@@ -134,7 +134,6 @@ describe('GridGenerator', () => {
     }
   });
 
-  command: 'npx vitest run tests/grid-generator.test.ts',
   it('should assign valid room template IDs matching cell door configurations', () => {
     const grid = generateRoomGrid(777);
 
