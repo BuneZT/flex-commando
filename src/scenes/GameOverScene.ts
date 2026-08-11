@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { isDevEnvironment } from '../config/Environment';
 
 export interface GameOverData {
   victory?: boolean;
@@ -35,14 +36,26 @@ export class GameOverScene extends Phaser.Scene {
       color: '#ffffff',
     }).setOrigin(0.5);
 
-    this.add.text(width / 2, height / 2 + 30, 'PRESS SPACE TO RESTART', {
+    this.add.text(width / 2, height / 2 + 25, 'PRESS SPACE TO RESTART', {
       fontFamily: 'monospace',
       fontSize: '10px',
       color: '#aaaaaa',
     }).setOrigin(0.5);
 
+    if (isDevEnvironment()) {
+      this.add.text(width / 2, height / 2 + 45, 'PRESS I FOR INFINITE LIVES', {
+        fontFamily: 'monospace',
+        fontSize: '9px',
+        color: '#00ffff',
+      }).setOrigin(0.5);
+
+      this.input.keyboard?.once('keydown-I', () => {
+        this.scene.start('GameScene', { infiniteLives: true });
+      });
+    }
+
     this.input.keyboard?.once('keydown-SPACE', () => {
-      this.scene.start('GameScene');
+      this.scene.start('GameScene', { infiniteLives: false });
     });
   }
 }
