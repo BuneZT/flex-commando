@@ -5,6 +5,7 @@ import { EnemyBase } from '../src/entities/enemies/EnemyBase';
 import { Trooper } from '../src/entities/enemies/Trooper';
 import { Turret } from '../src/entities/enemies/Turret';
 import { JumperMercenary } from '../src/entities/enemies/JumperMercenary';
+import { Boss } from '../src/entities/enemies/Boss';
 import { ProjectilePool } from '../src/weapons/ProjectilePool';
 
 function createMockScene(): Phaser.Scene {
@@ -13,8 +14,8 @@ function createMockScene(): Phaser.Scene {
       queueDepthSort: () => {},
       displayList: { add: () => {} },
       updateList: { add: () => {} },
-      anims: { on: () => {}, once: () => {}, off: () => {} },
-      textures: { get: () => ({ get: () => ({}) }) },
+      anims: { get: () => null, exists: () => false, on: () => {}, once: () => {}, off: () => {} },
+      textures: { get: (key?: string) => ({ key: key || '', get: () => ({}) }) },
     },
     add: { existing: () => {} },
     physics: { add: { existing: () => {} } },
@@ -129,5 +130,20 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     jumper.updateAI(0, 16, { x: 200, y: 100 });
     expect(body.velocity.y).toBeLessThan(0);
     expect(jumper.jumpTimer).toBeGreaterThan(0);
+  });
+
+  it('should initialize enemies with default texture keys', () => {
+    const scene = createMockScene();
+    const trooper = new Trooper(scene, 100, 100);
+    const turret = new Turret(scene, 100, 100);
+    const drone = new FalconDrone(scene, 100, 100);
+    const jumper = new JumperMercenary(scene, 100, 100);
+    const boss = new Boss(scene, 100, 100);
+
+    expect(trooper.texture.key).toBe('tex_enemy_trooper');
+    expect(turret.texture.key).toBe('tex_enemy_turret');
+    expect(drone.texture.key).toBe('tex_enemy_drone');
+    expect(jumper.texture.key).toBe('tex_enemy_jumper');
+    expect(boss.texture.key).toBe('tex_enemy_boss');
   });
 });

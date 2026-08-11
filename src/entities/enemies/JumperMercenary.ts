@@ -8,8 +8,8 @@ export class JumperMercenary extends EnemyBase {
   public jumpCooldownMs: number = 1800;
   public jumpTimer: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 1) {
-    super(scene, x, y, '', health);
+  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 1, texture: string = 'tex_enemy_jumper') {
+    super(scene, x, y, texture, health);
     this.scoreValue = 150;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -35,6 +35,10 @@ export class JumperMercenary extends EnemyBase {
 
     if (player) {
       this.facingLeft = player.x < this.x;
+    }
+
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
     }
 
     body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);

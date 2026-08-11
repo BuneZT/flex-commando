@@ -8,8 +8,8 @@ export class Turret extends EnemyBase {
   public shootTimer: number = 0;
   public range: number = 300;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 2) {
-    super(scene, x, y, '', health);
+  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 2, texture: string = 'tex_enemy_turret') {
+    super(scene, x, y, texture, health);
     this.scoreValue = 200;
     this.shootTimer = this.fireRateMs;
 
@@ -45,6 +45,10 @@ export class Turret extends EnemyBase {
         projectilePool.spawn(this.x, this.y, this.aimAngleDeg, 'PEA_SHOOTER', false);
         this.shootTimer = this.fireRateMs;
       }
+    }
+
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
     }
   }
 }

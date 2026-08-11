@@ -9,8 +9,8 @@ function createMockScene(): Phaser.Scene {
       queueDepthSort: () => {},
       displayList: { add: () => {} },
       updateList: { add: () => {} },
-      anims: { on: () => {}, once: () => {}, off: () => {} },
-      textures: { get: () => ({ get: () => ({}) }) },
+      anims: { get: () => null, exists: () => false, on: () => {}, once: () => {}, off: () => {} },
+      textures: { get: (key?: string) => ({ key: key || '', get: () => ({}) }) },
     },
     add: { existing: () => {} },
     physics: { add: { existing: () => {} } },
@@ -44,13 +44,14 @@ function createMockBody(): Phaser.Physics.Arcade.Body {
 }
 
 describe('Player entity', () => {
-  it('should initialize with default properties', () => {
+  it('should initialize with default properties and default texture key', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
     expect(player.lives).toBe(3);
     expect(player.aimDirection).toBe('FORWARD');
     expect(player.facingLeft).toBe(false);
     expect(player.isCrouching).toBe(false);
+    expect(player.texture.key).toBe('tex_player');
   });
 
   it('should update aiming and facing direction when moving left', () => {

@@ -6,8 +6,8 @@ export class Trooper extends EnemyBase {
   public moveSpeed: number = 60;
   public jumpVelocity: number = -220;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 1) {
-    super(scene, x, y, '', health);
+  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 1, texture: string = 'tex_enemy_trooper') {
+    super(scene, x, y, texture, health);
     this.scoreValue = 100;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -33,6 +33,14 @@ export class Trooper extends EnemyBase {
       } else {
         this.facingLeft = false;
       }
+    }
+
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
+    }
+
+    if (this.anims && typeof this.anims.play === 'function') {
+      this.anims.play('trooper_run', true);
     }
 
     body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);

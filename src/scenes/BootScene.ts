@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { TextureFactory } from '../core/TextureFactory';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -10,6 +11,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    TextureFactory.generateAllTextures(this);
     this.scene.start('MainMenuScene');
   }
 }

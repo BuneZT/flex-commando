@@ -9,8 +9,8 @@ export class Boss extends EnemyBase {
   private moveTimer: number = 0;
   private moveDirection: number = 1;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, '', 50);
+  constructor(scene: Phaser.Scene, x: number, y: number, health: number = 50, texture: string = 'tex_enemy_boss') {
+    super(scene, x, y, texture, health);
     this.scoreValue = 5000;
     this.damageOnContact = 2;
 
@@ -52,6 +52,10 @@ export class Boss extends EnemyBase {
     // Facing direction facing player
     if (player) {
       this.facingLeft = player.x < this.x;
+    }
+
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
     }
 
     // Shooting AI

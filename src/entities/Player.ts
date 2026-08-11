@@ -20,7 +20,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public barrierHits: number = 0;
   public isBarrierActive: boolean = false;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, texture: string = '') {
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string = 'tex_player') {
     super(scene, x, y, texture);
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);
@@ -70,6 +70,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.facingLeft = false;
     }
 
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
+    }
+
     // Calculate Aim Direction
     this.aimDirection = calculateAimDirection({
       up: input.up,
@@ -81,6 +85,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
 
     this.isCrouching = this.aimDirection === 'CROUCH';
+
+    if (this.anims && typeof this.anims.play === 'function') {
+      if (this.isCrouching) {
+        this.anims.play('player_crouch', true);
+      } else if (!isGrounded) {
+        this.anims.play('player_jump', true);
+      } else if (input.left || input.right) {
+        this.anims.play('player_run', true);
+      } else {
+        this.anims.play('player_idle', true);
+      }
+    }
 
     // Handle Drop-Through Platform Timer
     if (this.isDroppingThrough) {

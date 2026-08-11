@@ -19,9 +19,10 @@ export class FalconDrone extends EnemyBase {
     y: number,
     amplitude: number = 15,
     frequency: number = 0.003,
-    health: number = 1
+    health: number = 1,
+    texture: string = 'tex_enemy_drone'
   ) {
-    super(scene, x, y, '', health);
+    super(scene, x, y, texture, health);
     this.baseY = y;
     this.amplitude = amplitude;
     this.frequency = frequency;
@@ -50,6 +51,14 @@ export class FalconDrone extends EnemyBase {
       } else {
         this.facingLeft = false;
       }
+    }
+
+    if (typeof this.setFlipX === 'function') {
+      this.setFlipX(this.facingLeft);
+    }
+
+    if (this.anims && typeof this.anims.play === 'function') {
+      this.anims.play('drone_fly', true);
     }
 
     const body = this.body as Phaser.Physics.Arcade.Body;
