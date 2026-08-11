@@ -3,6 +3,7 @@ import { AimDirection, calculateAimDirection, getAimAngleDegrees } from './Playe
 import { RawInputState } from '../config/Controls';
 import { WeaponType, getSpreadShotAngles, WEAPON_CONFIGS } from '../weapons/WeaponTypes';
 import { ProjectilePool } from '../weapons/ProjectilePool';
+import { SoundManager } from '../core/SoundManager';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   public aimDirection: AimDirection = 'FORWARD';
@@ -163,8 +164,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       for (const angle of angles) {
         projectilePool.spawn(muzzle.x, muzzle.y, angle, 'SPREAD_SHOT', true);
       }
+      SoundManager.getInstance().playShoot('SPREAD_SHOT', true);
     } else {
       projectilePool.spawn(muzzle.x, muzzle.y, aimAngle, this.currentWeapon, true);
+      SoundManager.getInstance().playShoot(this.currentWeapon, true);
     }
 
     this.shootTimer = stats.fireRateMs;

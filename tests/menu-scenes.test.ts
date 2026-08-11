@@ -22,6 +22,9 @@ describe('Menu Scenes', () => {
       keyboard: {
         once: (event: string, callback: Function) => {
           listeners[event] = callback;
+        },
+        on: (event: string, callback: Function) => {
+          listeners[event] = callback;
         }
       }
     };
@@ -51,6 +54,9 @@ describe('Menu Scenes', () => {
     (gameOver as any).input = {
       keyboard: {
         once: (event: string, callback: Function) => {
+          listeners[event] = callback;
+        },
+        on: (event: string, callback: Function) => {
           listeners[event] = callback;
         }
       }

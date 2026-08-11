@@ -13,6 +13,7 @@ import { JumperMercenary } from '../entities/enemies/JumperMercenary';
 import { Boss } from '../entities/enemies/Boss';
 import { PickupCapsule, PickupItem } from '../entities/PickupCapsule';
 import { HUD } from '../ui/HUD';
+import { SoundManager } from '../core/SoundManager';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
@@ -126,6 +127,14 @@ export class GameScene extends Phaser.Scene {
 
     // 12. Initialize HUD overlay
     this.hud = new HUD(this);
+
+    // 13. Start BGM & setup M mute toggle key
+    SoundManager.getInstance().startBGM();
+    if (typeof this.input.keyboard?.on === 'function') {
+      this.input.keyboard.on('keydown-M', () => {
+        SoundManager.getInstance().toggleMute();
+      });
+    }
   }
 
   private spawnRoomEnemies(): void {

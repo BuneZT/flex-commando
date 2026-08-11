@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WeaponType, WEAPON_CONFIGS } from './WeaponTypes';
+import { SoundManager } from '../core/SoundManager';
 
 export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public weaponType: WeaponType = 'PEA_SHOOTER';
@@ -136,6 +137,9 @@ export class ProjectilePool {
 
     if (proj) {
       proj.fire(x, y, angleDeg, weaponType, isPlayerBullet);
+      if (!isPlayerBullet) {
+        SoundManager.getInstance().playShoot('ENEMY', false);
+      }
       return proj;
     }
 

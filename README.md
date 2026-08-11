@@ -1,4 +1,4 @@
-# Flex Commando: Rogue Beef 🎮💥
+# Flex Commando: Rogue Beef 🎮💥 (WIP)
 
 > A procedurally generated 2D retro run-and-gun action platformer inspired by *Contra*, built in Phaser 3 & TypeScript.
 

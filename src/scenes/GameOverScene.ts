@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { isDevEnvironment } from '../config/Environment';
+import { SoundManager } from '../core/SoundManager';
 
 export interface GameOverData {
   victory?: boolean;
@@ -42,6 +43,18 @@ export class GameOverScene extends Phaser.Scene {
       color: '#aaaaaa',
     }).setOrigin(0.5);
 
+    this.add.text(width / 2, height - 12, 'PRESS M TO TOGGLE MUTE', {
+      fontFamily: 'monospace',
+      fontSize: '8px',
+      color: '#888888'
+    }).setOrigin(0.5);
+
+    if (typeof this.input.keyboard?.on === 'function') {
+      this.input.keyboard.on('keydown-M', () => {
+        SoundManager.getInstance().toggleMute();
+      });
+    }
+
     if (isDevEnvironment()) {
       this.add.text(width / 2, height / 2 + 45, 'PRESS I FOR INFINITE LIVES', {
         fontFamily: 'monospace',
@@ -50,11 +63,13 @@ export class GameOverScene extends Phaser.Scene {
       }).setOrigin(0.5);
 
       this.input.keyboard?.once('keydown-I', () => {
+        SoundManager.getInstance().ensureContext();
         this.scene.start('GameScene', { infiniteLives: true });
       });
     }
 
     this.input.keyboard?.once('keydown-SPACE', () => {
+      SoundManager.getInstance().ensureContext();
       this.scene.start('GameScene', { infiniteLives: false });
     });
   }
