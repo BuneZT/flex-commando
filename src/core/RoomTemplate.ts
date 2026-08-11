@@ -30,10 +30,14 @@ function createEmptyTileMatrix(width = 20, height = 15, borderSolid = false): nu
     const row: number[] = [];
     for (let c = 0; c < width; c++) {
       if (r === height - 1) {
-        // Floor level solid blocks
+        // Floor level solid blocks (Tile 1)
         row.push(1);
+      } else if (r === 9 && c >= 5 && c <= 14) {
+        // Mid-room elevation platform bridge (Tile 2)
+        row.push(2);
       } else if (borderSolid && (r === 0 || c === 0 || c === width - 1)) {
-        row.push(1);
+        // Wall pillars and ceiling (Tile 3)
+        row.push(3);
       } else {
         row.push(0);
       }

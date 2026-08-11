@@ -50,6 +50,11 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = false;
     this.isVictory = false;
 
+    // 0. Set atmospheric background color
+    if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
+      this.cameras.main.setBackgroundColor('#121726');
+    }
+
     // 1. Generate room grid
     this.grid = generateRoomGrid(12345);
 
@@ -93,6 +98,13 @@ export class GameScene extends Phaser.Scene {
     const exitY = exitCell.y * 240 + 180;
     if (this.add && typeof this.add.sprite === 'function') {
       this.exitDoor = this.add.sprite(exitX, exitY, 'tileset', 4);
+    }
+    if (this.add && typeof this.add.text === 'function') {
+      this.add.text(exitX, exitY - 18, 'EXIT PORTAL', {
+        fontSize: '9px',
+        color: '#00ff88',
+        fontStyle: 'bold',
+      }).setOrigin(0.5);
     }
 
     // 12. Initialize HUD overlay
