@@ -26,7 +26,8 @@ flex-commando/
 │   │   ├── RoomTemplate.ts       # Bitmask door matcher (N=1, S=2, E=4, W=8) & 15 room templates
 │   │   ├── TilemapRenderer.ts    # Stitches 4x4 room grid into 80x60 global tilemap
 │   │   ├── TextureFactory.ts     # Procedural pixel-art sprite, tileset, and animation generator
-│   │   └── CameraManager.ts      # Active room calculation & smooth room pan transitions
+│   │   ├── CameraManager.ts      # Active room calculation & smooth room pan transitions
+│   │   └── SoundManager.ts       # Singleton Web Audio BGM & SFX manager (procedural, no file assets)
 │   ├── entities/
 │   │   ├── Player.ts             # Player arcade sprite, crouching hitbox, jump & muzzle offset
 │   │   ├── PlayerAim.ts          # Pure 8-way directional aiming state machine & angle math
@@ -42,8 +43,8 @@ flex-commando/
 │   │   ├── WeaponTypes.ts        # WeaponType enum, stats & getSpreadShotAngles([-30,-15,0,15,30])
 │   │   └── ProjectilePool.ts     # Recyclable Projectile Arcade sprite pool
 │   ├── scenes/
-│   │   ├── BootScene.ts          # Asset preloader
-│   │   ├── MainMenuScene.ts      # Title screen & high score start
+│   │   ├── BootScene.ts          # Calls TextureFactory.generateAllTextures() then launches MainMenuScene (no file assets)
+│   │   ├── MainMenuScene.ts      # Title screen; SPACE starts game, I (dev-only) starts with infinite lives
 │   │   ├── GameScene.ts          # Main game loop, colliders, HUD, camera, game state
 │   │   └── GameOverScene.ts      # Victory / Permadeath screen with Space restart
 │   ├── ui/
@@ -67,8 +68,8 @@ flex-commando/
    - `vite.config.ts` includes `resolve: { alias: { phaser: 'phaser/dist/phaser.js' } }` and `test: { setupFiles: ['./vitest.setup.ts'] }` for headless Vitest compatibility.
 
 3. **Performance & Memory Management**:
-   - Projectiles must use `ProjectilePool` recycling (`getFreeProjectile()`, `spawn()`, `despawn()`) instead of instantiating new sprites during firefights.
-   - Destroy inactive off-screen physics bodies or disable updates for performance.
+   - Projectiles must use `ProjectilePool` recycling. Acquire with `pool.spawn()` (reuses `pool.find(p => !p.active)` before allocating); release with `projectile.deactivate()`. Never instantiate new sprites mid-firefight.
+   - Inactive projectiles disable their physics body (`body.enable = false`) rather than being destroyed.
 
 4. **Testing Workflow**:
    - Run unit tests: `npm test` or `npx vitest run`
@@ -82,4 +83,4 @@ flex-commando/
 * **Adding New Weapon Types**: Add entry to `WeaponType` union in `src/weapons/WeaponTypes.ts`, define stats in `WEAPON_CONFIGS`, update `Player.shoot()` or `ProjectilePool.spawn()`.
 * **Adding New Enemies**: Extend `EnemyBase` in `src/entities/enemies/`, implement `updateAI(time, delta, player)`, add unit test in `tests/enemy.test.ts`.
 * **Adding New Room Templates**: Add template schema (20x15 tiles) in `src/core/RoomTemplate.ts` with appropriate `doorMask` bitmask matching its openings.
-* **Adding Audio / SFX**: Load Web Audio assets in `BootScene.ts` and trigger sounds in `Player.ts`, `ProjectilePool.ts`, and `GameScene.ts`.
+* **Adding Audio / SFX**: All audio is procedurally synthesised by `SoundManager` (singleton in `src/core/SoundManager.ts`) using the Web Audio API — no external files. Add new sound methods there and call them from `Player.ts`, `ProjectilePool.ts`, or `GameScene.ts`.
