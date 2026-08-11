@@ -30,6 +30,7 @@ export class GameScene extends Phaser.Scene {
   public pickupCapsules: PickupCapsule[] = [];
   public pickupItems: PickupItem[] = [];
   public exitDoor?: Phaser.GameObjects.Sprite;
+  public exitDoors: Phaser.GameObjects.Sprite[] = [];
 
   public invulnerableTimer: number = 0;
   public isGameOver: boolean = false;
@@ -46,13 +47,17 @@ export class GameScene extends Phaser.Scene {
     this.pickupCapsules = [];
     this.pickupItems = [];
     this.exitDoor = undefined;
+    this.exitDoors = [];
     this.invulnerableTimer = 0;
     this.isGameOver = false;
     this.isVictory = false;
 
-    // 0. Set atmospheric background color
+    // 0. Set atmospheric background color & 4x4 grid physics world bounds
     if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
       this.cameras.main.setBackgroundColor('#121726');
+    }
+    if (this.physics && this.physics.world && typeof this.physics.world.setBounds === 'function') {
+      this.physics.world.setBounds(0, 0, 1280, 960);
     }
 
     // 1. Generate room grid
@@ -92,19 +97,28 @@ export class GameScene extends Phaser.Scene {
     const capsule = new PickupCapsule(this, startX + 100, startY - 80, 'SPREAD_SHOT');
     this.pickupCapsules.push(capsule);
 
-    // 11. Spawn Exit Door in BOSS or final room
+    // 11. Spawn Exit Doors (in Start Room and in Boss Room)
     const exitCell = this.grid.flat().find((cell) => cell.type === 'BOSS') || { x: 3, y: 0 };
-    const exitX = exitCell.x * 320 + 260;
-    const exitY = exitCell.y * 240 + 180;
-    if (this.add && typeof this.add.sprite === 'function') {
-      this.exitDoor = this.add.sprite(exitX, exitY, 'tileset', 4);
-    }
-    if (this.add && typeof this.add.text === 'function') {
-      this.add.text(exitX, exitY - 18, 'EXIT PORTAL', {
-        fontSize: '9px',
-        color: '#00ff88',
-        fontStyle: 'bold',
-      }).setOrigin(0.5);
+    const exitLocations = [
+      { x: startX + 100, y: startY }, // Start room exit portal
+      { x: exitCell.x * 320 + 260, y: exitCell.y * 240 + 180 }, // Boss room exit portal
+    ];
+
+    for (const loc of exitLocations) {
+      if (this.add && typeof this.add.sprite === 'function') {
+        const portal = this.add.sprite(loc.x, loc.y, 'tileset', 4);
+        this.exitDoors.push(portal);
+        if (!this.exitDoor) {
+          this.exitDoor = portal;
+        }
+      }
+      if (this.add && typeof this.add.text === 'function') {
+        this.add.text(loc.x, loc.y - 18, 'EXIT PORTAL', {
+          fontSize: '9px',
+          color: '#00ff88',
+          fontStyle: 'bold',
+        }).setOrigin(0.5);
+      }
     }
 
     // 12. Initialize HUD overlay
@@ -364,11 +378,18 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // D. Player vs Level Exit Door / Portal
+    // D. Player vs Level Exit Doors / Portals
+    for (const door of this.exitDoors) {
+      if (this.checkOverlap(this.player, door, 8)) {
+        this.triggerVictory();
+        break;
+      }
+    }
     if (this.exitDoor && this.checkOverlap(this.player, this.exitDoor, 8)) {
       this.triggerVictory();
     }
   }
 }
+
 
 

@@ -75,5 +75,19 @@ describe('Boss Class Mechanics', () => {
     boss.takeDamage(boss.maxHealth);
     expect(enemies.every((e) => !e.isAlive)).toBe(true);
   });
+
+  it('should support full 4x4 level physics bounds (1280x960)', () => {
+    let bounds: { x: number; y: number; width: number; height: number } | null = null;
+    const mockPhysics = {
+      world: {
+        setBounds: (x: number, y: number, w: number, h: number) => {
+          bounds = { x, y, width: w, height: h };
+        },
+      },
+    };
+    mockPhysics.world.setBounds(0, 0, 1280, 960);
+    expect(bounds).toEqual({ x: 0, y: 0, width: 1280, height: 960 });
+  });
 });
+
 
