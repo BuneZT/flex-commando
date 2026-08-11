@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
+    "types": ["vite/client"],
     "noEmit": true
   },
   "include": ["src/**/*", "tests/**/*"]
