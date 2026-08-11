@@ -29,7 +29,8 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
   public letter: PickupLetter = 'S';
 
   constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT') {
-    super(scene, x, y, '');
+    const letter = weaponTypeToLetter(weaponType);
+    super(scene, x, y, `tex_pickup_${letter}`);
 
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);
@@ -45,6 +46,7 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
     this.setPosition(x, y);
     this.weaponType = weaponType;
     this.letter = weaponTypeToLetter(weaponType);
+    this.setTexture(`tex_pickup_${this.letter}`);
     this.setActive(true);
     this.setVisible(true);
 
@@ -80,14 +82,21 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
   private flightTime: number = 0;
   private startY: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT') {
-    super(scene, x, y, '');
+  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT', texture: string = 'tex_capsule_flying') {
+    super(scene, x, y, texture);
 
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);
     }
     if (scene.physics && scene.physics.add && typeof scene.physics.add.existing === 'function') {
       scene.physics.add.existing(this);
+    }
+
+    if (this.anims && typeof this.anims.play === 'function') {
+      const animsManager = scene.anims || scene.sys?.anims;
+      if (animsManager && typeof animsManager.exists === 'function' && animsManager.exists('capsule_spin')) {
+        this.anims.play('capsule_spin', true);
+      }
     }
 
     this.spawnCapsule(x, y, weaponType);

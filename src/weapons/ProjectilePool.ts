@@ -10,7 +10,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   private baseAngleRad: number = 0;
   private travelDistance: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, texture: string = '') {
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string = 'tex_bullet_pea') {
     super(scene, x, y, texture);
 
     if (scene.add && typeof scene.add.existing === 'function') {
@@ -26,6 +26,18 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
 
   public fire(x: number, y: number, angleDeg: number, weaponType: WeaponType, isPlayerBullet: boolean = true): void {
     const config = WEAPON_CONFIGS[weaponType] || WEAPON_CONFIGS.PEA_SHOOTER;
+
+    let textureKey = 'tex_bullet_pea';
+    if (!isPlayerBullet) {
+      textureKey = 'tex_bullet_enemy';
+    } else if (weaponType === 'SPREAD_SHOT') {
+      textureKey = 'tex_bullet_spread';
+    } else if (weaponType === 'LASER') {
+      textureKey = 'tex_bullet_laser';
+    } else if (weaponType === 'FLAME') {
+      textureKey = 'tex_bullet_flame';
+    }
+    this.setTexture(textureKey);
 
     this.setPosition(x, y);
     this.weaponType = weaponType;

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import Phaser from 'phaser';
 import { getSpreadShotAngles, WEAPON_CONFIGS, WeaponType } from '../src/weapons/WeaponTypes';
-import { ProjectilePool } from '../src/weapons/ProjectilePool';
-import { PickupCapsule, weaponTypeToLetter, letterToWeaponType } from '../src/entities/PickupCapsule';
+import { Projectile, ProjectilePool } from '../src/weapons/ProjectilePool';
+import { PickupCapsule, PickupItem, weaponTypeToLetter, letterToWeaponType } from '../src/entities/PickupCapsule';
 import { Player } from '../src/entities/Player';
 import { RawInputState } from '../src/config/Controls';
 
@@ -195,3 +195,54 @@ describe('Player Weapon & Barrier Integration', () => {
     expect(player.hitBarrier()).toBe(false); // No barrier left
   });
 });
+
+describe('Procedural Textures for Projectiles and Pickups', () => {
+  it('should assign correct bullet texture keys on Projectile.fire', () => {
+    const mockScene = createMockScene();
+    const proj = new Projectile(mockScene, 0, 0);
+
+    proj.fire(0, 0, 0, 'PEA_SHOOTER', true);
+    expect(proj.texture.key).toBe('tex_bullet_pea');
+
+    proj.fire(0, 0, 0, 'SPREAD_SHOT', true);
+    expect(proj.texture.key).toBe('tex_bullet_spread');
+
+    proj.fire(0, 0, 0, 'LASER', true);
+    expect(proj.texture.key).toBe('tex_bullet_laser');
+
+    proj.fire(0, 0, 0, 'FLAME', true);
+    expect(proj.texture.key).toBe('tex_bullet_flame');
+
+    proj.fire(0, 0, 0, 'MACHINE_GUN', true);
+    expect(proj.texture.key).toBe('tex_bullet_pea');
+
+    proj.fire(0, 0, 0, 'SPREAD_SHOT', false);
+    expect(proj.texture.key).toBe('tex_bullet_enemy');
+  });
+
+  it('should assign default flying capsule texture to PickupCapsule', () => {
+    const mockScene = createMockScene();
+    const capsule = new PickupCapsule(mockScene, 100, 100, 'SPREAD_SHOT');
+    expect(capsule.texture.key).toBe('tex_capsule_flying');
+  });
+
+  it('should assign letter badge textures to PickupItem based on weapon type', () => {
+    const mockScene = createMockScene();
+
+    const spreadItem = new PickupItem(mockScene, 0, 0, 'SPREAD_SHOT');
+    expect(spreadItem.texture.key).toBe('tex_pickup_S');
+
+    const laserItem = new PickupItem(mockScene, 0, 0, 'LASER');
+    expect(laserItem.texture.key).toBe('tex_pickup_L');
+
+    const flameItem = new PickupItem(mockScene, 0, 0, 'FLAME');
+    expect(flameItem.texture.key).toBe('tex_pickup_F');
+
+    const machineGunItem = new PickupItem(mockScene, 0, 0, 'MACHINE_GUN');
+    expect(machineGunItem.texture.key).toBe('tex_pickup_M');
+
+    const barrierItem = new PickupItem(mockScene, 0, 0, 'BARRIER');
+    expect(barrierItem.texture.key).toBe('tex_pickup_B');
+  });
+});
+
