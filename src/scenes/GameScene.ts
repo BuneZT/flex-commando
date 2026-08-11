@@ -224,6 +224,28 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private checkOverlap(
+    a: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; getBounds?: () => Phaser.Geom.Rectangle },
+    b: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; getBounds?: () => Phaser.Geom.Rectangle },
+    padding: number = 4
+  ): boolean {
+    if (typeof a.getBounds === 'function' && typeof b.getBounds === 'function') {
+      const rectA = a.getBounds();
+      const rectB = b.getBounds();
+      if (rectA && rectB && typeof rectA.x === 'number' && typeof rectB.x === 'number') {
+        const inflatedA = new Phaser.Geom.Rectangle(rectA.x - padding, rectA.y - padding, rectA.width + padding * 2, rectA.height + padding * 2);
+        return Phaser.Geom.Intersects.RectangleToRectangle(inflatedA, rectB);
+      }
+    }
+    const wA = a.displayWidth || a.width || 16;
+    const hA = a.displayHeight || a.height || 16;
+    const wB = b.displayWidth || b.width || 16;
+    const hB = b.displayHeight || b.height || 16;
+    const halfW = (wA + wB) / 2 + padding;
+    const halfH = (hA + hB) / 2 + padding;
+    return Math.abs(a.x - b.x) <= halfW && Math.abs(a.y - b.y) <= halfH;
+  }
+
   private handleCollisions(): void {
     if (!this.player || !this.projectilePool || this.isGameOver) return;
 
@@ -237,8 +259,7 @@ export class GameScene extends Phaser.Scene {
         // Player bullet vs Enemies
         for (const enemy of this.enemies) {
           if (enemy.isAlive && enemy.active) {
-            const dist = Phaser.Math.Distance.Between(proj.x, proj.y, enemy.x, enemy.y);
-            if (dist < 20) {
+            if (this.checkOverlap(proj, enemy, 4)) {
               const killed = enemy.takeDamage(proj.damage);
               if (!proj.piercing) {
                 proj.deactivate();
@@ -260,8 +281,7 @@ export class GameScene extends Phaser.Scene {
         // Player bullet vs Pickup Capsules
         for (const capsule of this.pickupCapsules) {
           if (capsule.active) {
-            const dist = Phaser.Math.Distance.Between(proj.x, proj.y, capsule.x, capsule.y);
-            if (dist < 16) {
+            if (this.checkOverlap(proj, capsule, 4)) {
               const droppedItem = capsule.hit();
               if (!proj.piercing) {
                 proj.deactivate();
@@ -279,8 +299,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         // Enemy bullet vs Player
         if (this.player && this.invulnerableTimer <= 0) {
-          const dist = Phaser.Math.Distance.Between(proj.x, proj.y, this.player.x, this.player.y);
-          if (dist < 14) {
+          if (this.checkOverlap(proj, this.player, 2)) {
             proj.deactivate();
             this.handlePlayerDamage();
           }
@@ -292,8 +311,7 @@ export class GameScene extends Phaser.Scene {
     if (this.invulnerableTimer <= 0) {
       for (const enemy of this.enemies) {
         if (enemy.isAlive && enemy.active) {
-          const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
-          if (dist < 18) {
+          if (this.checkOverlap(this.player, enemy, 2)) {
             this.handlePlayerDamage();
             break;
           }
@@ -304,8 +322,7 @@ export class GameScene extends Phaser.Scene {
     // C. Player vs Pickup Items
     for (const item of this.pickupItems) {
       if (item.active) {
-        const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
-        if (dist < 20) {
+        if (this.checkOverlap(this.player, item, 4)) {
           const weapon = item.collect();
           this.player.equipWeapon(weapon);
         }
@@ -313,3 +330,4 @@ export class GameScene extends Phaser.Scene {
     }
   }
 }
+

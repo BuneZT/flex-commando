@@ -146,4 +146,18 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     expect(jumper.texture.key).toBe('tex_enemy_jumper');
     expect(boss.texture.key).toBe('tex_enemy_boss');
   });
+
+  it('FalconDrone should update body position and take damage when hit within bounding box', () => {
+    const scene = createMockScene();
+    const drone = new FalconDrone(scene, 100, 100);
+    drone.body = createMockBody();
+
+    drone.updateAI(0, 100, { x: 50, y: 100 });
+    expect(drone.isAlive).toBe(true);
+
+    const hit = drone.takeDamage(1);
+    expect(hit).toBe(true);
+    expect(drone.isAlive).toBe(false);
+  });
 });
+

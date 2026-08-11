@@ -68,5 +68,11 @@ export class FalconDrone extends EnemyBase {
 
     const yOffset = calculateDroneSinePosition(this.elapsedTime, this.amplitude, this.frequency);
     this.y = this.baseY + yOffset;
+
+    if (body && typeof body.updateFromGameObject === 'function') {
+      body.updateFromGameObject();
+    }
   }
 }
+
+
