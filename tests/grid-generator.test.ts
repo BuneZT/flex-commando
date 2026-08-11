@@ -168,4 +168,20 @@ describe('RoomTemplate', () => {
       }
     }
   });
+
+  it('should provide open floor tiles for South doors and open ceiling tiles for North doors', () => {
+    const southTemplate = ROOM_TEMPLATES.find((t) => t.doors.south);
+    expect(southTemplate).toBeDefined();
+    if (southTemplate) {
+      // Bottom row (r=14) cols 8..11 should not be solid ground (tile 1)
+      expect(southTemplate.tiles[14][9]).not.toBe(1);
+    }
+
+    const northTemplate = ROOM_TEMPLATES.find((t) => t.doors.north);
+    expect(northTemplate).toBeDefined();
+    if (northTemplate) {
+      // Top row (r=0) cols 8..11 should be open air (tile 0)
+      expect(northTemplate.tiles[0][9]).toBe(0);
+    }
+  });
 });

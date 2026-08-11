@@ -24,20 +24,37 @@ export function calculateDoorMask(doors: { north: boolean; south: boolean; east:
   return mask;
 }
 
-function createEmptyTileMatrix(width = 20, height = 15, borderSolid = false): number[][] {
+function createEmptyTileMatrix(
+  width = 20,
+  height = 15,
+  doors: { north: boolean; south: boolean; east: boolean; west: boolean } = { north: false, south: false, east: false, west: false }
+): number[][] {
   const matrix: number[][] = [];
   for (let r = 0; r < height; r++) {
     const row: number[] = [];
     for (let c = 0; c < width; c++) {
       if (r === height - 1) {
-        // Floor level solid blocks (Tile 1)
-        row.push(1);
+        // Floor level (r = 14)
+        if (doors.south && c >= 8 && c <= 11) {
+          row.push(2); // One-way drop-through platform for South door
+        } else {
+          row.push(1); // Solid ground
+        }
+      } else if (r === 0) {
+        // Ceiling level (r = 0)
+        if (doors.north && c >= 8 && c <= 11) {
+          row.push(0); // Open ceiling gap for North door
+        } else {
+          row.push(3); // Solid ceiling wall
+        }
+      } else if (c === 0 && !doors.west) {
+        row.push(3); // West wall pillar if no West door
+      } else if (c === width - 1 && !doors.east) {
+        row.push(3); // East wall pillar if no East door
+      } else if ((doors.north || doors.south) && (r === 4 || r === 9) && c >= 7 && c <= 12) {
+        row.push(2); // Climbing platform ledges for vertical rooms
       } else if (r === 9 && c >= 5 && c <= 14) {
-        // Mid-room elevation platform bridge (Tile 2)
-        row.push(2);
-      } else if (borderSolid && (r === 0 || c === 0 || c === width - 1)) {
-        // Wall pillars and ceiling (Tile 3)
-        row.push(3);
+        row.push(2); // Standard platform bridge
       } else {
         row.push(0);
       }
@@ -56,7 +73,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'START',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: true, west: false }),
   },
   // 2. West only (Boss / Dead-end West)
   {
@@ -66,7 +83,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'BOSS',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: false, west: true }),
   },
   // 3. North only
   {
@@ -76,7 +93,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: false, west: false }),
   },
   // 4. South only
   {
@@ -86,7 +103,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: false, west: false }),
   },
   // 5. East-West horizontal corridor
   {
@@ -96,7 +113,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: true, west: true }),
   },
   // 6. North-South vertical corridor
   {
@@ -106,7 +123,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: false, west: false }),
   },
   // 7. North-East
   {
@@ -116,7 +133,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: true, west: false }),
   },
   // 8. North-West
   {
@@ -126,7 +143,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: false, west: true }),
   },
   // 9. South-East
   {
@@ -136,7 +153,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: true, west: false }),
   },
   // 10. South-West
   {
@@ -146,7 +163,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: false, west: true }),
   },
   // 11. North-East-West T-junction
   {
@@ -156,7 +173,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: true, west: true }),
   },
   // 12. South-East-West T-junction
   {
@@ -166,7 +183,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: true, west: true }),
   },
   // 13. North-South-East T-junction
   {
@@ -176,7 +193,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: true, west: false }),
   },
   // 14. North-South-West T-junction
   {
@@ -186,7 +203,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: false, west: true }),
   },
   // 15. North-South-East-West 4-way crossroad
   {
@@ -196,7 +213,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     width: 20,
     height: 15,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15),
+    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: true, west: true }),
   },
 ];
 

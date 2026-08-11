@@ -55,22 +55,29 @@ export function generateRoomGrid(seed: number): GridCell[][] {
 
   let currentX = 0;
   let currentY = startY;
+  let lastChoice: 'EAST' | 'NORTH' | 'SOUTH' | null = null;
 
   // Carve main path from START (0, startY) to BOSS (3, bossY)
-  while (currentX < 3 || currentY !== bossY) {
+  let steps = 0;
+  while ((currentX < 3 || currentY !== bossY) && steps < 50) {
+    steps++;
     const nextDirs: ('EAST' | 'NORTH' | 'SOUTH')[] = [];
 
     if (currentX < 3) {
       nextDirs.push('EAST');
+      nextDirs.push('EAST');
     }
-    if (currentY > 0 && currentY > bossY) {
+    if (currentY > 0 && lastChoice !== 'SOUTH') {
       nextDirs.push('NORTH');
+      if (currentY > bossY) nextDirs.push('NORTH');
     }
-    if (currentY < 3 && currentY < bossY) {
+    if (currentY < 3 && lastChoice !== 'NORTH') {
       nextDirs.push('SOUTH');
+      if (currentY < bossY) nextDirs.push('SOUTH');
     }
 
     const choice = nextDirs.length > 0 ? rng.choice(nextDirs) : 'EAST';
+    lastChoice = choice;
 
     if (choice === 'EAST') {
       grid[currentY][currentX].doors.east = true;
