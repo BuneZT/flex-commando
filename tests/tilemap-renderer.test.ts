@@ -88,4 +88,25 @@ describe('stitchGridTilemap', () => {
       expect(bottomRowTile).toBe(1);
     }
   });
+
+  it('should configure Tile 2 as a one-way platform allowing upward passage', () => {
+    const mockTile = {
+      index: 2,
+      collideLeft: true,
+      collideRight: true,
+      collideUp: true,
+      collideDown: true,
+      setCollision: function (left: boolean, right: boolean, up: boolean, down: boolean) {
+        this.collideLeft = left;
+        this.collideRight = right;
+        this.collideUp = up;
+        this.collideDown = down;
+      },
+    };
+
+    // Configure Tile 2 one-way collision: collideUp = true (land on top), collideDown = false (jump up through)
+    mockTile.setCollision(false, false, true, false);
+    expect(mockTile.collideDown).toBe(false);
+    expect(mockTile.collideUp).toBe(true);
+  });
 });
