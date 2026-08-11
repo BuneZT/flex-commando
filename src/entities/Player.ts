@@ -9,7 +9,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public facingLeft: boolean = false;
   public lives: number = 3;
   public moveSpeed: number = 120;
-  public jumpVelocity: number = -260;
+  public jumpVelocity: number = -340;
   public isCrouching: boolean = false;
   public isDroppingThrough: boolean = false;
   private dropThroughTimer: number = 0;

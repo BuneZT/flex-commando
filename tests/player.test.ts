@@ -107,4 +107,11 @@ describe('Player entity', () => {
     expect(pos.x).toBeGreaterThan(100);
     expect(pos.y).toBe(96);
   });
+
+  it('should have sufficient jump velocity to reach 80px high platform ledges', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    // Max height formula: h = v^2 / (2 * g). With g = 600, h >= 80px requires |v| >= 310
+    expect(Math.abs(player.jumpVelocity)).toBeGreaterThanOrEqual(340);
+  });
 });
