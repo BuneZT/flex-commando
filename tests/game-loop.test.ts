@@ -63,4 +63,17 @@ describe('Boss Class Mechanics', () => {
     expect(lethal).toBe(true);
     expect(boss.isAlive).toBe(false);
   });
+
+  it('should detect when all enemies are defeated', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 300, 200);
+    boss.body = createMockBody();
+
+    const enemies = [boss];
+    expect(enemies.every((e) => !e.isAlive)).toBe(false);
+
+    boss.takeDamage(boss.maxHealth);
+    expect(enemies.every((e) => !e.isAlive)).toBe(true);
+  });
 });
+

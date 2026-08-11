@@ -20,6 +20,7 @@ export class TextureFactory {
 
       this.createBulletTextures(scene);
       this.createCapsuleAndPickupTextures(scene);
+      this.createTilesetTexture(scene);
       this.createAnimations(scene);
     } finally {
       if (createdDummyRenderer) {
@@ -343,4 +344,52 @@ export class TextureFactory {
       });
     }
   }
+
+  private static createTilesetTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tileset')) return;
+    const g = scene.add.graphics();
+
+    // Tile 0 (0..15): Empty space (keep transparent)
+
+    // Tile 1 (16..31): Ground / Floor block
+    g.fillStyle(0x2e354f, 1); // Dark metallic blue base
+    g.fillRect(16, 0, 16, 16);
+    g.fillStyle(0x5b6585, 1); // Top edge highlight
+    g.fillRect(16, 0, 16, 2);
+    g.fillStyle(0x1a1e2d, 1); // Bottom shadow
+    g.fillRect(16, 14, 16, 2);
+    g.fillStyle(0x8899bb, 1); // Corner rivets
+    g.fillRect(18, 3, 2, 2);
+    g.fillRect(28, 3, 2, 2);
+    g.fillRect(18, 10, 2, 2);
+    g.fillRect(28, 10, 2, 2);
+
+    // Tile 2 (32..47): One-way platform / bridge girder
+    g.fillStyle(0x445566, 1);
+    g.fillRect(32, 2, 16, 4);
+    g.fillStyle(0x00ccdd, 1); // Cyan top glow edge
+    g.fillRect(32, 0, 16, 2);
+    g.fillStyle(0x223344, 1);
+    g.fillRect(34, 6, 3, 6);
+    g.fillRect(43, 6, 3, 6);
+
+    // Tile 3 (48..63): Wall pillar / armor plate
+    g.fillStyle(0x3a2e48, 1); // Dark purple steel
+    g.fillRect(48, 0, 16, 16);
+    g.fillStyle(0x5c4970, 1);
+    g.fillRect(48, 0, 2, 16);
+    g.fillRect(62, 0, 2, 16);
+
+    // Tile 4 (64..79): Level Exit Door / Portal
+    g.fillStyle(0x00ff88, 1); // Bright green frame
+    g.fillRect(64, 0, 16, 16);
+    g.fillStyle(0xffff44, 1); // Yellow inner door
+    g.fillRect(66, 2, 12, 12);
+    g.fillStyle(0x00ffff, 1); // Cyan portal core
+    g.fillRect(68, 4, 8, 8);
+
+    g.generateTexture('tileset', 80, 16);
+    g.destroy();
+  }
 }
+

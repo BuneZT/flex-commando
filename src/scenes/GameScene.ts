@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
 
   public pickupCapsules: PickupCapsule[] = [];
   public pickupItems: PickupItem[] = [];
+  public exitDoor?: Phaser.GameObjects.Sprite;
 
   public invulnerableTimer: number = 0;
   public isGameOver: boolean = false;
@@ -44,6 +45,7 @@ export class GameScene extends Phaser.Scene {
     this.bossTriggered = false;
     this.pickupCapsules = [];
     this.pickupItems = [];
+    this.exitDoor = undefined;
     this.invulnerableTimer = 0;
     this.isGameOver = false;
     this.isVictory = false;
@@ -85,7 +87,15 @@ export class GameScene extends Phaser.Scene {
     const capsule = new PickupCapsule(this, startX + 100, startY - 80, 'SPREAD_SHOT');
     this.pickupCapsules.push(capsule);
 
-    // 11. Initialize HUD overlay
+    // 11. Spawn Exit Door in BOSS or final room
+    const exitCell = this.grid.flat().find((cell) => cell.type === 'BOSS') || { x: 3, y: 0 };
+    const exitX = exitCell.x * 320 + 260;
+    const exitY = exitCell.y * 240 + 180;
+    if (this.add && typeof this.add.sprite === 'function') {
+      this.exitDoor = this.add.sprite(exitX, exitY, 'tileset', 4);
+    }
+
+    // 12. Initialize HUD overlay
     this.hud = new HUD(this);
   }
 
@@ -215,12 +225,30 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    // 7.5 Check All Enemies Defeated Victory Condition
+    if (!this.isVictory && this.enemies.length > 0 && this.enemies.every((e) => !e.isAlive)) {
+      this.triggerVictory();
+    }
+
     // 8. Collisions & Overlaps handling
     this.handleCollisions();
 
     // 9. Update HUD
     if (this.hud && this.player && this.grid) {
       this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss);
+    }
+  }
+
+  private triggerVictory(): void {
+    if (this.isVictory) return;
+    this.isVictory = true;
+    this.isGameOver = true;
+    if (this.time && typeof this.time.delayedCall === 'function') {
+      this.time.delayedCall(500, () => {
+        this.scene.start('GameOverScene', { victory: true });
+      });
+    } else {
+      this.scene.start('GameOverScene', { victory: true });
     }
   }
 
@@ -266,12 +294,7 @@ export class GameScene extends Phaser.Scene {
               }
 
               if (killed && enemy === this.boss) {
-                // Boss defeated! Trigger Victory!
-                this.isVictory = true;
-                this.isGameOver = true;
-                this.time.delayedCall(500, () => {
-                  this.scene.start('GameOverScene', { victory: true });
-                });
+                this.triggerVictory();
               }
               break;
             }
@@ -328,6 +351,12 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+
+    // D. Player vs Level Exit Door / Portal
+    if (this.exitDoor && this.checkOverlap(this.player, this.exitDoor, 8)) {
+      this.triggerVictory();
+    }
   }
 }
+
 
