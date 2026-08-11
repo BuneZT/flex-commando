@@ -3,7 +3,8 @@ import { Player } from '../entities/Player';
 import { Boss } from '../entities/enemies/Boss';
 import { GridCell } from '../core/GridGenerator';
 
-export function formatHUDLives(lives: number): string {
+export function formatHUDLives(lives: number, infiniteLives?: boolean): string {
+  if (infiniteLives) return '∞';
   if (lives <= 0) return 'DEAD';
   return '❤'.repeat(lives);
 }
@@ -48,10 +49,11 @@ export class HUD {
     grid: GridCell[][],
     currentGridX: number,
     currentGridY: number,
-    boss?: Boss | null
+    boss?: Boss | null,
+    infiniteLives?: boolean
   ): void {
     // 1. Update Lives
-    this.livesText.setText(`LIVES: ${formatHUDLives(player.lives)}`);
+    this.livesText.setText(`LIVES: ${formatHUDLives(player.lives, infiniteLives)}`);
 
     // 2. Update Weapon & Shield info
     let weaponStr = `WEAPON: ${player.currentWeapon}`;
