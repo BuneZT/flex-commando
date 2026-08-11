@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { AimDirection, calculateAimDirection, getAimAngleDegrees } from './PlayerAim';
 import { RawInputState } from '../config/Controls';
+import { WeaponType, getSpreadShotAngles, WEAPON_CONFIGS } from '../weapons/WeaponTypes';
+import { ProjectilePool } from '../weapons/ProjectilePool';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   public aimDirection: AimDirection = 'FORWARD';
@@ -11,6 +13,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public isCrouching: boolean = false;
   public isDroppingThrough: boolean = false;
   private dropThroughTimer: number = 0;
+
+  // Weapon System & Barrier
+  public currentWeapon: WeaponType = 'PEA_SHOOTER';
+  public shootTimer: number = 0;
+  public barrierHits: number = 0;
+  public isBarrierActive: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string = '') {
     super(scene, x, y, texture);
@@ -29,7 +37,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  public updatePlayer(input: RawInputState, delta: number = 16): void {
+  public equipWeapon(weaponType: WeaponType): void {
+    if (weaponType === 'BARRIER') {
+      this.isBarrierActive = true;
+      this.barrierHits = 3;
+    } else {
+      this.currentWeapon = weaponType;
+    }
+  }
+
+  public hitBarrier(): boolean {
+    if (this.isBarrierActive && this.barrierHits > 0) {
+      this.barrierHits -= 1;
+      if (this.barrierHits <= 0) {
+        this.isBarrierActive = false;
+      }
+      return true; // Hit absorbed
+    }
+    return false; // No barrier to absorb hit
+  }
+
+  public updatePlayer(input: RawInputState, delta: number = 16, projectilePool?: ProjectilePool): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (!body) return;
 
@@ -94,6 +122,36 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         body.setVelocityX(0);
       }
     }
+
+    // Shooting System
+    if (this.shootTimer > 0) {
+      this.shootTimer -= delta;
+    }
+
+    const wantsToShoot = this.currentWeapon === 'MACHINE_GUN'
+      ? input.shoot
+      : (input.shootJustPressed || input.shoot);
+
+    if (wantsToShoot && this.shootTimer <= 0 && projectilePool) {
+      this.shoot(projectilePool);
+    }
+  }
+
+  public shoot(projectilePool: ProjectilePool): void {
+    const muzzle = this.getMuzzlePosition();
+    const aimAngle = this.getAimAngle();
+    const stats = WEAPON_CONFIGS[this.currentWeapon] || WEAPON_CONFIGS.PEA_SHOOTER;
+
+    if (this.currentWeapon === 'SPREAD_SHOT') {
+      const angles = getSpreadShotAngles(aimAngle);
+      for (const angle of angles) {
+        projectilePool.spawn(muzzle.x, muzzle.y, angle, 'SPREAD_SHOT', true);
+      }
+    } else {
+      projectilePool.spawn(muzzle.x, muzzle.y, aimAngle, this.currentWeapon, true);
+    }
+
+    this.shootTimer = stats.fireRateMs;
   }
 
   public getAimAngle(): number {
