@@ -25,6 +25,7 @@ flex-commando/
 │   │   ├── GridGenerator.ts      # Seeded Mulberry32 PRNG & 4x4 room grid generator
 │   │   ├── RoomTemplate.ts       # Bitmask door matcher (N=1, S=2, E=4, W=8) & 15 room templates
 │   │   ├── TilemapRenderer.ts    # Stitches 4x4 room grid into 80x60 global tilemap
+│   │   ├── TextureFactory.ts     # Procedural pixel-art sprite, tileset, and animation generator
 │   │   └── CameraManager.ts      # Active room calculation & smooth room pan transitions
 │   ├── entities/
 │   │   ├── Player.ts             # Player arcade sprite, crouching hitbox, jump & muzzle offset
