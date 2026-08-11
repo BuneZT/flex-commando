@@ -14,7 +14,12 @@ import { Boss } from '../entities/enemies/Boss';
 import { PickupCapsule, PickupItem } from '../entities/PickupCapsule';
 import { HUD } from '../ui/HUD';
 
+export interface GameSceneInitData {
+  infiniteLives?: boolean;
+}
+
 export class GameScene extends Phaser.Scene {
+  public infiniteLives: boolean = false;
   public grid?: GridCell[][];
   public tilemapResult?: TilemapRenderResult | null;
   public cameraManager?: CameraManager;
@@ -38,6 +43,10 @@ export class GameScene extends Phaser.Scene {
 
   constructor() {
     super({ key: 'GameScene' });
+  }
+
+  init(data?: GameSceneInitData): void {
+    this.infiniteLives = !!data?.infiniteLives;
   }
 
   create(): void {
@@ -180,7 +189,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Direct damage to player lives
-    this.player.lives -= 1;
+    if (!this.infiniteLives) {
+      this.player.lives -= 1;
+    }
     this.invulnerableTimer = 1500; // 1.5s invulnerability frames
 
     if (this.player.lives <= 0) {
@@ -255,7 +266,7 @@ export class GameScene extends Phaser.Scene {
 
     // 9. Update HUD
     if (this.hud && this.player && this.grid) {
-      this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss);
+      this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss, this.infiniteLives);
     }
   }
 
