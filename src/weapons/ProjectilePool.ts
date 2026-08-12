@@ -154,7 +154,16 @@ export class ProjectilePool {
     }
   }
 
-  public getActiveProjectiles(): Projectile[] {
+  public getActiveProjectiles(outArray?: Projectile[]): Projectile[] {
+    if (outArray) {
+      outArray.length = 0;
+      for (const p of this.pool) {
+        if (p.active) {
+          outArray.push(p);
+        }
+      }
+      return outArray;
+    }
     return this.pool.filter(p => p.active);
   }
 

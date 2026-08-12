@@ -123,6 +123,27 @@ describe('ProjectilePool', () => {
     pool.update(0, 1300);
     expect(pool.getActiveProjectiles().length).toBe(0);
   });
+
+  it('should populate provided buffer in-place when getActiveProjectiles is passed an array', () => {
+    const mockScene = createMockScene();
+    const pool = new ProjectilePool(mockScene, 10);
+
+    const proj1 = pool.spawn(100, 100, 0, 'PEA_SHOOTER');
+    const proj2 = pool.spawn(150, 150, 0, 'LASER');
+
+    const buffer: Projectile[] = [new Projectile(mockScene, 0, 0)];
+    const res = pool.getActiveProjectiles(buffer);
+
+    expect(res).toBe(buffer);
+    expect(buffer.length).toBe(2);
+    expect(buffer[0]).toBe(proj1);
+    expect(buffer[1]).toBe(proj2);
+
+    proj1?.deactivate();
+    pool.getActiveProjectiles(buffer);
+    expect(buffer.length).toBe(1);
+    expect(buffer[0]).toBe(proj2);
+  });
 });
 
 describe('PickupCapsule', () => {
