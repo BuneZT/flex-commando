@@ -79,6 +79,9 @@ export class CameraManager {
   }
 
   public transitionToRoom(gridX: number, gridY: number, duration: number = 400): void {
+    const fromGridX = this.currentGridX;
+    const fromGridY = this.currentGridY;
+
     this.currentGridX = gridX;
     this.currentGridY = gridY;
     const bounds = getRoomBounds(gridX, gridY, this.roomWidthPx, this.roomHeightPx);
@@ -89,10 +92,21 @@ export class CameraManager {
 
     this.isTransitioningState = true;
 
+    const minGridX = Math.min(fromGridX, gridX);
+    const maxGridX = Math.max(fromGridX, gridX);
+    const minGridY = Math.min(fromGridY, gridY);
+    const maxGridY = Math.max(fromGridY, gridY);
+
+    const unionX = minGridX * this.roomWidthPx;
+    const unionY = minGridY * this.roomHeightPx;
+    const unionWidth = (maxGridX - minGridX + 1) * this.roomWidthPx;
+    const unionHeight = (maxGridY - minGridY + 1) * this.roomHeightPx;
+
+    if (typeof this.camera.setBounds === 'function') {
+      this.camera.setBounds(unionX, unionY, unionWidth, unionHeight);
+    }
+
     if (typeof this.camera.pan === 'function') {
-      if (typeof this.camera.removeBounds === 'function') {
-        this.camera.removeBounds();
-      }
       this.camera.pan(targetCenterX, targetCenterY, duration, 'Power2', false, (_cam: any, progress: number) => {
         if (progress === 1) {
           this.isTransitioningState = false;

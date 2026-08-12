@@ -132,4 +132,33 @@ describe('CameraManager enemy spatial culling', () => {
     expect(buffer.length).toBe(1);
     expect(buffer[0]).toBe(enemyInRoom00);
   });
+
+  it('should set union camera bounds during room transitions', () => {
+    const setBoundsCalls: any[] = [];
+    let removeBoundsCalled = false;
+    const customCameraMock: any = {
+      setBounds: (x: number, y: number, w: number, h: number) => {
+        setBoundsCalls.push({ x, y, w, h });
+      },
+      centerOn: () => {},
+      pan: (targetX: number, targetY: number, duration: number, ease: string, force: boolean, callback: Function) => {
+        // Mock pan triggering callback with progress 1
+        if (callback) callback({}, 1);
+      },
+      removeBounds: () => {
+        removeBoundsCalled = true;
+      },
+    };
+
+    const cm = new CameraManager(customCameraMock, 0, 0, 320, 240);
+    setBoundsCalls.length = 0; // clear initial call from constructor
+
+    cm.transitionToRoom(1, 0, 400);
+
+    // Initial bounds call should be union of room (0,0) [0,0,320,240] and room (1,0) [320,0,320,240] -> [0,0,640,240]
+    expect(setBoundsCalls[0]).toEqual({ x: 0, y: 0, w: 640, h: 240 });
+    // Final bounds call on completion should be target room (1,0) [320,0,320,240]
+    expect(setBoundsCalls[1]).toEqual({ x: 320, y: 0, w: 320, h: 240 });
+    expect(removeBoundsCalled).toBe(false);
+  });
 });
