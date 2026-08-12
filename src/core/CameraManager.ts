@@ -107,16 +107,17 @@ export class CameraManager {
     }
   }
 
-  public cullEnemies(
-    enemies: {
-      x: number;
-      y: number;
-      isAlive: boolean;
-      setActive: (active: boolean) => any;
-      setVisible: (visible: boolean) => any;
-      body?: any;
-    }[]
-  ): void {
+  public cullEnemies<T extends {
+    x: number;
+    y: number;
+    isAlive: boolean;
+    setActive: (active: boolean) => any;
+    setVisible: (visible: boolean) => any;
+    body?: any;
+  }>(enemies: T[], outArray?: T[]): T[] {
+    const activeEnemies = outArray || [];
+    activeEnemies.length = 0;
+
     for (const enemy of enemies) {
       if (!enemy.isAlive) continue;
 
@@ -130,7 +131,11 @@ export class CameraManager {
       if (enemy.body) {
         enemy.body.enable = isActiveRoom;
       }
+      if (isActiveRoom) {
+        activeEnemies.push(enemy);
+      }
     }
+    return activeEnemies;
   }
 }
 

@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   public hud?: HUD;
 
   public enemies: EnemyBase[] = [];
+  public activeEnemies: EnemyBase[] = [];
   public boss: Boss | null = null;
   public bossTriggered: boolean = false;
 
@@ -57,6 +58,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.enemies = [];
+    this.activeEnemies = [];
     this.boss = null;
     this.bossTriggered = false;
     this.pickupCapsules = [];
@@ -247,9 +249,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (this.cameraManager) {
-      this.cameraManager.cullEnemies(this.enemies);
+      this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
     }
-
 
     // 4. Boss Room Trigger on Column 3 or BOSS room cell
     if (!this.bossTriggered && this.grid && (currentGridX === 3 || this.grid[currentGridY][currentGridX].type === 'BOSS')) {
@@ -258,7 +259,8 @@ export class GameScene extends Phaser.Scene {
 
     // 5. Update Projectile Pool
     if (this.projectilePool) {
-      this.projectilePool.update(time, delta);
+      const bounds = this.cameraManager?.getActiveBounds();
+      this.projectilePool.update(time, delta, bounds);
     }
 
     // 6. Update Pickup Capsules & Items
@@ -336,7 +338,7 @@ export class GameScene extends Phaser.Scene {
 
       if (proj.isPlayerBullet) {
         // Player bullet vs Enemies
-        for (const enemy of this.enemies) {
+        for (const enemy of this.activeEnemies) {
           if (enemy.isAlive && enemy.active) {
             if (this.checkOverlap(proj, enemy, 4)) {
               const killed = enemy.takeDamage(proj.damage);
@@ -383,7 +385,7 @@ export class GameScene extends Phaser.Scene {
 
     // B. Player Contact Damage vs Enemies / Boss
     if (this.invulnerableTimer <= 0) {
-      for (const enemy of this.enemies) {
+      for (const enemy of this.activeEnemies) {
         if (enemy.isAlive && enemy.active) {
           if (this.checkOverlap(this.player, enemy, 2)) {
             this.handlePlayerDamage();

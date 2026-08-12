@@ -105,4 +105,31 @@ describe('CameraManager enemy spatial culling', () => {
     expect(enemyOffscreenNoBody.active).toBe(false);
     expect(enemyOffscreenNoBody.visible).toBe(false);
   });
+
+  it('should return array of active enemies from cullEnemies', () => {
+    const enemyInRoom00 = createMockEnemy(100, 100, true);
+    const enemyInRoom10 = createMockEnemy(400, 100, true);
+    const enemyInRoom01 = createMockEnemy(100, 300, true);
+
+    const enemies = [enemyInRoom00, enemyInRoom10, enemyInRoom01];
+
+    const activeEnemies = cameraManager.cullEnemies(enemies);
+
+    expect(activeEnemies.length).toBe(1);
+    expect(activeEnemies[0]).toBe(enemyInRoom00);
+  });
+
+  it('should populate provided outArray buffer in-place when provided', () => {
+    const enemyInRoom00 = createMockEnemy(100, 100, true);
+    const enemyInRoom10 = createMockEnemy(400, 100, true);
+
+    const enemies = [enemyInRoom00, enemyInRoom10];
+    const buffer: any[] = [];
+
+    const res = cameraManager.cullEnemies(enemies, buffer);
+
+    expect(res).toBe(buffer);
+    expect(buffer.length).toBe(1);
+    expect(buffer[0]).toBe(enemyInRoom00);
+  });
 });

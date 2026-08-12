@@ -74,7 +74,11 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  public updateProjectile(_time: number, delta: number): void {
+  public updateProjectile(
+    _time: number,
+    delta: number,
+    bounds?: { x: number; y: number; width: number; height: number }
+  ): void {
     if (!this.active) return;
 
     this.lifespan -= delta;
@@ -99,8 +103,19 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
-    // World bounds safety check
-    if (this.x < -100 || this.x > 3000 || this.y < -100 || this.y > 3000) {
+    // Room bounds check with +32px margin if bounds provided, otherwise fallback to global bounds
+    if (bounds) {
+      const margin = 32;
+      if (
+        this.x < bounds.x - margin ||
+        this.x > bounds.x + bounds.width + margin ||
+        this.y < bounds.y - margin ||
+        this.y > bounds.y + bounds.height + margin
+      ) {
+        this.deactivate();
+        return;
+      }
+    } else if (this.x < -100 || this.x > 3000 || this.y < -100 || this.y > 3000) {
       this.deactivate();
     }
   }
@@ -146,10 +161,10 @@ export class ProjectilePool {
     return null;
   }
 
-  public update(time: number, delta: number): void {
+  public update(time: number, delta: number, bounds?: { x: number; y: number; width: number; height: number }): void {
     for (const proj of this.pool) {
       if (proj.active) {
-        proj.updateProjectile(time, delta);
+        proj.updateProjectile(time, delta, bounds);
       }
     }
   }

@@ -144,6 +144,38 @@ describe('ProjectilePool', () => {
     expect(buffer.length).toBe(1);
     expect(buffer[0]).toBe(proj2);
   });
+
+  it('should deactivate projectile when crossing room bounds plus 32px margin', () => {
+    const mockScene = createMockScene();
+    const pool = new ProjectilePool(mockScene, 10);
+    const bounds = { x: 0, y: 0, width: 320, height: 240 };
+
+    const proj = pool.spawn(100, 100, 0, 'PEA_SHOOTER');
+    if (proj) proj.body = createMockBody();
+
+    // Inside room bounds
+    pool.update(0, 16, bounds);
+    expect(proj?.active).toBe(true);
+
+    // Position projectile past room width + 32px margin (320 + 32 = 352, so 353 is past)
+    if (proj) proj.x = 353;
+    pool.update(0, 16, bounds);
+    expect(proj?.active).toBe(false);
+  });
+
+  it('should keep projectile active within room bounds plus margin', () => {
+    const mockScene = createMockScene();
+    const pool = new ProjectilePool(mockScene, 10);
+    const bounds = { x: 0, y: 0, width: 320, height: 240 };
+
+    const proj = pool.spawn(100, 100, 0, 'PEA_SHOOTER');
+    if (proj) proj.body = createMockBody();
+
+    // Position projectile within margin (x = 350 <= 352)
+    if (proj) proj.x = 350;
+    pool.update(0, 16, bounds);
+    expect(proj?.active).toBe(true);
+  });
 });
 
 describe('PickupCapsule', () => {
