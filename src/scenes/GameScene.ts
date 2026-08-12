@@ -17,10 +17,12 @@ import { SoundManager } from '../core/SoundManager';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
+  seed?: number;
 }
 
 export class GameScene extends Phaser.Scene {
   public infiniteLives: boolean = false;
+  public seed: number = 0;
   public grid?: GridCell[][];
   public tilemapResult?: TilemapRenderResult | null;
   public cameraManager?: CameraManager;
@@ -48,6 +50,9 @@ export class GameScene extends Phaser.Scene {
 
   init(data?: GameSceneInitData): void {
     this.infiniteLives = !!data?.infiniteLives;
+    this.seed = (data?.seed !== undefined && data?.seed !== null)
+      ? data.seed
+      : Math.floor(Math.random() * 2147483647);
   }
 
   create(): void {
@@ -71,7 +76,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 1. Generate room grid
-    this.grid = generateRoomGrid(12345);
+    this.grid = generateRoomGrid(this.seed);
 
     // 2. Render tilemap
     this.tilemapResult = TilemapRenderer.renderLevel(this, this.grid);
