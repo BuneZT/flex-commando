@@ -12,6 +12,9 @@ export class SoundManager {
   private bgmTimer: number | null = null;
   private bgmStep: number = 0;
 
+  private noiseBuffer: AudioBuffer | null = null;
+  private lastSfxTimes: Map<string, number> = new Map();
+
   private constructor() {
     this.initAudioContext();
     this.setupUnlockListeners();
@@ -39,6 +42,13 @@ export class SoundManager {
         this.sfxGain.connect(this.masterGain);
         this.musicGain.connect(this.masterGain);
         this.masterGain.connect(this.ctx.destination);
+
+        const noiseLen = Math.floor(this.ctx.sampleRate * 0.5);
+        this.noiseBuffer = this.ctx.createBuffer(1, noiseLen, this.ctx.sampleRate);
+        const data = this.noiseBuffer.getChannelData(0);
+        for (let i = 0; i < noiseLen; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
       }
     } catch {
       // AudioContext unavailable in non-browser unit test environments
@@ -94,6 +104,12 @@ export class SoundManager {
     this.ensureContext();
 
     const t = this.ctx.currentTime;
+    const key = !isPlayerBullet || weaponType === 'ENEMY' ? 'ENEMY' : weaponType;
+    const lastTime = this.lastSfxTimes.get(key) ?? -1;
+    if (t - lastTime < 0.025) {
+      return;
+    }
+    this.lastSfxTimes.set(key, t);
 
     if (!isPlayerBullet || weaponType === 'ENEMY') {
       this.playEnemyShootSound(t);
@@ -233,11 +249,14 @@ export class SoundManager {
     if (!this.ctx || !this.sfxGain) return;
     this.playPunchKick(t, 160, 30, 0.08);
 
-    const bufferSize = Math.floor(this.ctx.sampleRate * 0.1);
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+    let buffer = this.noiseBuffer;
+    if (!buffer) {
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.1);
+      buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
     }
 
     const noise = this.ctx.createBufferSource();
@@ -438,11 +457,14 @@ export class SoundManager {
       } else {
         // Snare / Hi-Hat Noise
         const duration = isSnare ? 0.07 : 0.02;
-        const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
+        let buffer = this.noiseBuffer;
+        if (!buffer) {
+          const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+          buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
         }
 
         const noise = this.ctx.createBufferSource();
