@@ -217,15 +217,22 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
 ];
 
+// Pre-indexed lookup map for O(1) room template matching by doorMask (0..15)
+const ROOM_TEMPLATES_BY_MASK: Map<number, RoomTemplate[]> = new Map();
+for (const template of ROOM_TEMPLATES) {
+  const existing = ROOM_TEMPLATES_BY_MASK.get(template.doorMask) || [];
+  existing.push(template);
+  ROOM_TEMPLATES_BY_MASK.set(template.doorMask, existing);
+}
+
 export function getMatchingRoomTemplates(doorMask: number, type?: string): RoomTemplate[] {
-  const matches = ROOM_TEMPLATES.filter((t) => t.doorMask === doorMask);
+  const matches = ROOM_TEMPLATES_BY_MASK.get(doorMask) || [];
   if (type && matches.some((t) => t.type === type)) {
     return matches.filter((t) => t.type === type);
   }
   if (matches.length > 0) {
     return matches;
   }
-  // Fallback to generic EW or EW-based template if no exact match
   return [ROOM_TEMPLATES[0]];
 }
 
