@@ -106,4 +106,31 @@ export class CameraManager {
       this.isTransitioningState = false;
     }
   }
+
+  public cullEnemies(
+    enemies: {
+      x: number;
+      y: number;
+      isAlive: boolean;
+      setActive: (active: boolean) => any;
+      setVisible: (visible: boolean) => any;
+      body?: any;
+    }[]
+  ): void {
+    for (const enemy of enemies) {
+      if (!enemy.isAlive) continue;
+
+      const enemyGridX = Math.floor(enemy.x / this.roomWidthPx);
+      const enemyGridY = Math.floor(enemy.y / this.roomHeightPx);
+
+      const isActiveRoom = enemyGridX === this.currentGridX && enemyGridY === this.currentGridY;
+
+      enemy.setActive(isActiveRoom);
+      enemy.setVisible(isActiveRoom);
+      if (enemy.body) {
+        enemy.body.enable = isActiveRoom;
+      }
+    }
+  }
 }
+

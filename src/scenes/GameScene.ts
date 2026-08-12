@@ -246,6 +246,11 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    if (this.cameraManager) {
+      this.cameraManager.cullEnemies(this.enemies);
+    }
+
+
     // 4. Boss Room Trigger on Column 3 or BOSS room cell
     if (!this.bossTriggered && this.grid && (currentGridX === 3 || this.grid[currentGridY][currentGridX].type === 'BOSS')) {
       this.triggerBossEncounter(currentGridX, currentGridY);
