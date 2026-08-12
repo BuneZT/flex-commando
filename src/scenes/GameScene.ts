@@ -362,20 +362,19 @@ export class GameScene extends Phaser.Scene {
 
         // Player bullet vs Pickup Capsules
         for (const capsule of this.pickupCapsules) {
-          if (capsule.active) {
-            if (this.checkOverlap(proj, capsule, 4)) {
-              const droppedItem = capsule.hit();
-              if (!proj.piercing) {
-                proj.deactivate();
-              }
-              if (droppedItem) {
-                this.pickupItems.push(droppedItem);
-                if (this.tilemapResult?.groundLayer) {
-                  this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
-                }
-              }
-              break;
+          if (!capsule.active) continue;
+          if (this.checkOverlap(proj, capsule, 4)) {
+            const droppedItem = capsule.hit();
+            if (!proj.piercing) {
+              proj.deactivate();
             }
+            if (droppedItem) {
+              this.pickupItems.push(droppedItem);
+              if (this.tilemapResult?.groundLayer) {
+                this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
+              }
+            }
+            break;
           }
         }
       } else {
@@ -403,11 +402,10 @@ export class GameScene extends Phaser.Scene {
 
     // C. Player vs Pickup Items
     for (const item of this.pickupItems) {
-      if (item.active) {
-        if (this.checkOverlap(this.player, item, 4)) {
-          const weapon = item.collect();
-          this.player.equipWeapon(weapon);
-        }
+      if (!item.active) continue;
+      if (this.checkOverlap(this.player, item, 4)) {
+        const weapon = item.collect();
+        this.player.equipWeapon(weapon);
       }
     }
 

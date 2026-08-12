@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getRoomBounds, CameraManager } from '../src/core/CameraManager';
-import { stitchGridTilemap } from '../src/core/TilemapRenderer';
+import { stitchGridTilemap, TilemapRenderer } from '../src/core/TilemapRenderer';
 import { generateRoomGrid } from '../src/core/GridGenerator';
 
 describe('getRoomBounds', () => {
@@ -108,5 +108,34 @@ describe('stitchGridTilemap', () => {
     mockTile.setCollision(false, false, true, false);
     expect(mockTile.collideDown).toBe(false);
     expect(mockTile.collideUp).toBe(true);
+  });
+
+  it('should call bulk map.setCollision for tiles 1, 3 and tile 2 on renderLevel', () => {
+    const setCollisionCalls: Array<{ indexes: any; collides: boolean; recalculateFaces: boolean }> = [];
+    const mockGroundLayer = {
+      forEachTile: (cb: (tile: any) => void) => {
+        cb({ index: 2, setCollision: () => {} });
+      },
+    };
+    const mockMap = {
+      addTilesetImage: () => ({}),
+      createLayer: () => mockGroundLayer,
+      setCollision: (indexes: any, collides: boolean, recalculateFaces: boolean) => {
+        setCollisionCalls.push({ indexes, collides, recalculateFaces });
+      },
+    };
+    const mockScene = {
+      make: {
+        tilemap: () => mockMap,
+      },
+    } as any;
+
+    const grid = generateRoomGrid(12345);
+    const result = TilemapRenderer.renderLevel(mockScene, grid);
+
+    expect(result).not.toBeNull();
+    expect(setCollisionCalls.length).toBe(2);
+    expect(setCollisionCalls[0]).toEqual({ indexes: [1, 3], collides: true, recalculateFaces: true });
+    expect(setCollisionCalls[1]).toEqual({ indexes: 2, collides: true, recalculateFaces: false });
   });
 });

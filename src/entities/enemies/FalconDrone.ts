@@ -63,14 +63,14 @@ export class FalconDrone extends EnemyBase {
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);
-    }
-
-    const yOffset = calculateDroneSinePosition(this.elapsedTime, this.amplitude, this.frequency);
-    this.y = this.baseY + yOffset;
-
-    if (body && typeof body.updateFromGameObject === 'function') {
-      body.updateFromGameObject();
+      const vx = this.facingLeft ? -this.moveSpeed : this.moveSpeed;
+      const vy = Math.cos(this.elapsedTime * this.frequency) * this.amplitude * this.frequency * 1000;
+      if (typeof body.setVelocity === 'function') {
+        body.setVelocity(vx, vy);
+      } else {
+        if (typeof body.setVelocityX === 'function') body.setVelocityX(vx);
+        if (typeof body.setVelocityY === 'function') body.setVelocityY(vy);
+      }
     }
   }
 }

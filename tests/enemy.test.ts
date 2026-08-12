@@ -111,13 +111,15 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     expect(proj.isPlayerBullet).toBe(false);
   });
 
-  it('FalconDrone should update sinusoidal position over time', () => {
+  it('FalconDrone should update direct physics velocity over time', () => {
     const scene = createMockScene();
-    const drone = new FalconDrone(scene, 100, 100, 20, 1);
-    drone.body = createMockBody();
+    const drone = new FalconDrone(scene, 100, 100, 20, 0.003);
+    const body = createMockBody();
+    drone.body = body;
 
-    drone.updateAI(0, Math.PI / 2, { x: 50, y: 100 });
-    expect(drone.y).toBeCloseTo(120);
+    drone.updateAI(0, 100, { x: 50, y: 100 });
+    expect(body.velocity.x).toBeLessThan(0);
+    expect(body.velocity.y).toBeCloseTo(Math.cos(100 * 0.003) * 20 * 0.003 * 1000);
   });
 
   it('JumperMercenary should periodically jump towards player when grounded', () => {

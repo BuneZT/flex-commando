@@ -73,18 +73,17 @@ export class TilemapRenderer {
     }
 
     const groundLayer = map.createLayer(0, tileset || tilesetKey, 0, 0);
-    if (groundLayer && typeof groundLayer.forEachTile === 'function') {
-      groundLayer.forEachTile((tile) => {
-        if (tile.index === 1 || tile.index === 3) {
-          tile.setCollision(true, true, true, true); // Solid walls & floor
-        } else if (tile.index === 2) {
-          // One-way platform: collideUp = true (land on top), collideDown = false (pass up through)
-          tile.setCollision(false, false, true, false);
-        } else {
-          tile.setCollision(false, false, false, false);
-        }
-      });
-    } else if (groundLayer) {
+    if (groundLayer && map && typeof map.setCollision === 'function') {
+      map.setCollision([1, 3], true, true, groundLayer);
+      map.setCollision(2, true, false, groundLayer);
+      if (typeof groundLayer.forEachTile === 'function') {
+        groundLayer.forEachTile((tile) => {
+          if (tile.index === 2) {
+            tile.setCollision(false, false, true, false);
+          }
+        });
+      }
+    } else if (groundLayer && typeof groundLayer.setCollisionByExclusion === 'function') {
       groundLayer.setCollisionByExclusion([0]);
     }
 
