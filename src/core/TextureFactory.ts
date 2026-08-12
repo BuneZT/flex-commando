@@ -301,14 +301,6 @@ export class TextureFactory {
       });
     }
 
-    if (!scene.anims.exists('player_crouch')) {
-      scene.anims.create({
-        key: 'player_crouch',
-        frames: [{ key: 'tex_player', frame: 3 }],
-        frameRate: 1,
-      });
-    }
-
     if (!scene.anims.exists('player_jump')) {
       scene.anims.create({
         key: 'player_jump',

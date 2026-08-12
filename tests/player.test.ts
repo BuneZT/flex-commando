@@ -50,7 +50,6 @@ describe('Player entity', () => {
     expect(player.lives).toBe(3);
     expect(player.aimDirection).toBe('FORWARD');
     expect(player.facingLeft).toBe(false);
-    expect(player.isCrouching).toBe(false);
     expect(player.texture.key).toBe('tex_player');
   });
 
@@ -75,7 +74,7 @@ describe('Player entity', () => {
     expect(player.getAimAngle()).toBe(-135);
   });
 
-  it('should handle crouching state', () => {
+  it('should handle grounded down aim without shrinking hitbox', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
     const body = createMockBody();
@@ -92,9 +91,8 @@ describe('Player entity', () => {
       shootJustPressed: false,
     };
     player.updatePlayer(input);
-    expect(player.isCrouching).toBe(true);
-    expect(player.aimDirection).toBe('CROUCH');
-    expect(body.height).toBe(12);
+    expect(player.aimDirection).toBe('DOWN');
+    expect(body.height).toBe(24);
   });
 
   it('should calculate muzzle position correctly', () => {
@@ -111,7 +109,6 @@ describe('Player entity', () => {
   it('should have sufficient jump velocity to reach 80px high platform ledges', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
-    // Max height formula: h = v^2 / (2 * g). With g = 600, h >= 80px requires |v| >= 310
     expect(Math.abs(player.jumpVelocity)).toBeGreaterThanOrEqual(340);
   });
 });

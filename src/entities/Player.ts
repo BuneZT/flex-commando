@@ -11,7 +11,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public lives: number = 3;
   public moveSpeed: number = 120;
   public jumpVelocity: number = -340;
-  public isCrouching: boolean = false;
   public isDroppingThrough: boolean = false;
   private dropThroughTimer: number = 0;
 
@@ -85,12 +84,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       facingLeft: this.facingLeft,
     });
 
-    this.isCrouching = this.aimDirection === 'CROUCH';
-
     if (this.anims && typeof this.anims.play === 'function') {
-      if (this.isCrouching) {
-        this.anims.play('player_crouch', true);
-      } else if (!isGrounded) {
+      if (!isGrounded) {
         this.anims.play('player_jump', true);
       } else if (input.left || input.right) {
         this.anims.play('player_run', true);
@@ -117,27 +112,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (body.checkCollision) {
         body.checkCollision.down = false;
       }
-    } else if (isGrounded && input.jumpJustPressed && !this.isCrouching) {
+    } else if (isGrounded && input.jumpJustPressed) {
       // Regular Jump
       body.setVelocityY(this.jumpVelocity);
     }
 
     // Horizontal Movement
-    if (this.isCrouching) {
-      body.setVelocityX(0);
-      body.setSize(16, 12);
-      body.setOffset(0, 12);
-    } else {
-      body.setSize(16, 24);
-      body.setOffset(0, 0);
+    body.setSize(16, 24);
+    body.setOffset(0, 0);
 
-      if (input.left) {
-        body.setVelocityX(-this.moveSpeed);
-      } else if (input.right) {
-        body.setVelocityX(this.moveSpeed);
-      } else {
-        body.setVelocityX(0);
-      }
+    if (input.left) {
+      body.setVelocityX(-this.moveSpeed);
+    } else if (input.right) {
+      body.setVelocityX(this.moveSpeed);
+    } else {
+      body.setVelocityX(0);
     }
 
     // Shooting System
@@ -182,7 +171,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const angleRad = Phaser.Math.DegToRad(angleDeg);
     const offsetX = Math.cos(angleRad) * 12;
     const offsetY = Math.sin(angleRad) * 12;
-    const spawnY = this.isCrouching ? this.y + 4 : this.y - 4;
+    const spawnY = this.y - 4;
     return {
       x: this.x + offsetX,
       y: spawnY + offsetY,
