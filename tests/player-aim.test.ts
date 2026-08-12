@@ -15,9 +15,9 @@ describe('calculateAimDirection', () => {
     expect(aimLeft).toBe('UP_FORWARD');
   });
 
-  it('should return CROUCH when holding Down key on ground without horizontal movement', () => {
+  it('should return DOWN when holding Down key on ground without horizontal movement', () => {
     const aim = calculateAimDirection({ up: false, down: true, left: false, right: false, isGrounded: true, facingLeft: false });
-    expect(aim).toBe('CROUCH');
+    expect(aim).toBe('DOWN');
   });
 
   it('should return DOWN_FORWARD when holding Down key with horizontal movement on ground', () => {
@@ -51,7 +51,6 @@ describe('getAimAngleDegrees', () => {
     expect(getAimAngleDegrees('UP', false)).toBe(-90);
     expect(getAimAngleDegrees('DOWN_FORWARD', false)).toBe(45);
     expect(getAimAngleDegrees('DOWN', false)).toBe(90);
-    expect(getAimAngleDegrees('CROUCH', false)).toBe(0);
   });
 
   it('should return correct degrees when facing left', () => {
@@ -60,6 +59,5 @@ describe('getAimAngleDegrees', () => {
     expect(getAimAngleDegrees('UP', true)).toBe(-90);
     expect(getAimAngleDegrees('DOWN_FORWARD', true)).toBe(135);
     expect(getAimAngleDegrees('DOWN', true)).toBe(90);
-    expect(getAimAngleDegrees('CROUCH', true)).toBe(180);
   });
 });

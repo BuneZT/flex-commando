@@ -1,4 +1,4 @@
-export type AimDirection = 'FORWARD' | 'UP' | 'UP_FORWARD' | 'DOWN_FORWARD' | 'DOWN' | 'CROUCH';
+export type AimDirection = 'FORWARD' | 'UP' | 'UP_FORWARD' | 'DOWN_FORWARD' | 'DOWN';
 
 export interface InputState {
   up: boolean;
@@ -15,9 +15,6 @@ export function calculateAimDirection(input: InputState): AimDirection {
     return movingHoriz ? 'UP_FORWARD' : 'UP';
   }
   if (input.down) {
-    if (input.isGrounded) {
-      return movingHoriz ? 'DOWN_FORWARD' : 'CROUCH';
-    }
     return movingHoriz ? 'DOWN_FORWARD' : 'DOWN';
   }
   return 'FORWARD';
@@ -27,7 +24,6 @@ export function getAimAngleDegrees(aim: AimDirection, facingLeft: boolean): numb
   if (facingLeft) {
     switch (aim) {
       case 'FORWARD':
-      case 'CROUCH':
         return 180;
       case 'UP_FORWARD':
         return -135;
@@ -41,7 +37,6 @@ export function getAimAngleDegrees(aim: AimDirection, facingLeft: boolean): numb
   } else {
     switch (aim) {
       case 'FORWARD':
-      case 'CROUCH':
         return 0;
       case 'UP_FORWARD':
         return -45;
