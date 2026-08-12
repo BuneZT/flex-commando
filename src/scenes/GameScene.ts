@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   public hud?: HUD;
 
   public enemies: EnemyBase[] = [];
+  public enemyGroup?: Phaser.Physics.Arcade.Group;
   public activeEnemies: EnemyBase[] = [];
   public boss: Boss | null = null;
   public bossTriggered: boolean = false;
@@ -58,6 +59,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.enemies = [];
+    this.enemyGroup = undefined;
     this.activeEnemies = [];
     this.boss = null;
     this.bossTriggered = false;
@@ -75,6 +77,9 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.physics && this.physics.world && typeof this.physics.world.setBounds === 'function') {
       this.physics.world.setBounds(0, 0, 1280, 960);
+    }
+    if (this.physics && typeof this.physics.add?.group === 'function') {
+      this.enemyGroup = this.physics.add.group();
     }
 
     // 1. Generate room grid
@@ -137,7 +142,7 @@ export class GameScene extends Phaser.Scene {
 
     // 13. Start BGM & setup M mute toggle key
     SoundManager.getInstance().startBGM();
-    if (typeof this.input.keyboard?.on === 'function') {
+    if (typeof this.input?.keyboard?.on === 'function') {
       this.input.keyboard.on('keydown-M', () => {
         SoundManager.getInstance().toggleMute();
       });
@@ -157,6 +162,7 @@ export class GameScene extends Phaser.Scene {
           // Spawn Trooper
           const trooper = new Trooper(this, roomX + 100, roomY + 180);
           this.enemies.push(trooper);
+          if (this.enemyGroup) this.enemyGroup.add(trooper);
 
           // Spawn Turret on ceiling/wall
           const turret = new Turret(this, roomX + 240, roomY + 60);
@@ -169,15 +175,14 @@ export class GameScene extends Phaser.Scene {
           // Spawn Jumper Mercenary
           const jumper = new JumperMercenary(this, roomX + 280, roomY + 180);
           this.enemies.push(jumper);
+          if (this.enemyGroup) this.enemyGroup.add(jumper);
         }
       }
     }
 
     // Add ground colliders for ground enemies
-    if (this.tilemapResult?.groundLayer) {
-      for (const enemy of this.enemies) {
-        this.physics.add.collider(enemy, this.tilemapResult.groundLayer);
-      }
+    if (this.tilemapResult?.groundLayer && this.enemyGroup) {
+      this.physics.add.collider(this.enemyGroup, this.tilemapResult.groundLayer);
     }
   }
 
@@ -188,6 +193,7 @@ export class GameScene extends Phaser.Scene {
 
     this.boss = new Boss(this, bossX, bossY);
     this.enemies.push(this.boss);
+    if (this.enemyGroup) this.enemyGroup.add(this.boss);
 
     if (this.tilemapResult?.groundLayer) {
       this.physics.add.collider(this.boss, this.tilemapResult.groundLayer);

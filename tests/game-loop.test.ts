@@ -7,13 +7,47 @@ function createMockScene() {
   return {
     sys: {
       queueDepthSort: () => {},
-      displayList: { add: () => {} },
+      displayList: { add: () => {}, queueDepthSort: () => {} },
       updateList: { add: () => {} },
       anims: { on: () => {}, once: () => {}, off: () => {} },
       textures: { get: () => ({ get: () => ({}) }) },
+      settings: { data: {} },
     },
-    add: { existing: () => {} },
-    physics: { add: { existing: () => {} } },
+    cameras: { main: { setBackgroundColor: () => {}, setScroll: () => {}, setBounds: () => {} } },
+    add: {
+      existing: () => {},
+      group: () => ({ add: () => {} }),
+      text: () => {
+        const textObj: any = {
+          setOrigin: () => textObj,
+          setScrollFactor: () => textObj,
+          setDepth: () => textObj,
+          setText: () => textObj,
+          setColor: () => textObj,
+        };
+        return textObj;
+      },
+      sprite: () => {
+        const spriteObj: any = {
+          setScrollFactor: () => spriteObj,
+          setDepth: () => spriteObj,
+        };
+        return spriteObj;
+      },
+      graphics: () => {
+        const gfxObj: any = {
+          setScrollFactor: () => gfxObj,
+          setDepth: () => gfxObj,
+          clear: () => gfxObj,
+          fillStyle: () => gfxObj,
+          fillRect: () => gfxObj,
+          lineStyle: () => gfxObj,
+          strokeRect: () => gfxObj,
+        };
+        return gfxObj;
+      },
+    },
+    physics: { add: { existing: () => {}, group: () => ({ add: () => {} }), collider: () => {} }, world: { setBounds: () => {} } },
   } as any;
 }
 
@@ -116,6 +150,35 @@ describe('GameScene Primitive AABB Collision Detection', () => {
     expect(scene.checkOverlap(a, b, 4)).toBe(true);
   });
 });
+
+describe('GameScene Group Physics Consolidation', () => {
+  it('should initialize enemyGroup for physics colliders', () => {
+    const scene = new GameScene();
+    let mockGroupCreated = false;
+    const mock = createMockScene();
+    scene.sys = mock.sys;
+    scene.cameras = mock.cameras;
+    scene.add = mock.add;
+    scene.physics = {
+      ...mock.physics,
+      add: {
+        ...mock.physics.add,
+        group: () => {
+          mockGroupCreated = true;
+          return { add: () => {} } as any;
+        },
+      },
+    } as any;
+
+    expect(scene.enemyGroup).toBeUndefined();
+    scene.create();
+    expect(mockGroupCreated).toBe(true);
+    expect(scene.enemyGroup).toBeDefined();
+  });
+});
+
+
+
 
 
 
