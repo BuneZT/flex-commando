@@ -21,6 +21,10 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
+  fps: {
+    target: 60,
+    smoothStep: true
+  },
   scene: [BootScene, MainMenuScene, GameScene, GameOverScene]
 };
 
