@@ -276,8 +276,17 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 7.5 Check All Enemies Defeated Victory Condition
-    if (!this.isVictory && this.enemies.length > 0 && this.enemies.every((e) => !e.isAlive)) {
-      this.triggerVictory();
+    if (!this.isVictory && this.enemies.length > 0) {
+      let allDead = true;
+      for (let i = 0; i < this.enemies.length; i++) {
+        if (this.enemies[i].isAlive) {
+          allDead = false;
+          break;
+        }
+      }
+      if (allDead) {
+        this.triggerVictory();
+      }
     }
 
     // 8. Collisions & Overlaps handling
@@ -303,34 +312,26 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkOverlap(
-    a: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; getBounds?: () => Phaser.Geom.Rectangle },
-    b: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; getBounds?: () => Phaser.Geom.Rectangle },
+    a: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any; getBounds?: () => any },
+    b: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any; getBounds?: () => any },
     padding: number = 4
   ): boolean {
-    if (typeof a.getBounds === 'function' && typeof b.getBounds === 'function') {
-      const rectA = a.getBounds();
-      const rectB = b.getBounds();
-      if (rectA && rectB && typeof rectA.x === 'number' && typeof rectB.x === 'number') {
-        const inflatedA = new Phaser.Geom.Rectangle(rectA.x - padding, rectA.y - padding, rectA.width + padding * 2, rectA.height + padding * 2);
-        return Phaser.Geom.Intersects.RectangleToRectangle(inflatedA, rectB);
-      }
-    }
-    const wA = a.displayWidth || a.width || 16;
-    const hA = a.displayHeight || a.height || 16;
-    const wB = b.displayWidth || b.width || 16;
-    const hB = b.displayHeight || b.height || 16;
+    const wA = a.body ? a.body.width : (a.displayWidth || a.width || 16);
+    const hA = a.body ? a.body.height : (a.displayHeight || a.height || 16);
+    const wB = b.body ? b.body.width : (b.displayWidth || b.width || 16);
+    const hB = b.body ? b.body.height : (b.displayHeight || b.height || 16);
+
     const halfW = (wA + wB) / 2 + padding;
     const halfH = (hA + hB) / 2 + padding;
+
     return Math.abs(a.x - b.x) <= halfW && Math.abs(a.y - b.y) <= halfH;
   }
 
   private handleCollisions(): void {
     if (!this.player || !this.projectilePool || this.isGameOver) return;
 
-    const activeProjectiles = this.projectilePool.getActiveProjectiles();
-
     // A. Player Bullets vs Enemies / Boss / Capsules
-    for (const proj of activeProjectiles) {
+    for (const proj of this.projectilePool.pool) {
       if (!proj.active) continue;
 
       if (proj.isPlayerBullet) {

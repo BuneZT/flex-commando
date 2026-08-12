@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { formatHUDLives } from '../src/ui/HUD';
 import { Boss } from '../src/entities/enemies/Boss';
+import { GameScene } from '../src/scenes/GameScene';
 
 function createMockScene() {
   return {
@@ -89,5 +90,32 @@ describe('Boss Class Mechanics', () => {
     expect(bounds).toEqual({ x: 0, y: 0, width: 1280, height: 960 });
   });
 });
+
+describe('GameScene Primitive AABB Collision Detection', () => {
+  it('should correctly detect overlapping objects using AABB math', () => {
+    const scene = new GameScene();
+    const a = { x: 100, y: 100, width: 16, height: 16 };
+    const b = { x: 108, y: 108, width: 16, height: 16 };
+    // @ts-ignore - testing private method
+    expect(scene.checkOverlap(a, b, 4)).toBe(true);
+  });
+
+  it('should return false when objects are beyond collision threshold', () => {
+    const scene = new GameScene();
+    const a = { x: 100, y: 100, width: 16, height: 16 };
+    const b = { x: 200, y: 200, width: 16, height: 16 };
+    // @ts-ignore - testing private method
+    expect(scene.checkOverlap(a, b, 4)).toBe(false);
+  });
+
+  it('should prioritize body dimensions over width/height properties', () => {
+    const scene = new GameScene();
+    const a = { x: 100, y: 100, width: 8, height: 8, body: { width: 32, height: 32 } };
+    const b = { x: 120, y: 120, width: 8, height: 8, body: { width: 32, height: 32 } };
+    // @ts-ignore - testing private method
+    expect(scene.checkOverlap(a, b, 4)).toBe(true);
+  });
+});
+
 
 
