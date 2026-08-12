@@ -144,8 +144,8 @@ describe('GameScene Primitive AABB Collision Detection', () => {
 
   it('should prioritize body dimensions over width/height properties', () => {
     const scene = new GameScene();
-    const a = { x: 100, y: 100, width: 8, height: 8, body: { width: 32, height: 32 } };
-    const b = { x: 120, y: 120, width: 8, height: 8, body: { width: 32, height: 32 } };
+    const a = { x: 100, y: 100, width: 8, height: 8, body: { x: 84, y: 84, width: 32, height: 32 } };
+    const b = { x: 120, y: 120, width: 8, height: 8, body: { x: 104, y: 104, width: 32, height: 32 } };
     // @ts-ignore - testing private method
     expect(scene.checkOverlap(a, b, 4)).toBe(true);
   });

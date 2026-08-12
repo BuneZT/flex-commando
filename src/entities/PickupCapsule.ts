@@ -134,8 +134,8 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
       body.setVelocityX(this.speed);
     }
 
-    // World bounds check
-    if (this.x < -50 || this.x > 3200) {
+    // World bounds check (level width is 1280px)
+    if (this.x < -50 || this.x > 1400) {
       this.setActive(false);
       this.setVisible(false);
       if (body) body.enable = false;

@@ -40,7 +40,9 @@ export class Trooper extends EnemyBase {
     }
 
     if (this.anims && typeof this.anims.play === 'function') {
-      this.anims.play('trooper_run', true);
+      if (this.anims.currentAnim?.key !== 'trooper_run') {
+        this.anims.play('trooper_run', true);
+      }
     }
 
     body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);

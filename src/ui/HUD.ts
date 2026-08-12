@@ -50,6 +50,11 @@ export class HUD {
     this.minimapGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(100);
   }
 
+  private lastLives: number = -999;
+  private lastWeapon: string = '';
+  private lastBarrierHits: number = -1;
+  private lastIsBarrierActive: boolean = false;
+
   public update(
     player: Player,
     grid: GridCell[][],
@@ -59,20 +64,26 @@ export class HUD {
     infiniteLives?: boolean
   ): void {
     // 1. Update Lives
-    const livesStr = `LIVES: ${formatHUDLives(player.lives, infiniteLives)}`;
-    if (livesStr !== this.lastLivesStr) {
+    if (player.lives !== this.lastLives) {
+      const livesStr = `LIVES: ${formatHUDLives(player.lives, infiniteLives)}`;
       this.livesText.setText(livesStr);
-      this.lastLivesStr = livesStr;
+      this.lastLives = player.lives;
     }
 
     // 2. Update Weapon & Shield info
-    let weaponStr = `WEAPON: ${player.currentWeapon}`;
-    if (player.isBarrierActive) {
-      weaponStr += ` [SHIELD:${player.barrierHits}]`;
-    }
-    if (weaponStr !== this.lastWeaponStr) {
+    if (
+      player.currentWeapon !== this.lastWeapon ||
+      player.barrierHits !== this.lastBarrierHits ||
+      player.isBarrierActive !== this.lastIsBarrierActive
+    ) {
+      let weaponStr = `WEAPON: ${player.currentWeapon}`;
+      if (player.isBarrierActive) {
+        weaponStr += ` [SHIELD:${player.barrierHits}]`;
+      }
       this.weaponText.setText(weaponStr);
-      this.lastWeaponStr = weaponStr;
+      this.lastWeapon = player.currentWeapon;
+      this.lastBarrierHits = player.barrierHits;
+      this.lastIsBarrierActive = player.isBarrierActive;
     }
 
     // 3. Update Boss HP

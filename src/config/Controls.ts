@@ -26,6 +26,17 @@ export class Controls {
     j: Phaser.Input.Keyboard.Key;
   };
 
+  private cachedInputState: RawInputState = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    jump: false,
+    jumpJustPressed: false,
+    shoot: false,
+    shootJustPressed: false,
+  };
+
   constructor(scene: Phaser.Scene) {
     if (!scene.input || !scene.input.keyboard) {
       throw new Error('Scene input keyboard is missing.');
@@ -47,24 +58,15 @@ export class Controls {
   }
 
   public getInputState(): RawInputState {
-    const up = this.keys.w.isDown || this.keys.up.isDown;
-    const down = this.keys.s.isDown || this.keys.down.isDown;
-    const left = this.keys.a.isDown || this.keys.left.isDown;
-    const right = this.keys.d.isDown || this.keys.right.isDown;
-    const jump = this.keys.space.isDown;
-    const jumpJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.space);
-    const shoot = this.keys.x.isDown || this.keys.j.isDown;
-    const shootJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.x) || Phaser.Input.Keyboard.JustDown(this.keys.j);
+    this.cachedInputState.up = this.keys.w.isDown || this.keys.up.isDown;
+    this.cachedInputState.down = this.keys.s.isDown || this.keys.down.isDown;
+    this.cachedInputState.left = this.keys.a.isDown || this.keys.left.isDown;
+    this.cachedInputState.right = this.keys.d.isDown || this.keys.right.isDown;
+    this.cachedInputState.jump = this.keys.space.isDown;
+    this.cachedInputState.jumpJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.space);
+    this.cachedInputState.shoot = this.keys.x.isDown || this.keys.j.isDown;
+    this.cachedInputState.shootJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.x) || Phaser.Input.Keyboard.JustDown(this.keys.j);
 
-    return {
-      up,
-      down,
-      left,
-      right,
-      jump,
-      jumpJustPressed,
-      shoot,
-      shootJustPressed,
-    };
+    return this.cachedInputState;
   }
 }

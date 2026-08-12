@@ -73,10 +73,9 @@ export class Boss extends EnemyBase {
 
     if (this.phase === 2) {
       // 3-way spread attack in phase 2
-      const angles = [baseAngle - 20, baseAngle, baseAngle + 20];
-      for (const angle of angles) {
-        projectilePool.spawn(this.x, this.y + 10, angle, 'PEA_SHOOTER', false);
-      }
+      projectilePool.spawn(this.x, this.y + 10, baseAngle - 20, 'PEA_SHOOTER', false);
+      projectilePool.spawn(this.x, this.y + 10, baseAngle, 'PEA_SHOOTER', false);
+      projectilePool.spawn(this.x, this.y + 10, baseAngle + 20, 'PEA_SHOOTER', false);
     } else {
       // Single direct targeted shot in phase 1
       projectilePool.spawn(this.x, this.y + 10, baseAngle, 'PEA_SHOOTER', false);

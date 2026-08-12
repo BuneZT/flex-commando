@@ -38,7 +38,10 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     } else if (weaponType === 'FLAME') {
       textureKey = 'tex_bullet_flame';
     }
-    this.setTexture(textureKey);
+
+    if (this.texture?.key !== textureKey) {
+      this.setTexture(textureKey);
+    }
 
     this.setPosition(x, y);
     this.weaponType = weaponType;
@@ -64,12 +67,10 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
       body.setVelocity(velX, velY);
 
       // Adjust hitbox size based on weapon type
-      if (weaponType === 'LASER') {
-        body.setSize(16, 4);
-      } else if (weaponType === 'FLAME') {
-        body.setSize(12, 12);
-      } else {
-        body.setSize(6, 6);
+      const targetW = weaponType === 'LASER' ? 16 : (weaponType === 'FLAME' ? 12 : 6);
+      const targetH = weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 12 : 6);
+      if (body.width !== targetW || body.height !== targetH) {
+        body.setSize(targetW, targetH);
       }
     }
   }
@@ -77,7 +78,8 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public updateProjectile(
     _time: number,
     delta: number,
-    bounds?: { x: number; y: number; width: number; height: number }
+    bounds?: { x: number; y: number; width: number; height: number },
+    groundLayer?: Phaser.Tilemaps.TilemapLayer
   ): void {
     if (!this.active) return;
 
@@ -100,6 +102,17 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
         const vx = Math.cos(this.baseAngleRad) * config.speed + Math.cos(perpAngle) * offset * 10;
         const vy = Math.sin(this.baseAngleRad) * config.speed + Math.sin(perpAngle) * offset * 10;
         body.setVelocity(vx, vy);
+      }
+    }
+
+    // Tilemap solid wall/ground collision check
+    if (groundLayer && typeof groundLayer.getTileAt === 'function') {
+      const tileX = Math.floor(this.x / 16);
+      const tileY = Math.floor(this.y / 16);
+      const tile = groundLayer.getTileAt(tileX, tileY, false);
+      if (tile && (tile.index === 1 || tile.index === 3 || tile.collides)) {
+        this.deactivate();
+        return;
       }
     }
 
@@ -143,7 +156,13 @@ export class ProjectilePool {
   }
 
   public spawn(x: number, y: number, angleDeg: number, weaponType: WeaponType, isPlayerBullet: boolean = true): Projectile | null {
-    let proj = this.pool.find(p => !p.active);
+    let proj: Projectile | undefined = undefined;
+    for (let i = 0; i < this.pool.length; i++) {
+      if (!this.pool[i].active) {
+        proj = this.pool[i];
+        break;
+      }
+    }
 
     if (!proj && this.pool.length < this.maxSize) {
       proj = new Projectile(this.scene, x, y);
@@ -161,10 +180,16 @@ export class ProjectilePool {
     return null;
   }
 
-  public update(time: number, delta: number, bounds?: { x: number; y: number; width: number; height: number }): void {
-    for (const proj of this.pool) {
+  public update(
+    time: number,
+    delta: number,
+    bounds?: { x: number; y: number; width: number; height: number },
+    groundLayer?: Phaser.Tilemaps.TilemapLayer
+  ): void {
+    for (let i = 0; i < this.pool.length; i++) {
+      const proj = this.pool[i];
       if (proj.active) {
-        proj.updateProjectile(time, delta, bounds);
+        proj.updateProjectile(time, delta, bounds, groundLayer);
       }
     }
   }
@@ -172,19 +197,26 @@ export class ProjectilePool {
   public getActiveProjectiles(outArray?: Projectile[]): Projectile[] {
     if (outArray) {
       outArray.length = 0;
-      for (const p of this.pool) {
+      for (let i = 0; i < this.pool.length; i++) {
+        const p = this.pool[i];
         if (p.active) {
           outArray.push(p);
         }
       }
       return outArray;
     }
-    return this.pool.filter(p => p.active);
+    const result: Projectile[] = [];
+    for (let i = 0; i < this.pool.length; i++) {
+      if (this.pool[i].active) {
+        result.push(this.pool[i]);
+      }
+    }
+    return result;
   }
 
   public clear(): void {
-    for (const proj of this.pool) {
-      proj.deactivate();
+    for (let i = 0; i < this.pool.length; i++) {
+      this.pool[i].deactivate();
     }
   }
 }

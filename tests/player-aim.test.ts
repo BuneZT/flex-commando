@@ -3,43 +3,43 @@ import { calculateAimDirection, getAimAngleDegrees } from '../src/entities/Playe
 
 describe('calculateAimDirection', () => {
   it('should return UP when holding Up key without left/right', () => {
-    const aim = calculateAimDirection({ up: true, down: false, left: false, right: false, isGrounded: true, facingLeft: false });
+    const aim = calculateAimDirection(true, false, false, false);
     expect(aim).toBe('UP');
   });
 
   it('should return UP_FORWARD when holding Up key with horizontal movement', () => {
-    const aimRight = calculateAimDirection({ up: true, down: false, left: false, right: true, isGrounded: true, facingLeft: false });
+    const aimRight = calculateAimDirection(true, false, false, true);
     expect(aimRight).toBe('UP_FORWARD');
 
-    const aimLeft = calculateAimDirection({ up: true, down: false, left: true, right: false, isGrounded: false, facingLeft: true });
+    const aimLeft = calculateAimDirection(true, false, true, false);
     expect(aimLeft).toBe('UP_FORWARD');
   });
 
   it('should return DOWN when holding Down key on ground without horizontal movement', () => {
-    const aim = calculateAimDirection({ up: false, down: true, left: false, right: false, isGrounded: true, facingLeft: false });
+    const aim = calculateAimDirection(false, true, false, false);
     expect(aim).toBe('DOWN');
   });
 
   it('should return DOWN_FORWARD when holding Down key with horizontal movement on ground', () => {
-    const aim = calculateAimDirection({ up: false, down: true, left: false, right: true, isGrounded: true, facingLeft: false });
+    const aim = calculateAimDirection(false, true, false, true);
     expect(aim).toBe('DOWN_FORWARD');
   });
 
   it('should return DOWN when holding Down key in air without horizontal movement', () => {
-    const aim = calculateAimDirection({ up: false, down: true, left: false, right: false, isGrounded: false, facingLeft: false });
+    const aim = calculateAimDirection(false, true, false, false);
     expect(aim).toBe('DOWN');
   });
 
   it('should return DOWN_FORWARD when holding Down key in air with horizontal movement', () => {
-    const aim = calculateAimDirection({ up: false, down: true, left: true, right: false, isGrounded: false, facingLeft: true });
+    const aim = calculateAimDirection(false, true, true, false);
     expect(aim).toBe('DOWN_FORWARD');
   });
 
   it('should return FORWARD when no vertical key is pressed', () => {
-    const aimGrounded = calculateAimDirection({ up: false, down: false, left: true, right: false, isGrounded: true, facingLeft: true });
+    const aimGrounded = calculateAimDirection(false, false, true, false);
     expect(aimGrounded).toBe('FORWARD');
 
-    const aimAir = calculateAimDirection({ up: false, down: false, left: false, right: false, isGrounded: false, facingLeft: false });
+    const aimAir = calculateAimDirection(false, false, false, false);
     expect(aimAir).toBe('FORWARD');
   });
 });

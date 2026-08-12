@@ -9,12 +9,17 @@ export interface InputState {
   facingLeft: boolean;
 }
 
-export function calculateAimDirection(input: InputState): AimDirection {
-  const movingHoriz = input.left || input.right;
-  if (input.up) {
+export function calculateAimDirection(
+  up: boolean,
+  down: boolean,
+  left: boolean,
+  right: boolean
+): AimDirection {
+  const movingHoriz = left || right;
+  if (up) {
     return movingHoriz ? 'UP_FORWARD' : 'UP';
   }
-  if (input.down) {
+  if (down) {
     return movingHoriz ? 'DOWN_FORWARD' : 'DOWN';
   }
   return 'FORWARD';

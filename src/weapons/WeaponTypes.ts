@@ -1,8 +1,14 @@
 export type WeaponType = 'PEA_SHOOTER' | 'SPREAD_SHOT' | 'LASER' | 'MACHINE_GUN' | 'FLAME' | 'BARRIER';
 
-export function getSpreadShotAngles(baseAngleDeg: number): number[] {
-  const offsets = [-30, -15, 0, 15, 30];
-  return offsets.map(offset => baseAngleDeg + offset);
+const SPREAD_OFFSETS = [-30, -15, 0, 15, 30];
+const SPREAD_ANGLES_BUFFER = [0, 0, 0, 0, 0];
+
+export function getSpreadShotAngles(baseAngleDeg: number, outArray?: number[]): number[] {
+  const target = outArray || SPREAD_ANGLES_BUFFER;
+  for (let i = 0; i < 5; i++) {
+    target[i] = baseAngleDeg + SPREAD_OFFSETS[i];
+  }
+  return target;
 }
 
 export interface WeaponStats {

@@ -75,22 +75,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Calculate Aim Direction
-    this.aimDirection = calculateAimDirection({
-      up: input.up,
-      down: input.down,
-      left: input.left,
-      right: input.right,
-      isGrounded,
-      facingLeft: this.facingLeft,
-    });
+    this.aimDirection = calculateAimDirection(
+      input.up,
+      input.down,
+      input.left,
+      input.right
+    );
 
     if (this.anims && typeof this.anims.play === 'function') {
-      if (!isGrounded) {
-        this.anims.play('player_jump', true);
-      } else if (input.left || input.right) {
-        this.anims.play('player_run', true);
-      } else {
-        this.anims.play('player_idle', true);
+      const targetAnim = !isGrounded ? 'player_jump' : (input.left || input.right ? 'player_run' : 'player_idle');
+      if (this.anims.currentAnim?.key !== targetAnim) {
+        this.anims.play(targetAnim, true);
       }
     }
 
@@ -150,8 +145,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (this.currentWeapon === 'SPREAD_SHOT') {
       const angles = getSpreadShotAngles(aimAngle);
-      for (const angle of angles) {
-        projectilePool.spawn(muzzle.x, muzzle.y, angle, 'SPREAD_SHOT', true);
+      for (let i = 0; i < angles.length; i++) {
+        projectilePool.spawn(muzzle.x, muzzle.y, angles[i], 'SPREAD_SHOT', true);
       }
       SoundManager.getInstance().playShoot('SPREAD_SHOT', true);
     } else {
@@ -166,15 +161,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return getAimAngleDegrees(this.aimDirection, this.facingLeft);
   }
 
+  private muzzlePos: { x: number; y: number } = { x: 0, y: 0 };
+
   public getMuzzlePosition(): { x: number; y: number } {
     const angleDeg = this.getAimAngle();
     const angleRad = Phaser.Math.DegToRad(angleDeg);
     const offsetX = Math.cos(angleRad) * 12;
     const offsetY = Math.sin(angleRad) * 12;
-    const spawnY = this.y - 4;
-    return {
-      x: this.x + offsetX,
-      y: spawnY + offsetY,
-    };
+    this.muzzlePos.x = this.x + offsetX;
+    this.muzzlePos.y = this.y - 4 + offsetY;
+    return this.muzzlePos;
   }
 }

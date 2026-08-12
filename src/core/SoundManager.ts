@@ -178,86 +178,83 @@ export class SoundManager {
 
   private playPeaShooterSound(t: number): void {
     if (!this.ctx || !this.sfxGain) return;
-    this.playAttackClick(t);
-    this.playPunchKick(t, 200, 45, 0.045);
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = 'square';
-    osc.frequency.setValueAtTime(1100, t);
-    osc.frequency.exponentialRampToValueAtTime(180, t + 0.06);
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(150, t + 0.05);
 
-    gain.gain.setValueAtTime(0.35, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.06);
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
 
     osc.connect(gain);
     gain.connect(this.sfxGain);
 
     osc.start(t);
-    osc.stop(t + 0.06);
+    osc.stop(t + 0.05);
   }
 
   private playSpreadShotSound(t: number): void {
     if (!this.ctx || !this.sfxGain) return;
-    this.playAttackClick(t);
-    this.playPunchKick(t, 240, 35, 0.06);
 
-    const freqs = [550, 850, 1250];
-    freqs.forEach((f, idx) => {
-      const osc = this.ctx!.createOscillator();
-      const gain = this.ctx!.createGain();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
 
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(f, t + idx * 0.004);
-      osc.frequency.exponentialRampToValueAtTime(140, t + 0.075 + idx * 0.004);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(950, t);
+    osc.frequency.exponentialRampToValueAtTime(120, t + 0.07);
 
-      gain.gain.setValueAtTime(0.28, t + idx * 0.004);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.075 + idx * 0.004);
+    gain.gain.setValueAtTime(0.45, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
 
-      osc.connect(gain);
-      gain.connect(this.sfxGain!);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
 
-      osc.start(t + idx * 0.004);
-      osc.stop(t + 0.075 + idx * 0.004);
-    });
+    osc.start(t);
+    osc.stop(t + 0.07);
   }
 
   private playLaserSound(t: number): void {
     if (!this.ctx || !this.sfxGain) return;
-    this.playAttackClick(t);
-    this.playPunchKick(t, 280, 50, 0.07);
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(3200, t);
-    osc.frequency.exponentialRampToValueAtTime(350, t + 0.11);
+    osc.frequency.exponentialRampToValueAtTime(300, t + 0.09);
 
     gain.gain.setValueAtTime(0.35, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.11);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.09);
 
     osc.connect(gain);
     gain.connect(this.sfxGain);
 
     osc.start(t);
-    osc.stop(t + 0.11);
+    osc.stop(t + 0.09);
+  }
+
+  private getNoiseBuffer(): AudioBuffer | null {
+    if (!this.ctx) return null;
+    if (!this.noiseBuffer) {
+      const noiseLen = Math.floor(this.ctx.sampleRate * 0.5);
+      this.noiseBuffer = this.ctx.createBuffer(1, noiseLen, this.ctx.sampleRate);
+      const data = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseLen; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+    }
+    return this.noiseBuffer;
   }
 
   private playFlameSound(t: number): void {
     if (!this.ctx || !this.sfxGain) return;
     this.playPunchKick(t, 160, 30, 0.08);
 
-    let buffer = this.noiseBuffer;
-    if (!buffer) {
-      const bufferSize = Math.floor(this.ctx.sampleRate * 0.1);
-      buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-    }
+    const buffer = this.getNoiseBuffer();
+    if (!buffer) return;
 
     const noise = this.ctx.createBufferSource();
     noise.buffer = buffer;
@@ -457,27 +454,20 @@ export class SoundManager {
       } else {
         // Snare / Hi-Hat Noise
         const duration = isSnare ? 0.07 : 0.02;
-        let buffer = this.noiseBuffer;
-        if (!buffer) {
-          const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-          buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1;
-          }
+        const buffer = this.getNoiseBuffer();
+        if (buffer) {
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(isSnare ? 0.14 : 0.035, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+          noise.connect(gain);
+          gain.connect(this.musicGain);
+
+          noise.start(t);
         }
-
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(isSnare ? 0.14 : 0.035, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-
-        noise.connect(gain);
-        gain.connect(this.musicGain);
-
-        noise.start(t);
       }
     }
 

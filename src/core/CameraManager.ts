@@ -28,6 +28,7 @@ export class CameraManager {
   private roomWidthPx: number;
   private roomHeightPx: number;
   private isTransitioningState: boolean = false;
+  private activeBounds: RoomBounds;
 
   constructor(
     camera: Phaser.Cameras.Scene2D.Camera,
@@ -39,7 +40,15 @@ export class CameraManager {
     this.camera = camera;
     this.roomWidthPx = roomWidthPx;
     this.roomHeightPx = roomHeightPx;
+    this.activeBounds = { x: 0, y: 0, width: roomWidthPx, height: roomHeightPx };
     this.setRoom(startGridX, startGridY, true);
+  }
+
+  private updateActiveBounds(): void {
+    this.activeBounds.x = this.currentGridX * this.roomWidthPx;
+    this.activeBounds.y = this.currentGridY * this.roomHeightPx;
+    this.activeBounds.width = this.roomWidthPx;
+    this.activeBounds.height = this.roomHeightPx;
   }
 
   public getCurrentRoom(): { gridX: number; gridY: number } {
@@ -47,7 +56,7 @@ export class CameraManager {
   }
 
   public getActiveBounds(): RoomBounds {
-    return getRoomBounds(this.currentGridX, this.currentGridY, this.roomWidthPx, this.roomHeightPx);
+    return this.activeBounds;
   }
 
   public isTransitioning(): boolean {
@@ -57,6 +66,7 @@ export class CameraManager {
   public setRoom(gridX: number, gridY: number, immediate: boolean = true): void {
     this.currentGridX = gridX;
     this.currentGridY = gridY;
+    this.updateActiveBounds();
     const bounds = getRoomBounds(gridX, gridY, this.roomWidthPx, this.roomHeightPx);
 
     if (this.camera) {
@@ -70,8 +80,26 @@ export class CameraManager {
   }
 
   public update(targetX: number, targetY: number): void {
-    const newGridX = Math.floor(targetX / this.roomWidthPx);
-    const newGridY = Math.floor(targetY / this.roomHeightPx);
+    const threshold = 16;
+    let newGridX = this.currentGridX;
+    let newGridY = this.currentGridY;
+
+    const left = this.currentGridX * this.roomWidthPx;
+    const right = (this.currentGridX + 1) * this.roomWidthPx;
+    const top = this.currentGridY * this.roomHeightPx;
+    const bottom = (this.currentGridY + 1) * this.roomHeightPx;
+
+    if (targetX < left - threshold) {
+      newGridX = Math.floor(targetX / this.roomWidthPx);
+    } else if (targetX > right + threshold) {
+      newGridX = Math.floor(targetX / this.roomWidthPx);
+    }
+
+    if (targetY < top - threshold) {
+      newGridY = Math.floor(targetY / this.roomHeightPx);
+    } else if (targetY > bottom + threshold) {
+      newGridY = Math.floor(targetY / this.roomHeightPx);
+    }
 
     if (newGridX !== this.currentGridX || newGridY !== this.currentGridY) {
       this.transitionToRoom(newGridX, newGridY);
@@ -84,6 +112,7 @@ export class CameraManager {
 
     this.currentGridX = gridX;
     this.currentGridY = gridY;
+    this.updateActiveBounds();
     const bounds = getRoomBounds(gridX, gridY, this.roomWidthPx, this.roomHeightPx);
     const targetCenterX = bounds.x + bounds.width / 2;
     const targetCenterY = bounds.y + bounds.height / 2;
@@ -132,7 +161,8 @@ export class CameraManager {
     const activeEnemies = outArray || [];
     activeEnemies.length = 0;
 
-    for (const enemy of enemies) {
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
       if (!enemy.isAlive) continue;
 
       const enemyGridX = Math.floor(enemy.x / this.roomWidthPx);

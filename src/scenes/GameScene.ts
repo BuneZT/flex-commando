@@ -46,6 +46,10 @@ export class GameScene extends Phaser.Scene {
   public isGameOver: boolean = false;
   public isVictory: boolean = false;
 
+  public lastCullGridX: number = -1;
+  public lastCullGridY: number = -1;
+  private activeBulletsBuffer: any[] = [];
+
   constructor() {
     super({ key: 'GameScene' });
   }
@@ -70,6 +74,8 @@ export class GameScene extends Phaser.Scene {
     this.invulnerableTimer = 0;
     this.isGameOver = false;
     this.isVictory = false;
+    this.lastCullGridX = -1;
+    this.lastCullGridY = -1;
 
     // 0. Set atmospheric background color & 4x4 grid physics world bounds
     if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
@@ -198,6 +204,7 @@ export class GameScene extends Phaser.Scene {
     if (this.tilemapResult?.groundLayer) {
       this.physics.add.collider(this.boss, this.tilemapResult.groundLayer);
     }
+    this.lastCullGridX = -1;
   }
 
   public handlePlayerDamage(): void {
@@ -241,21 +248,27 @@ export class GameScene extends Phaser.Scene {
       this.player.updatePlayer(input, delta, this.projectilePool);
     }
 
-    // 3. Camera update & current grid cell tracking
     let currentGridX = 0;
     let currentGridY = 0;
 
     if (this.player) {
-      currentGridX = Math.max(0, Math.min(3, Math.floor(this.player.x / 320)));
-      currentGridY = Math.max(0, Math.min(3, Math.floor(this.player.y / 240)));
-
       if (this.cameraManager) {
         this.cameraManager.update(this.player.x, this.player.y);
+        const room = this.cameraManager.getCurrentRoom();
+        currentGridX = room.gridX;
+        currentGridY = room.gridY;
+      } else {
+        currentGridX = Math.max(0, Math.min(3, Math.floor(this.player.x / 320)));
+        currentGridY = Math.max(0, Math.min(3, Math.floor(this.player.y / 240)));
       }
     }
 
     if (this.cameraManager) {
-      this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
+      if (currentGridX !== this.lastCullGridX || currentGridY !== this.lastCullGridY) {
+        this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
+        this.lastCullGridX = currentGridX;
+        this.lastCullGridY = currentGridY;
+      }
     }
 
     // 4. Boss Room Trigger on Column 3 or BOSS room cell
@@ -266,18 +279,22 @@ export class GameScene extends Phaser.Scene {
     // 5. Update Projectile Pool
     if (this.projectilePool) {
       const bounds = this.cameraManager?.getActiveBounds();
-      this.projectilePool.update(time, delta, bounds);
+      this.projectilePool.update(time, delta, bounds, this.tilemapResult?.groundLayer);
     }
 
     // 6. Update Pickup Capsules & Items
-    for (const capsule of this.pickupCapsules) {
+    for (let i = this.pickupCapsules.length - 1; i >= 0; i--) {
+      const capsule = this.pickupCapsules[i];
       if (capsule.active) {
         capsule.updateCapsule(time, delta);
+      } else {
+        this.pickupCapsules.splice(i, 1);
       }
     }
 
-    // 7. Update Enemy AI
-    for (const enemy of this.enemies) {
+    // 7. Update Active Enemy AI Only
+    for (let i = 0; i < this.activeEnemies.length; i++) {
+      const enemy = this.activeEnemies[i];
       if (enemy.isAlive && enemy.active) {
         enemy.updateAI(time, delta, this.player, this.projectilePool);
       }
@@ -320,69 +337,95 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkOverlap(
-    a: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any; getBounds?: () => any },
-    b: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any; getBounds?: () => any },
+    a: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any },
+    b: { x: number; y: number; width?: number; height?: number; displayWidth?: number; displayHeight?: number; body?: any },
     padding: number = 4
   ): boolean {
-    const wA = a.body ? a.body.width : (a.displayWidth || a.width || 16);
-    const hA = a.body ? a.body.height : (a.displayHeight || a.height || 16);
-    const wB = b.body ? b.body.width : (b.displayWidth || b.width || 16);
-    const hB = b.body ? b.body.height : (b.displayHeight || b.height || 16);
+    let cx1 = a.x, cy1 = a.y, w1 = 16, h1 = 16;
+    if (a.body) {
+      w1 = a.body.width;
+      h1 = a.body.height;
+      cx1 = a.body.x + w1 * 0.5;
+      cy1 = a.body.y + h1 * 0.5;
+    } else {
+      w1 = a.displayWidth || a.width || 16;
+      h1 = a.displayHeight || a.height || 16;
+    }
 
-    const halfW = (wA + wB) / 2 + padding;
-    const halfH = (hA + hB) / 2 + padding;
+    let cx2 = b.x, cy2 = b.y, w2 = 16, h2 = 16;
+    if (b.body) {
+      w2 = b.body.width;
+      h2 = b.body.height;
+      cx2 = b.body.x + w2 * 0.5;
+      cy2 = b.body.y + h2 * 0.5;
+    } else {
+      w2 = b.displayWidth || b.width || 16;
+      h2 = b.displayHeight || b.height || 16;
+    }
 
-    return Math.abs(a.x - b.x) <= halfW && Math.abs(a.y - b.y) <= halfH;
+    const halfW = (w1 + w2) * 0.5 + padding;
+    const halfH = (h1 + h2) * 0.5 + padding;
+    const dx = cx1 - cx2;
+    const dy = cy1 - cy2;
+
+    return (dx < 0 ? -dx : dx) <= halfW && (dy < 0 ? -dy : dy) <= halfH;
   }
 
   private handleCollisions(): void {
     if (!this.player || !this.projectilePool || this.isGameOver) return;
 
     // A. Player Bullets vs Enemies / Boss / Capsules
-    for (const proj of this.projectilePool.pool) {
-      if (!proj.active) continue;
+    const activeBullets = this.projectilePool.getActiveProjectiles(this.activeBulletsBuffer);
 
-      if (proj.isPlayerBullet) {
-        // Player bullet vs Enemies
-        for (const enemy of this.activeEnemies) {
-          if (enemy.isAlive && enemy.active) {
-            if (this.checkOverlap(proj, enemy, 4)) {
-              const killed = enemy.takeDamage(proj.damage);
+    if (activeBullets.length > 0) {
+      for (let p = 0; p < activeBullets.length; p++) {
+        const proj = activeBullets[p];
+        if (!proj.active) continue;
+
+        if (proj.isPlayerBullet) {
+          // Player bullet vs Enemies
+          for (let e = 0; e < this.activeEnemies.length; e++) {
+            const enemy = this.activeEnemies[e];
+            if (enemy.isAlive && enemy.active) {
+              if (this.checkOverlap(proj, enemy, 4)) {
+                const killed = enemy.takeDamage(proj.damage);
+                if (!proj.piercing) {
+                  proj.deactivate();
+                }
+
+                if (killed && enemy === this.boss) {
+                  this.triggerVictory();
+                }
+                break;
+              }
+            }
+          }
+
+          // Player bullet vs Pickup Capsules
+          for (let c = this.pickupCapsules.length - 1; c >= 0; c--) {
+            const capsule = this.pickupCapsules[c];
+            if (!capsule.active) continue;
+            if (this.checkOverlap(proj, capsule, 4)) {
+              const droppedItem = capsule.hit();
               if (!proj.piercing) {
                 proj.deactivate();
               }
-
-              if (killed && enemy === this.boss) {
-                this.triggerVictory();
+              if (droppedItem) {
+                this.pickupItems.push(droppedItem);
+                if (this.tilemapResult?.groundLayer) {
+                  this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
+                }
               }
               break;
             }
           }
-        }
-
-        // Player bullet vs Pickup Capsules
-        for (const capsule of this.pickupCapsules) {
-          if (!capsule.active) continue;
-          if (this.checkOverlap(proj, capsule, 4)) {
-            const droppedItem = capsule.hit();
-            if (!proj.piercing) {
+        } else {
+          // Enemy bullet vs Player
+          if (this.player && this.invulnerableTimer <= 0) {
+            if (this.checkOverlap(proj, this.player, 2)) {
               proj.deactivate();
+              this.handlePlayerDamage();
             }
-            if (droppedItem) {
-              this.pickupItems.push(droppedItem);
-              if (this.tilemapResult?.groundLayer) {
-                this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
-              }
-            }
-            break;
-          }
-        }
-      } else {
-        // Enemy bullet vs Player
-        if (this.player && this.invulnerableTimer <= 0) {
-          if (this.checkOverlap(proj, this.player, 2)) {
-            proj.deactivate();
-            this.handlePlayerDamage();
           }
         }
       }
@@ -390,7 +433,8 @@ export class GameScene extends Phaser.Scene {
 
     // B. Player Contact Damage vs Enemies / Boss
     if (this.invulnerableTimer <= 0) {
-      for (const enemy of this.activeEnemies) {
+      for (let i = 0; i < this.activeEnemies.length; i++) {
+        const enemy = this.activeEnemies[i];
         if (enemy.isAlive && enemy.active) {
           if (this.checkOverlap(this.player, enemy, 2)) {
             this.handlePlayerDamage();
@@ -401,16 +445,22 @@ export class GameScene extends Phaser.Scene {
     }
 
     // C. Player vs Pickup Items
-    for (const item of this.pickupItems) {
-      if (!item.active) continue;
+    for (let i = this.pickupItems.length - 1; i >= 0; i--) {
+      const item = this.pickupItems[i];
+      if (!item.active) {
+        this.pickupItems.splice(i, 1);
+        continue;
+      }
       if (this.checkOverlap(this.player, item, 4)) {
         const weapon = item.collect();
         this.player.equipWeapon(weapon);
+        this.pickupItems.splice(i, 1);
       }
     }
 
     // D. Player vs Level Exit Doors / Portals
-    for (const door of this.exitDoors) {
+    for (let i = 0; i < this.exitDoors.length; i++) {
+      const door = this.exitDoors[i];
       if (this.checkOverlap(this.player, door, 8)) {
         this.triggerVictory();
         break;
