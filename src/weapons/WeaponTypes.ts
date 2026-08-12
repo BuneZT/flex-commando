@@ -11,6 +11,14 @@ export function getSpreadShotAngles(baseAngleDeg: number, outArray?: number[]): 
   return target;
 }
 
+export const PICKUP_WEAPON_TYPES: WeaponType[] = ['SPREAD_SHOT', 'LASER', 'MACHINE_GUN', 'FLAME', 'BARRIER'];
+
+export function getRandomPickupWeapon(rng?: () => number): WeaponType {
+  const randomFn = rng || Math.random;
+  const index = Math.floor(randomFn() * PICKUP_WEAPON_TYPES.length);
+  return PICKUP_WEAPON_TYPES[index];
+}
+
 export interface WeaponStats {
   fireRateMs: number;
   speed: number;

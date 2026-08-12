@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Phaser from 'phaser';
-import { getSpreadShotAngles, WEAPON_CONFIGS, WeaponType } from '../src/weapons/WeaponTypes';
+import { getSpreadShotAngles, WEAPON_CONFIGS, WeaponType, getRandomPickupWeapon, PICKUP_WEAPON_TYPES } from '../src/weapons/WeaponTypes';
 import { Projectile, ProjectilePool } from '../src/weapons/ProjectilePool';
 import { PickupCapsule, PickupItem, weaponTypeToLetter, letterToWeaponType } from '../src/entities/PickupCapsule';
 import { Player } from '../src/entities/Player';
@@ -86,6 +86,32 @@ describe('Weapon Configurations & Letter Conversion', () => {
     expect(letterToWeaponType('M')).toBe('MACHINE_GUN');
     expect(letterToWeaponType('F')).toBe('FLAME');
     expect(letterToWeaponType('B')).toBe('BARRIER');
+  });
+
+  it('should list all pickup weapon types excluding PEA_SHOOTER', () => {
+    expect(PICKUP_WEAPON_TYPES).toEqual(['SPREAD_SHOT', 'LASER', 'MACHINE_GUN', 'FLAME', 'BARRIER']);
+    expect(PICKUP_WEAPON_TYPES).not.toContain('PEA_SHOOTER');
+  });
+
+  it('should return a random valid pickup weapon and accept a custom RNG', () => {
+    const mockRng0 = () => 0.0;
+    expect(getRandomPickupWeapon(mockRng0)).toBe('SPREAD_SHOT');
+
+    const mockRng1 = () => 0.2;
+    expect(getRandomPickupWeapon(mockRng1)).toBe('LASER');
+
+    const mockRng2 = () => 0.4;
+    expect(getRandomPickupWeapon(mockRng2)).toBe('MACHINE_GUN');
+
+    const mockRng3 = () => 0.6;
+    expect(getRandomPickupWeapon(mockRng3)).toBe('FLAME');
+
+    const mockRng4 = () => 0.8;
+    expect(getRandomPickupWeapon(mockRng4)).toBe('BARRIER');
+
+    // Default call without arguments
+    const randomResult = getRandomPickupWeapon();
+    expect(PICKUP_WEAPON_TYPES).toContain(randomResult);
   });
 });
 
@@ -192,6 +218,19 @@ describe('PickupCapsule', () => {
     expect(droppedItem?.letter).toBe('S');
     expect(droppedItem?.weaponType).toBe('SPREAD_SHOT');
     expect(capsule.active).toBe(false);
+  });
+
+  it('should support spawning capsules for all random pickup weapon types', () => {
+    const mockScene = createMockScene();
+    for (const weaponType of PICKUP_WEAPON_TYPES) {
+      const capsule = new PickupCapsule(mockScene, 100, 100, weaponType);
+      capsule.body = createMockBody();
+      expect(capsule.weaponType).toBe(weaponType);
+
+      const droppedItem = capsule.hit();
+      expect(droppedItem?.weaponType).toBe(weaponType);
+      expect(droppedItem?.letter).toBe(weaponTypeToLetter(weaponType));
+    }
   });
 });
 

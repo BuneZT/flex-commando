@@ -12,6 +12,7 @@ import { FalconDrone } from '../entities/enemies/FalconDrone';
 import { JumperMercenary } from '../entities/enemies/JumperMercenary';
 import { Boss } from '../entities/enemies/Boss';
 import { PickupCapsule, PickupItem } from '../entities/PickupCapsule';
+import { getRandomPickupWeapon } from '../weapons/WeaponTypes';
 import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
 
@@ -122,7 +123,8 @@ export class GameScene extends Phaser.Scene {
     this.spawnRoomEnemies();
 
     // 10. Spawn flying weapon pickup capsule in starting area
-    const capsule = new PickupCapsule(this, startX + 100, startY - 80, 'SPREAD_SHOT');
+    const startWeapon = getRandomPickupWeapon();
+    const capsule = new PickupCapsule(this, startX + 100, startY - 80, startWeapon);
     this.pickupCapsules.push(capsule);
 
     // 11. Spawn Exit Door in final/BOSS room
@@ -182,6 +184,11 @@ export class GameScene extends Phaser.Scene {
           const jumper = new JumperMercenary(this, roomX + 280, roomY + 180);
           this.enemies.push(jumper);
           if (this.enemyGroup) this.enemyGroup.add(jumper);
+
+          // Spawn flying weapon capsule per room
+          const roomCapsuleWeapon = getRandomPickupWeapon();
+          const roomCapsule = new PickupCapsule(this, roomX + 40, roomY + 70, roomCapsuleWeapon);
+          this.pickupCapsules.push(roomCapsule);
         }
       }
     }
@@ -393,8 +400,16 @@ export class GameScene extends Phaser.Scene {
                   proj.deactivate();
                 }
 
-                if (killed && enemy === this.boss) {
-                  this.triggerVictory();
+                if (killed) {
+                  if (enemy === this.boss) {
+                    this.triggerVictory();
+                  } else if (Math.random() < 0.2) {
+                    const droppedItem = new PickupItem(this, enemy.x, enemy.y, getRandomPickupWeapon());
+                    this.pickupItems.push(droppedItem);
+                    if (this.tilemapResult?.groundLayer) {
+                      this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
+                    }
+                  }
                 }
                 break;
               }
