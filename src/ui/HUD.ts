@@ -16,6 +16,12 @@ export class HUD {
   private bossHpText: Phaser.GameObjects.Text;
   private minimapGraphics: Phaser.GameObjects.Graphics;
 
+  private lastLivesStr: string = '';
+  private lastWeaponStr: string = '';
+  private lastBossHpStr: string = '';
+  private lastMinimapGridX: number = -1;
+  private lastMinimapGridY: number = -1;
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
 
@@ -53,29 +59,48 @@ export class HUD {
     infiniteLives?: boolean
   ): void {
     // 1. Update Lives
-    this.livesText.setText(`LIVES: ${formatHUDLives(player.lives, infiniteLives)}`);
+    const livesStr = `LIVES: ${formatHUDLives(player.lives, infiniteLives)}`;
+    if (livesStr !== this.lastLivesStr) {
+      this.livesText.setText(livesStr);
+      this.lastLivesStr = livesStr;
+    }
 
     // 2. Update Weapon & Shield info
     let weaponStr = `WEAPON: ${player.currentWeapon}`;
     if (player.isBarrierActive) {
       weaponStr += ` [SHIELD:${player.barrierHits}]`;
     }
-    this.weaponText.setText(weaponStr);
+    if (weaponStr !== this.lastWeaponStr) {
+      this.weaponText.setText(weaponStr);
+      this.lastWeaponStr = weaponStr;
+    }
 
     // 3. Update Boss HP
+    let bossHpStr = '';
     if (boss && boss.isAlive) {
       const pct = Math.max(0, Math.ceil((boss.health / boss.maxHealth) * 100));
       const barLen = 10;
       const filled = Math.max(0, Math.min(barLen, Math.ceil((boss.health / boss.maxHealth) * barLen)));
       const bar = '█'.repeat(filled) + '░'.repeat(barLen - filled);
-      this.bossHpText.setText(`BOSS HP: [${bar}] ${boss.health}/${boss.maxHealth} (${pct}%)`);
-      this.bossHpText.setVisible(true);
-    } else {
-      this.bossHpText.setVisible(false);
+      bossHpStr = `BOSS HP: [${bar}] ${boss.health}/${boss.maxHealth} (${pct}%)`;
+    }
+
+    if (bossHpStr !== this.lastBossHpStr) {
+      if (bossHpStr !== '') {
+        this.bossHpText.setText(bossHpStr);
+        this.bossHpText.setVisible(true);
+      } else {
+        this.bossHpText.setVisible(false);
+      }
+      this.lastBossHpStr = bossHpStr;
     }
 
     // 4. Render 4x4 minimap grid
-    this.renderMinimap(grid, currentGridX, currentGridY);
+    if (currentGridX !== this.lastMinimapGridX || currentGridY !== this.lastMinimapGridY) {
+      this.renderMinimap(grid, currentGridX, currentGridY);
+      this.lastMinimapGridX = currentGridX;
+      this.lastMinimapGridY = currentGridY;
+    }
   }
 
   private renderMinimap(grid: GridCell[][], currentGridX: number, currentGridY: number): void {
