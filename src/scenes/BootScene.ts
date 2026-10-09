@@ -7,11 +7,26 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Preload assets for BootScene if needed
+    if (!this.load) return;
+
+    // Standard Phaser loaders for browser execution
+    this.load.image('logo', 'assets/ui/logo.png');
+    this.load.image('cyber_hangar_bg', 'assets/bg/cyber_hangar_bg.png');
+    this.load.spritesheet('tileset', 'assets/tiles/tileset.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('tex_player', 'assets/sprites/player.png', { frameWidth: 24, frameHeight: 24 });
+    this.load.spritesheet('tex_enemy_trooper', 'assets/sprites/trooper.png', { frameWidth: 24, frameHeight: 24 });
+    this.load.spritesheet('tex_enemy_turret', 'assets/sprites/turret.png', { frameWidth: 32, frameHeight: 24 });
+    this.load.spritesheet('tex_enemy_drone', 'assets/sprites/drone.png', { frameWidth: 32, frameHeight: 20 });
+    this.load.spritesheet('tex_enemy_jumper', 'assets/sprites/jumper.png', { frameWidth: 24, frameHeight: 28 });
+    this.load.spritesheet('tex_enemy_boss', 'assets/sprites/boss.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.image('tex_crosshair', 'assets/vfx/crosshair.png');
+    this.load.spritesheet('tex_projectiles', 'assets/vfx/projectiles.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('tex_pickups', 'assets/vfx/pickups.png', { frameWidth: 16, frameHeight: 16 });
   }
 
   create(): void {
+    // Generate any fallback textures if running headless or missing
     TextureFactory.generateAllTextures(this);
-    this.scene.start('MainMenuScene');
+    this.scene?.start('MainMenuScene');
   }
 }

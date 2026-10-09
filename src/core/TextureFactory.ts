@@ -22,6 +22,10 @@ export class TextureFactory {
       this.createCapsuleAndPickupTextures(scene);
       this.createTilesetTexture(scene);
       this.createCrosshairTexture(scene);
+      this.createLogoTexture(scene);
+      this.createCyberHangarBgTexture(scene);
+      this.createProjectilesFallbackTexture(scene);
+      this.createPickupsFallbackTexture(scene);
       this.createAnimations(scene);
     } finally {
       if (createdDummyRenderer) {
@@ -33,157 +37,193 @@ export class TextureFactory {
   private static createPlayerTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_player')) return;
     const g = scene.add.graphics();
-    // 5 frames of 16x24 = 80x24 total width
-    for (let f = 0; f < 5; f++) {
-      const ox = f * 16;
+    // 6 frames of 24x24 = 144x24 total width
+    for (let f = 0; f < 6; f++) {
+      const ox = f * 24;
       // Headband & Head
       g.fillStyle(0xcc3333, 1);
-      g.fillRect(ox + 4, 2, 8, 2);
+      g.fillRect(ox + 8, 2, 8, 2);
       g.fillStyle(0xffcc99, 1);
-      g.fillRect(ox + 4, 4, 8, 5);
+      g.fillRect(ox + 8, 4, 8, 5);
 
       // Uniform Body
       g.fillStyle(0x3366cc, 1);
-      g.fillRect(ox + 3, 9, 10, 8);
+      g.fillRect(ox + 7, 9, 10, 8);
 
       // Legs / Animation offset
       g.fillStyle(0x112244, 1);
-      if (f === 3) {
+      if (f === 4) {
         // Crouch
-        g.fillRect(ox + 2, 14, 12, 6);
+        g.fillRect(ox + 6, 16, 12, 6);
       } else if (f === 1) {
         // Walk 1
-        g.fillRect(ox + 2, 17, 5, 7);
-        g.fillRect(ox + 9, 17, 5, 5);
+        g.fillRect(ox + 6, 17, 5, 7);
+        g.fillRect(ox + 13, 17, 5, 5);
       } else if (f === 2) {
         // Walk 2
-        g.fillRect(ox + 2, 17, 5, 5);
-        g.fillRect(ox + 9, 17, 5, 7);
+        g.fillRect(ox + 6, 17, 5, 5);
+        g.fillRect(ox + 13, 17, 5, 7);
+      } else if (f === 3) {
+        // Jump
+        g.fillRect(ox + 7, 16, 4, 5);
+        g.fillRect(ox + 13, 15, 4, 5);
       } else {
-        // Idle / Jump
-        g.fillRect(ox + 3, 17, 4, 7);
-        g.fillRect(ox + 9, 17, 4, 7);
+        // Idle (0) / Shoot (5)
+        g.fillRect(ox + 7, 17, 4, 7);
+        g.fillRect(ox + 13, 17, 4, 7);
       }
 
       // Gun
       g.fillStyle(0xaaaaaa, 1);
-      g.fillRect(ox + 10, 11, 6, 3);
+      g.fillRect(ox + 14, 11, 6, 3);
+      if (f === 5) {
+        g.fillStyle(0xffcc00, 1);
+        g.fillRect(ox + 20, 11, 3, 3);
+      }
     }
 
-    g.generateTexture('tex_player', 80, 24);
+    g.generateTexture('tex_player', 144, 24);
     g.destroy();
 
     const tex = scene.textures.get('tex_player');
-    for (let i = 0; i < 5; i++) {
-      tex.add(i, 0, i * 16, 0, 16, 24);
+    for (let i = 0; i < 6; i++) {
+      tex.add(i, 0, i * 24, 0, 24, 24);
     }
   }
 
   private static createTrooperTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_enemy_trooper')) return;
     const g = scene.add.graphics();
-    // 2 frames of 16x24 = 32x24
-    for (let f = 0; f < 2; f++) {
-      const ox = f * 16;
+    // 4 frames of 24x24 = 96x24
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 24;
       g.fillStyle(0xee2222, 1); // Red alien armor
-      g.fillRect(ox + 4, 2, 8, 6); // Helmet
+      g.fillRect(ox + 8, 2, 8, 6); // Helmet
       g.fillStyle(0x333333, 1);
-      g.fillRect(ox + 4, 5, 8, 2); // Visor
+      g.fillRect(ox + 8, 5, 8, 2); // Visor
       g.fillStyle(0xcc1111, 1);
-      g.fillRect(ox + 3, 8, 10, 8); // Torso
+      g.fillRect(ox + 7, 8, 10, 8); // Torso
 
       // Legs
       g.fillStyle(0x222222, 1);
       if (f === 0) {
-        g.fillRect(ox + 2, 16, 5, 8);
-        g.fillRect(ox + 9, 16, 5, 6);
+        g.fillRect(ox + 6, 16, 5, 8);
+        g.fillRect(ox + 13, 16, 5, 6);
+      } else if (f === 1) {
+        g.fillRect(ox + 6, 16, 5, 6);
+        g.fillRect(ox + 13, 16, 5, 8);
       } else {
-        g.fillRect(ox + 2, 16, 5, 6);
-        g.fillRect(ox + 9, 16, 5, 8);
+        g.fillRect(ox + 7, 16, 4, 7);
+        g.fillRect(ox + 13, 16, 4, 7);
       }
     }
-    g.generateTexture('tex_enemy_trooper', 32, 24);
+    g.generateTexture('tex_enemy_trooper', 96, 24);
     g.destroy();
 
     const tex = scene.textures.get('tex_enemy_trooper');
-    tex.add(0, 0, 0, 0, 16, 24);
-    tex.add(1, 0, 16, 0, 16, 24);
+    for (let f = 0; f < 4; f++) {
+      tex.add(f, 0, f * 24, 0, 24, 24);
+    }
   }
 
   private static createTurretTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_enemy_turret')) return;
     const g = scene.add.graphics();
-    g.fillStyle(0x555555, 1);
-    g.fillRect(2, 12, 20, 12); // Base
-    g.fillStyle(0x777777, 1);
-    g.fillRect(4, 4, 16, 10); // Barrel mount
-    g.fillStyle(0xff2222, 1);
-    g.fillRect(10, 6, 4, 4); // Red Lens
-    g.fillStyle(0x222222, 1);
-    g.fillRect(0, 7, 6, 4); // Barrel extension
-    g.generateTexture('tex_enemy_turret', 24, 24);
+    // 2 frames of 32x24 = 64x24
+    for (let f = 0; f < 2; f++) {
+      const ox = f * 32;
+      g.fillStyle(0x555555, 1);
+      g.fillRect(ox + 2, 12, 20, 12); // Base
+      g.fillStyle(0x777777, 1);
+      g.fillRect(ox + 4, 4, 16, 10); // Barrel mount
+      g.fillStyle(0xff2222, 1);
+      g.fillRect(ox + 10, 6, 4, 4); // Red Lens
+      g.fillStyle(0x222222, 1);
+      g.fillRect(ox + 0, 7, 6, 4); // Barrel extension
+      if (f === 1) {
+        g.fillStyle(0xffcc00, 1);
+        g.fillRect(ox + 24, 6, 6, 6); // Muzzle flash
+      }
+    }
+    g.generateTexture('tex_enemy_turret', 64, 24);
     g.destroy();
+
+    const tex = scene.textures.get('tex_enemy_turret');
+    tex.add(0, 0, 0, 0, 32, 24);
+    tex.add(1, 0, 32, 0, 32, 24);
   }
 
   private static createDroneTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_enemy_drone')) return;
     const g = scene.add.graphics();
-    // 2 frames of 16x16 = 32x16
-    for (let f = 0; f < 2; f++) {
-      const ox = f * 16;
+    // 4 frames of 32x20 = 128x20
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 32;
       g.fillStyle(0xeecc00, 1); // Yellow body
-      g.fillRect(ox + 4, 4, 8, 8);
+      g.fillRect(ox + 10, 4, 12, 8);
       g.fillStyle(0x00ffff, 1); // Cyan eye
-      g.fillRect(ox + 7, 6, 3, 3);
+      g.fillRect(ox + 14, 6, 4, 4);
       // Wings
       g.fillStyle(0x888888, 1);
-      const wingY = f === 0 ? 2 : 4;
-      g.fillRect(ox + 1, wingY, 3, 4);
-      g.fillRect(ox + 12, wingY, 3, 4);
+      const wingY = f % 2 === 0 ? 3 : 5;
+      g.fillRect(ox + 4, wingY, 6, 4);
+      g.fillRect(ox + 22, wingY, 6, 4);
     }
-    g.generateTexture('tex_enemy_drone', 32, 16);
+    g.generateTexture('tex_enemy_drone', 128, 20);
     g.destroy();
 
     const tex = scene.textures.get('tex_enemy_drone');
-    tex.add(0, 0, 0, 0, 16, 16);
-    tex.add(1, 0, 16, 0, 16, 16);
+    for (let f = 0; f < 4; f++) {
+      tex.add(f, 0, f * 32, 0, 32, 20);
+    }
   }
 
   private static createJumperTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_enemy_jumper')) return;
     const g = scene.add.graphics();
-    // 2 frames of 16x24 = 32x24
-    for (let f = 0; f < 2; f++) {
-      const ox = f * 16;
+    // 4 frames of 24x28 = 96x28
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 24;
       g.fillStyle(0x8822aa, 1); // Purple
-      g.fillRect(ox + 4, 2, 8, 6);
+      g.fillRect(ox + 8, 2, 8, 6);
       g.fillStyle(0x00ff66, 1); // Green visor
-      g.fillRect(ox + 5, 4, 6, 2);
+      g.fillRect(ox + 9, 4, 6, 2);
       g.fillStyle(0x661188, 1);
-      g.fillRect(ox + 3, 8, 10, 8);
+      g.fillRect(ox + 7, 8, 10, 8);
       g.fillStyle(0x330044, 1);
-      g.fillRect(ox + 2, 16, 12, 8);
+      g.fillRect(ox + 6, 16, 12, 8);
     }
-    g.generateTexture('tex_enemy_jumper', 32, 24);
+    g.generateTexture('tex_enemy_jumper', 96, 28);
     g.destroy();
 
     const tex = scene.textures.get('tex_enemy_jumper');
-    tex.add(0, 0, 0, 0, 16, 24);
-    tex.add(1, 0, 16, 0, 16, 24);
+    for (let f = 0; f < 4; f++) {
+      tex.add(f, 0, f * 24, 0, 24, 28);
+    }
   }
 
   private static createBossTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_enemy_boss')) return;
     const g = scene.add.graphics();
-    g.fillStyle(0x444455, 1);
-    g.fillRect(0, 0, 64, 48); // Armor plate chassis
-    g.fillStyle(0xff1133, 1);
-    g.fillRect(24, 16, 16, 16); // Glowing red reactor core
-    g.fillStyle(0x222222, 1);
-    g.fillRect(4, 36, 16, 10); // Left cannon
-    g.fillRect(44, 36, 16, 10); // Right cannon
-    g.generateTexture('tex_enemy_boss', 64, 48);
+    // 4 frames of 64x64 = 256x64
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 64;
+      g.fillStyle(0x444455, 1);
+      g.fillRect(ox + 0, 16, 64, 48); // Armor plate chassis
+      const coreColor = f % 2 === 0 ? 0xff1133 : 0xff5577;
+      g.fillStyle(coreColor, 1);
+      g.fillRect(ox + 24, 24, 16, 16); // Glowing red reactor core
+      g.fillStyle(0x222222, 1);
+      g.fillRect(ox + 4, 44, 16, 10); // Left cannon
+      g.fillRect(ox + 44, 44, 16, 10); // Right cannon
+    }
+    g.generateTexture('tex_enemy_boss', 256, 64);
     g.destroy();
+
+    const tex = scene.textures.get('tex_enemy_boss');
+    for (let f = 0; f < 4; f++) {
+      tex.add(f, 0, f * 64, 0, 64, 64);
+    }
   }
 
   private static createBulletTextures(scene: Phaser.Scene): void {
@@ -305,6 +345,14 @@ export class TextureFactory {
     if (!scene.anims.exists('player_jump')) {
       scene.anims.create({
         key: 'player_jump',
+        frames: [{ key: 'tex_player', frame: 3 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_crouch')) {
+      scene.anims.create({
+        key: 'player_crouch',
         frames: [{ key: 'tex_player', frame: 4 }],
         frameRate: 1,
       });
@@ -324,6 +372,24 @@ export class TextureFactory {
         key: 'drone_fly',
         frames: scene.anims.generateFrameNumbers('tex_enemy_drone', { start: 0, end: 1 }),
         frameRate: 10,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('jumper_jump')) {
+      scene.anims.create({
+        key: 'jumper_jump',
+        frames: scene.anims.generateFrameNumbers('tex_enemy_jumper', { start: 0, end: 1 }),
+        frameRate: 6,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('boss_drive')) {
+      scene.anims.create({
+        key: 'boss_drive',
+        frames: scene.anims.generateFrameNumbers('tex_enemy_boss', { start: 0, end: 1 }),
+        frameRate: 4,
         repeat: -1,
       });
     }
@@ -405,6 +471,42 @@ export class TextureFactory {
     g.generateTexture('tex_crosshair', 9, 9);
     g.destroy();
   }
+
+  private static createLogoTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('logo')) return;
+    const g = scene.add.graphics();
+    g.fillStyle(0xff8800, 1);
+    g.fillRect(0, 0, 200, 50);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(4, 4, 192, 42);
+    g.generateTexture('logo', 200, 50);
+    g.destroy();
+  }
+
+  private static createCyberHangarBgTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('cyber_hangar_bg')) return;
+    const g = scene.add.graphics();
+    g.fillStyle(0x0e111a, 1);
+    g.fillRect(0, 0, 320, 240);
+    g.generateTexture('cyber_hangar_bg', 320, 240);
+    g.destroy();
+  }
+
+  private static createProjectilesFallbackTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tex_projectiles')) return;
+    const g = scene.add.graphics();
+    g.fillStyle(0xffff00, 1);
+    g.fillRect(0, 0, 80, 16);
+    g.generateTexture('tex_projectiles', 80, 16);
+    g.destroy();
+  }
+
+  private static createPickupsFallbackTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tex_pickups')) return;
+    const g = scene.add.graphics();
+    g.fillStyle(0x00ffff, 1);
+    g.fillRect(0, 0, 112, 16);
+    g.generateTexture('tex_pickups', 112, 16);
+    g.destroy();
+  }
 }
-
-
