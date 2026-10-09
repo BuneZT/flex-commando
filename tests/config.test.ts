@@ -24,6 +24,13 @@ describe('GameConfig', () => {
     expect(GameConfig.scale?.mode).toBe(Phaser.Scale.FIT);
     expect(GameConfig.scale?.autoCenter).toBe(Phaser.Scale.CENTER_BOTH);
   });
+
+  it('should configure fps settings with target 60 and limit 60', () => {
+    expect(GameConfig.fps).toBeDefined();
+    expect(GameConfig.fps?.target).toBe(60);
+    expect(GameConfig.fps?.limit).toBe(60);
+    expect(GameConfig.fps?.smoothStep).toBe(true);
+  });
 });
 
 describe('index.html layout and container styling', () => {

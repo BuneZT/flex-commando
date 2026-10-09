@@ -41,7 +41,9 @@ export class GameScene extends Phaser.Scene {
   public bossTriggered: boolean = false;
 
   public pickupCapsules: PickupCapsule[] = [];
+  public activePickupCapsules: PickupCapsule[] = [];
   public pickupItems: PickupItem[] = [];
+  public pickupItemGroup?: Phaser.Physics.Arcade.Group;
   public crosshair?: Phaser.GameObjects.Sprite;
   public exitDoor?: Phaser.GameObjects.Sprite;
   public exitDoors: Phaser.GameObjects.Sprite[] = [];
@@ -53,6 +55,7 @@ export class GameScene extends Phaser.Scene {
   public lastCullGridX: number = -1;
   public lastCullGridY: number = -1;
   private activeBulletsBuffer: any[] = [];
+  private tempWorldPoint: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor() {
     super({ key: 'GameScene' });
@@ -73,6 +76,7 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossTriggered = false;
     this.pickupCapsules = [];
+    this.activePickupCapsules = [];
     this.pickupItems = [];
     this.exitDoor = undefined;
     this.exitDoors = [];
@@ -100,6 +104,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.physics && typeof this.physics.add?.group === 'function') {
       this.enemyGroup = this.physics.add.group();
+      this.pickupItemGroup = this.physics.add.group();
     }
 
     // 0.5. Parallax cyber hangar background
@@ -196,12 +201,15 @@ export class GameScene extends Phaser.Scene {
     this.hud = new HUD(this);
 
     // 13. Start BGM & setup M mute toggle key
-    SoundManager.getInstance().startBGM();
+    SoundManager.getInstance().startBGM('STAGE', this);
     if (typeof this.input?.keyboard?.on === 'function') {
       this.input.keyboard.on('keydown-M', () => {
         SoundManager.getInstance().toggleMute();
       });
     }
+
+    // 14. Initial spatial culling for START room
+    this.cullEntities(startRoom.x, startRoom.y);
   }
 
   private spawnRoomEnemies(): void {
@@ -240,9 +248,12 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Add ground colliders for ground enemies
+    // Add ground colliders for ground enemies and dropped items
     if (this.tilemapResult?.groundLayer && this.enemyGroup) {
       this.physics.add.collider(this.enemyGroup, this.tilemapResult.groundLayer);
+    }
+    if (this.tilemapResult?.groundLayer && this.pickupItemGroup) {
+      this.physics.add.collider(this.pickupItemGroup, this.tilemapResult.groundLayer);
     }
   }
 
@@ -259,6 +270,7 @@ export class GameScene extends Phaser.Scene {
       this.physics.add.collider(this.boss, this.tilemapResult.groundLayer);
     }
     this.lastCullGridX = -1;
+    SoundManager.getInstance().startBGM('BOSS', this);
   }
 
   public handlePlayerDamage(): void {
@@ -312,7 +324,7 @@ export class GameScene extends Phaser.Scene {
     } else if (this.crosshair && this.input?.activePointer && typeof this.crosshair.setPosition === 'function') {
       const pointer = this.input.activePointer;
       const worldPoint = (this.cameras?.main && typeof this.cameras.main.getWorldPoint === 'function')
-        ? this.cameras.main.getWorldPoint(pointer.x, pointer.y)
+        ? this.cameras.main.getWorldPoint(pointer.x, pointer.y, this.tempWorldPoint as any)
         : { x: pointer.worldX ?? pointer.x ?? 0, y: pointer.worldY ?? pointer.y ?? 0 };
       this.crosshair.setPosition(worldPoint.x, worldPoint.y);
     }
@@ -334,9 +346,7 @@ export class GameScene extends Phaser.Scene {
 
     if (this.cameraManager) {
       if (currentGridX !== this.lastCullGridX || currentGridY !== this.lastCullGridY) {
-        this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
-        this.lastCullGridX = currentGridX;
-        this.lastCullGridY = currentGridY;
+        this.cullEntities(currentGridX, currentGridY);
       }
     }
 
@@ -357,12 +367,16 @@ export class GameScene extends Phaser.Scene {
       this.projectilePool.update(time, delta, bounds, this.tilemapResult?.groundLayer);
     }
 
-    // 6. Update Pickup Capsules & Items
-    for (let i = this.pickupCapsules.length - 1; i >= 0; i--) {
-      const capsule = this.pickupCapsules[i];
+    // 6. Update Active Pickup Capsules & Clean Dead Capsules
+    for (let i = this.activePickupCapsules.length - 1; i >= 0; i--) {
+      const capsule = this.activePickupCapsules[i];
       if (capsule.active) {
         capsule.updateCapsule(time, delta);
-      } else {
+      }
+    }
+    for (let i = this.pickupCapsules.length - 1; i >= 0; i--) {
+      const capsule = this.pickupCapsules[i];
+      if (capsule.hp <= 0 || capsule.x < -50 || capsule.x > 1400) {
         this.pickupCapsules.splice(i, 1);
       }
     }
@@ -396,6 +410,44 @@ export class GameScene extends Phaser.Scene {
     if (this.hud && this.player && this.grid) {
       this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss, this.infiniteLives);
     }
+  }
+
+  public cullEntities(gridX: number, gridY: number): void {
+    if (this.cameraManager) {
+      this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
+    }
+    this.activePickupCapsules = this.cullCapsules(this.pickupCapsules, gridX, gridY, this.activePickupCapsules);
+    this.lastCullGridX = gridX;
+    this.lastCullGridY = gridY;
+  }
+
+  public cullCapsules(
+    capsules: PickupCapsule[],
+    gridX: number,
+    gridY: number,
+    outArray?: PickupCapsule[]
+  ): PickupCapsule[] {
+    const activeCapsules = outArray || [];
+    activeCapsules.length = 0;
+
+    for (let i = 0; i < capsules.length; i++) {
+      const capsule = capsules[i];
+      if (!capsule.active && capsule.hp <= 0) continue;
+
+      const capsuleGridX = Math.floor(capsule.x / 320);
+      const capsuleGridY = Math.floor(capsule.y / 240);
+      const isActiveRoom = capsuleGridX === gridX && capsuleGridY === gridY;
+
+      capsule.setActive(isActiveRoom);
+      capsule.setVisible(isActiveRoom);
+      if (capsule.body) {
+        capsule.body.enable = isActiveRoom;
+      }
+      if (isActiveRoom) {
+        activeCapsules.push(capsule);
+      }
+    }
+    return activeCapsules;
   }
 
   private triggerVictory(): void {
@@ -477,8 +529,8 @@ export class GameScene extends Phaser.Scene {
                   } else if (Math.random() < 0.2) {
                     const droppedItem = new PickupItem(this, enemy.x, enemy.y, getRandomPickupWeapon());
                     this.pickupItems.push(droppedItem);
-                    if (this.tilemapResult?.groundLayer) {
-                      this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
+                    if (this.pickupItemGroup) {
+                      this.pickupItemGroup.add(droppedItem);
                     }
                   }
                 }
@@ -487,9 +539,9 @@ export class GameScene extends Phaser.Scene {
             }
           }
 
-          // Player bullet vs Pickup Capsules
-          for (let c = this.pickupCapsules.length - 1; c >= 0; c--) {
-            const capsule = this.pickupCapsules[c];
+          // Player bullet vs Pickup Capsules (only active capsules in current room)
+          for (let c = this.activePickupCapsules.length - 1; c >= 0; c--) {
+            const capsule = this.activePickupCapsules[c];
             if (!capsule.active) continue;
             if (this.checkOverlap(proj, capsule, 4)) {
               const droppedItem = capsule.hit();
@@ -498,8 +550,8 @@ export class GameScene extends Phaser.Scene {
               }
               if (droppedItem) {
                 this.pickupItems.push(droppedItem);
-                if (this.tilemapResult?.groundLayer) {
-                  this.physics.add.collider(droppedItem, this.tilemapResult.groundLayer);
+                if (this.pickupItemGroup) {
+                  this.pickupItemGroup.add(droppedItem);
                 }
               }
               break;
@@ -541,6 +593,9 @@ export class GameScene extends Phaser.Scene {
         const weapon = item.collect();
         this.player.equipWeapon(weapon);
         this.pickupItems.splice(i, 1);
+        if (typeof item.destroy === 'function') {
+          item.destroy();
+        }
       }
     }
 

@@ -35,4 +35,19 @@ describe('Asset Integrity', () => {
       expect(pngHeight).toBe(height);
     });
   });
+
+  it('verifies all expected BGM audio asset files exist and have non-zero size', () => {
+    const audioFiles = [
+      'public/assets/audio/bgm_stage.ogg',
+      'public/assets/audio/bgm_stage.mp3',
+      'public/assets/audio/bgm_boss.ogg',
+      'public/assets/audio/bgm_boss.mp3',
+    ];
+    audioFiles.forEach((relPath) => {
+      const fullPath = path.resolve(process.cwd(), relPath);
+      expect(fs.existsSync(fullPath), `Missing audio asset: ${relPath}`).toBe(true);
+      const stat = fs.statSync(fullPath);
+      expect(stat.size).toBeGreaterThan(100000); // Greater than 100KB
+    });
+  });
 });

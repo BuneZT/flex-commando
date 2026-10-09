@@ -15,7 +15,7 @@ export class MainMenuScene extends Phaser.Scene {
     if (this.cameras?.main && typeof this.cameras.main.setRoundPixels === 'function') {
       this.cameras.main.setRoundPixels(true);
     }
-    SoundManager.getInstance().startBGM();
+    SoundManager.getInstance().startBGM('STAGE', this);
 
     const { width, height } = this.cameras.main;
 

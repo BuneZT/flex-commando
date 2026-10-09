@@ -285,6 +285,66 @@ describe('GameScene Parallax Background', () => {
   });
 });
 
+describe('Pickup Capsule Spatial Culling', () => {
+  function createMockCapsule(x: number, y: number, hp: number = 1) {
+    const capsule: any = {
+      x,
+      y,
+      hp,
+      active: true,
+      visible: true,
+      body: { enable: true },
+      setActive(val: boolean) {
+        this.active = val;
+        return this;
+      },
+      setVisible(val: boolean) {
+        this.visible = val;
+        return this;
+      },
+    };
+    return capsule;
+  }
+
+  it('should cull capsules outside the current room and activate capsules inside', () => {
+    const scene = new GameScene();
+    const capsuleRoom00 = createMockCapsule(100, 100);
+    const capsuleRoom10 = createMockCapsule(400, 100);
+    const capsuleRoom01 = createMockCapsule(100, 300);
+
+    const capsules = [capsuleRoom00, capsuleRoom10, capsuleRoom01];
+    const active = scene.cullCapsules(capsules, 0, 0);
+
+    expect(active.length).toBe(1);
+    expect(active[0]).toBe(capsuleRoom00);
+    expect(capsuleRoom00.active).toBe(true);
+    expect(capsuleRoom00.visible).toBe(true);
+    expect(capsuleRoom00.body.enable).toBe(true);
+
+    expect(capsuleRoom10.active).toBe(false);
+    expect(capsuleRoom10.visible).toBe(false);
+    expect(capsuleRoom10.body.enable).toBe(false);
+
+    expect(capsuleRoom01.active).toBe(false);
+    expect(capsuleRoom01.visible).toBe(false);
+    expect(capsuleRoom01.body.enable).toBe(false);
+  });
+
+  it('should update active capsules when room changes', () => {
+    const scene = new GameScene();
+    const capsuleRoom00 = createMockCapsule(100, 100);
+    const capsuleRoom10 = createMockCapsule(400, 100);
+
+    const capsules = [capsuleRoom00, capsuleRoom10];
+    const active = scene.cullCapsules(capsules, 1, 0);
+
+    expect(active.length).toBe(1);
+    expect(active[0]).toBe(capsuleRoom10);
+    expect(capsuleRoom00.active).toBe(false);
+    expect(capsuleRoom10.active).toBe(true);
+  });
+});
+
 
 
 

@@ -29,6 +29,7 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
   },
   fps: {
     target: 60,
+    limit: 60,
     smoothStep: true
   },
   scene: [BootScene, MainMenuScene, GameScene, GameOverScene]

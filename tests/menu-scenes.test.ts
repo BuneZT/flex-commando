@@ -11,6 +11,7 @@ describe('Menu Scenes', () => {
 
     const loadedImages: Record<string, string> = {};
     const loadedSpritesheets: Record<string, { path: string; config: any }> = {};
+    const loadedAudio: Record<string, string[]> = {};
     (boot as any).load = {
       image: (key: string, path: string) => {
         loadedImages[key] = path;
@@ -18,9 +19,15 @@ describe('Menu Scenes', () => {
       spritesheet: (key: string, path: string, config: any) => {
         loadedSpritesheets[key] = { path, config };
       },
+      audio: (key: string, paths: string[]) => {
+        loadedAudio[key] = paths;
+      },
     };
 
     boot.preload();
+
+    expect(loadedAudio['bgm_stage']).toEqual(['assets/audio/bgm_stage.ogg', 'assets/audio/bgm_stage.mp3']);
+    expect(loadedAudio['bgm_boss']).toEqual(['assets/audio/bgm_boss.ogg', 'assets/audio/bgm_boss.mp3']);
 
     expect(loadedImages['logo']).toBe('assets/ui/logo.png');
     expect(loadedImages['cyber_hangar_bg']).toBe('assets/bg/cyber_hangar_bg.png');

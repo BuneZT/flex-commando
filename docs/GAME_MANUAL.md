@@ -23,9 +23,8 @@ Players step into the combat boots of an over-the-top 80s action hero—featurin
   * **Critical Path:** Carved via a random walk algorithm with backtrack prevention to guarantee a valid route from entrance to exit.
   * **Branch Rooms:** Optional side corridors offering extra weapon capsules and enemy challenges.
   * **Door Bitmask Matching:** Rooms connect dynamically using 4-bit doorway masks (`N=1, S=2, E=4, W=8`) matched to 15 modular room templates.
-* **Authentic 16-Bit Graphics & Headless Safety:**
   * **Graphics:** Preloaded 16-bit arcade pixel-art PNG assets located in `public/assets/` (title logo, seamless parallax cyber hangar backdrop, multi-frame enemy sheets, player commando, and neon projectiles) with an automated procedural fallback in `TextureFactory.ts` guaranteeing 100% headless Vitest test execution without HTTP dependencies.
-  * **Audio:** 100% synthesized Web Audio API sound effects and chiptune background music (arpeggios, laser blasts, hits, explosions) in `SoundManager.ts`. No audio files required.
+  * **Audio:** Preloaded CC0 chiptune audio tracks (`bgm_stage`, `bgm_boss`) in `public/assets/audio/` with automated procedural Web Audio synthesis fallback in `SoundManager.ts` ensuring rich sound and 100% headless Vitest test execution without HTTP dependencies.
 * **Seamless Room Camera & Culling:** Smooth pan transitions between rooms; off-screen rooms pause enemy AI and physics to maintain 60 FPS performance.
 
 ---

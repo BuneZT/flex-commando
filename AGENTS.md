@@ -27,7 +27,7 @@ flex-commando/
 │   │   ├── TilemapRenderer.ts    # Stitches 4x4 room grid into 80x60 global tilemap
 │   │   ├── TextureFactory.ts     # Procedural pixel-art sprite, tileset, and animation generator
 │   │   ├── CameraManager.ts      # Active room calculation & smooth room pan transitions
-│   │   └── SoundManager.ts       # Singleton Web Audio BGM & SFX manager (procedural, no file assets)
+│   │   └── SoundManager.ts       # Singleton audio manager (CC0 audio file BGM with procedural SFX & headless fallback)
 │   ├── entities/
 │   │   ├── Player.ts             # Player arcade sprite, crouching hitbox, jump & muzzle offset
 │   │   ├── PlayerAim.ts          # Pure 8-way directional aiming state machine & angle math
@@ -83,4 +83,4 @@ flex-commando/
 * **Adding New Weapon Types**: Add entry to `WeaponType` union in `src/weapons/WeaponTypes.ts`, define stats in `WEAPON_CONFIGS`, update `Player.shoot()` or `ProjectilePool.spawn()`.
 * **Adding New Enemies**: Extend `EnemyBase` in `src/entities/enemies/`, implement `updateAI(time, delta, player)`, add unit test in `tests/enemy.test.ts`.
 * **Adding New Room Templates**: Add template schema (20x15 tiles) in `src/core/RoomTemplate.ts` with appropriate `doorMask` bitmask matching its openings.
-* **Adding Audio / SFX**: All audio is procedurally synthesised by `SoundManager` (singleton in `src/core/SoundManager.ts`) using the Web Audio API — no external files. Add new sound methods there and call them from `Player.ts`, `ProjectilePool.ts`, or `GameScene.ts`.
+* **Adding Audio / SFX**: BGM tracks are preloaded audio files in `public/assets/audio/` (with procedural synth fallback in `SoundManager.ts`). SFX is procedurally synthesised by `SoundManager` using Web Audio API. Add new sound methods there and call them from `Player.ts`, `ProjectilePool.ts`, or `GameScene.ts`.

@@ -41,6 +41,36 @@ describe('SoundManager', () => {
     }).not.toThrow();
   });
 
+  it('should play BGM using scene.sound when available and handle track switching', () => {
+    const sm = SoundManager.getInstance();
+    let playedTrack = '';
+    let stoppedTrack = '';
+    const mockSoundObj = {
+      play: () => {},
+      stop: () => { stoppedTrack = playedTrack; },
+      destroy: () => {},
+      setMute: () => {},
+    };
+    const mockScene = {
+      sound: {
+        add: (key: string) => {
+          playedTrack = key;
+          return mockSoundObj;
+        },
+        mute: false,
+      },
+    } as any;
+
+    sm.startBGM('STAGE', mockScene);
+    expect(playedTrack).toBe('bgm_stage');
+
+    sm.startBGM('BOSS', mockScene);
+    expect(stoppedTrack).toBe('bgm_stage');
+    expect(playedTrack).toBe('bgm_boss');
+
+    sm.stopBGM();
+  });
+
   it('should throttle rapid duplicate playShoot triggers within 25ms window', () => {
     const sm = SoundManager.getInstance();
     let playCount = 0;

@@ -22,6 +22,10 @@ export class BootScene extends Phaser.Scene {
     this.load.image('tex_crosshair', 'assets/vfx/crosshair.png');
     this.load.spritesheet('tex_projectiles', 'assets/vfx/projectiles.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('tex_pickups', 'assets/vfx/pickups.png', { frameWidth: 16, frameHeight: 16 });
+    if (typeof this.load.audio === 'function') {
+      this.load.audio('bgm_stage', ['assets/audio/bgm_stage.ogg', 'assets/audio/bgm_stage.mp3']);
+      this.load.audio('bgm_boss', ['assets/audio/bgm_boss.ogg', 'assets/audio/bgm_boss.mp3']);
+    }
   }
 
   create(): void {

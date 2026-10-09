@@ -60,6 +60,8 @@ export class Controls {
     };
   }
 
+  private tempWorldPoint: { x: number; y: number } = { x: 0, y: 0 };
+
   public getInputState(camera?: Phaser.Cameras.Scene2D.Camera): RawInputState {
     const pointer = this.scene.input?.activePointer;
     let isPointerDown = false;
@@ -69,7 +71,7 @@ export class Controls {
     if (pointer) {
       isPointerDown = pointer.isDown;
       if (camera && typeof camera.getWorldPoint === 'function') {
-        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y, this.tempWorldPoint as any);
         mouseX = worldPoint.x;
         mouseY = worldPoint.y;
       } else {
