@@ -336,5 +336,79 @@ describe('Procedural Textures for Projectiles and Pickups', () => {
     const barrierItem = new PickupItem(mockScene, 0, 0, 'BARRIER');
     expect(barrierItem.texture.key).toBe('tex_pickup_B');
   });
+
+  it('should use preloaded tex_projectiles spritesheet frames and hitboxes when present', () => {
+    const mockScene = createMockScene();
+    (mockScene as any).textures = {
+      exists: (key: string) => key === 'tex_projectiles',
+      get: () => ({}),
+    };
+    const proj = new Projectile(mockScene, 0, 0);
+    const body = createMockBody();
+    proj.body = body;
+
+    const setTextureCalls: { key: string; frame?: string | number }[] = [];
+    proj.setTexture = ((key: string, frame?: string | number) => {
+      setTextureCalls.push({ key, frame });
+      return proj;
+    }) as any;
+
+    // PEA_SHOOTER -> frame 0
+    proj.fire(0, 0, 0, 'PEA_SHOOTER', true);
+    expect(setTextureCalls[setTextureCalls.length - 1]).toEqual({ key: 'tex_projectiles', frame: 0 });
+    expect(body.width).toBe(6);
+    expect(body.height).toBe(6);
+
+    // SPREAD_SHOT -> frame 1
+    proj.fire(0, 0, 0, 'SPREAD_SHOT', true);
+    expect(setTextureCalls[setTextureCalls.length - 1]).toEqual({ key: 'tex_projectiles', frame: 1 });
+    expect(body.width).toBe(6);
+    expect(body.height).toBe(6);
+
+    // LASER -> frame 2
+    proj.fire(0, 0, 0, 'LASER', true);
+    expect(setTextureCalls[setTextureCalls.length - 1]).toEqual({ key: 'tex_projectiles', frame: 2 });
+    expect(body.width).toBe(16);
+    expect(body.height).toBe(4);
+
+    // FLAME -> frame 3
+    proj.fire(0, 0, 0, 'FLAME', true);
+    expect(setTextureCalls[setTextureCalls.length - 1]).toEqual({ key: 'tex_projectiles', frame: 3 });
+    expect(body.width).toBe(12);
+    expect(body.height).toBe(12);
+
+    // Enemy bullet -> frame 4
+    proj.fire(0, 0, 0, 'PEA_SHOOTER', false);
+    expect(setTextureCalls[setTextureCalls.length - 1]).toEqual({ key: 'tex_projectiles', frame: 4 });
+  });
+
+  it('should use preloaded tex_pickups spritesheet frames for capsule and badges when present', () => {
+    const mockScene = createMockScene();
+    (mockScene as any).textures = {
+      exists: (key: string) => key === 'tex_pickups',
+      get: () => ({}),
+    };
+
+    const capsule = new PickupCapsule(mockScene, 100, 100, 'SPREAD_SHOT');
+    expect(capsule.texture.key).toBe('tex_pickups');
+
+    const badgeCalls: { key: string; frame?: string | number }[] = [];
+    const testBadge = (type: WeaponType, expectedFrame: number) => {
+      badgeCalls.length = 0;
+      const item = new PickupItem(mockScene, 0, 0, type);
+      item.setTexture = ((key: string, frame?: string | number) => {
+        badgeCalls.push({ key, frame });
+        return item;
+      }) as any;
+      item.initPickup(0, 0, type);
+      expect(badgeCalls[badgeCalls.length - 1]).toEqual({ key: 'tex_pickups', frame: expectedFrame });
+    };
+
+    testBadge('SPREAD_SHOT', 2);
+    testBadge('LASER', 3);
+    testBadge('FLAME', 4);
+    testBadge('MACHINE_GUN', 5);
+    testBadge('BARRIER', 6);
+  });
 });
 

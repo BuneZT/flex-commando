@@ -28,19 +28,46 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public fire(x: number, y: number, angleDeg: number, weaponType: WeaponType, isPlayerBullet: boolean = true): void {
     const config = WEAPON_CONFIGS[weaponType] || WEAPON_CONFIGS.PEA_SHOOTER;
 
-    let textureKey = 'tex_bullet_pea';
-    if (!isPlayerBullet) {
-      textureKey = 'tex_bullet_enemy';
-    } else if (weaponType === 'SPREAD_SHOT') {
-      textureKey = 'tex_bullet_spread';
-    } else if (weaponType === 'LASER') {
-      textureKey = 'tex_bullet_laser';
-    } else if (weaponType === 'FLAME') {
-      textureKey = 'tex_bullet_flame';
-    }
+    const hasProjectilesSheet = Boolean(this.scene?.textures?.exists?.('tex_projectiles'));
+    if (hasProjectilesSheet) {
+      let frameIndex = 0;
+      if (!isPlayerBullet) {
+        frameIndex = 4;
+      } else {
+        switch (weaponType) {
+          case 'PEA_SHOOTER':
+            frameIndex = 0;
+            break;
+          case 'SPREAD_SHOT':
+            frameIndex = 1;
+            break;
+          case 'LASER':
+            frameIndex = 2;
+            break;
+          case 'FLAME':
+            frameIndex = 3;
+            break;
+          default:
+            frameIndex = 0;
+            break;
+        }
+      }
+      this.setTexture('tex_projectiles', frameIndex);
+    } else {
+      let textureKey = 'tex_bullet_pea';
+      if (!isPlayerBullet) {
+        textureKey = 'tex_bullet_enemy';
+      } else if (weaponType === 'SPREAD_SHOT') {
+        textureKey = 'tex_bullet_spread';
+      } else if (weaponType === 'LASER') {
+        textureKey = 'tex_bullet_laser';
+      } else if (weaponType === 'FLAME') {
+        textureKey = 'tex_bullet_flame';
+      }
 
-    if (this.texture?.key !== textureKey) {
-      this.setTexture(textureKey);
+      if (this.texture?.key !== textureKey) {
+        this.setTexture(textureKey);
+      }
     }
 
     this.setPosition(x, y);
@@ -70,15 +97,19 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(velX, velY);
       }
 
-      // Adjust hitbox size based on weapon type
+      // Adjust hitbox size based on weapon type and texture format
       const targetW = weaponType === 'LASER' ? 16 : (weaponType === 'FLAME' ? 12 : 6);
       const targetH = weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 12 : 6);
       if (typeof body.setSize === 'function' && (body.width !== targetW || body.height !== targetH)) {
         body.setSize(targetW, targetH);
       }
       if (typeof body.setOffset === 'function') {
-        const offX = weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 1 : 0);
-        const offY = weaponType === 'LASER' ? 1 : (weaponType === 'FLAME' ? 1 : 0);
+        const offX = hasProjectilesSheet
+          ? (weaponType === 'LASER' ? 0 : (weaponType === 'FLAME' ? 2 : 5))
+          : (weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 1 : 0));
+        const offY = hasProjectilesSheet
+          ? (weaponType === 'LASER' ? 6 : (weaponType === 'FLAME' ? 2 : 5))
+          : (weaponType === 'LASER' ? 1 : (weaponType === 'FLAME' ? 1 : 0));
         body.setOffset(offX, offY);
       }
     }

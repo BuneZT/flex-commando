@@ -57,7 +57,8 @@ export class Boss extends EnemyBase {
     }
 
     if (this.anims && typeof this.anims.play === 'function') {
-      if (this.anims.currentAnim?.key !== 'boss_drive') {
+      const anims = this.scene?.anims || this.scene?.sys?.anims;
+      if (anims?.exists?.('boss_drive') && this.anims.currentAnim?.key !== 'boss_drive') {
         this.anims.play('boss_drive', true);
       }
     }

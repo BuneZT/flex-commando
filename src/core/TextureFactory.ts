@@ -395,9 +395,11 @@ export class TextureFactory {
     }
 
     if (!scene.anims.exists('capsule_spin')) {
+      const hasPickups = scene.textures?.exists('tex_pickups');
+      const capsuleKey = hasPickups ? 'tex_pickups' : 'tex_capsule_flying';
       scene.anims.create({
         key: 'capsule_spin',
-        frames: scene.anims.generateFrameNumbers('tex_capsule_flying', { start: 0, end: 1 }),
+        frames: scene.anims.generateFrameNumbers(capsuleKey, { start: 0, end: 1 }),
         frameRate: 6,
         repeat: -1,
       });
@@ -499,6 +501,13 @@ export class TextureFactory {
     g.fillRect(0, 0, 80, 16);
     g.generateTexture('tex_projectiles', 80, 16);
     g.destroy();
+
+    const tex = scene.textures.get('tex_projectiles');
+    if (tex && typeof tex.add === 'function') {
+      for (let i = 0; i < 5; i++) {
+        tex.add(i, 0, i * 16, 0, 16, 16);
+      }
+    }
   }
 
   private static createPickupsFallbackTexture(scene: Phaser.Scene): void {
@@ -508,5 +517,12 @@ export class TextureFactory {
     g.fillRect(0, 0, 112, 16);
     g.generateTexture('tex_pickups', 112, 16);
     g.destroy();
+
+    const tex = scene.textures.get('tex_pickups');
+    if (tex && typeof tex.add === 'function') {
+      for (let i = 0; i < 7; i++) {
+        tex.add(i, 0, i * 16, 0, 16, 16);
+      }
+    }
   }
 }

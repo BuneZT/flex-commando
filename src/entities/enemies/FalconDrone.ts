@@ -65,7 +65,8 @@ export class FalconDrone extends EnemyBase {
     }
 
     if (this.anims && typeof this.anims.play === 'function') {
-      if (this.anims.currentAnim?.key !== 'drone_fly') {
+      const anims = this.scene?.anims || this.scene?.sys?.anims;
+      if (anims?.exists?.('drone_fly') && this.anims.currentAnim?.key !== 'drone_fly') {
         this.anims.play('drone_fly', true);
       }
     }

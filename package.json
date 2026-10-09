@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:assets": "node scripts/generate-pixel-assets.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.0"

@@ -38,12 +38,14 @@ function createMockBody(): Phaser.Physics.Arcade.Body {
 }
 
 function createMockScene(): Phaser.Scene {
+  const anims = { get: () => null, exists: () => false, on: () => {}, once: () => {}, off: () => {} };
   return {
+    anims,
     sys: {
       queueDepthSort: () => {},
       displayList: { add: () => {} },
       updateList: { add: () => {} },
-      anims: { get: () => null, exists: () => false, on: () => {}, once: () => {}, off: () => {} },
+      anims,
       textures: { get: (key?: string) => ({ key: key || '', get: () => ({}) }) },
     },
     add: { existing: () => {} },
@@ -214,6 +216,7 @@ describe('Enemy Classes AI and Damage Behavior', () => {
 
   it('should play multi-frame animations or switch frames for enemy states', () => {
     const scene = createMockScene();
+    (scene.anims as any).exists = () => true;
 
     // Trooper: play trooper_run on moving, stop on idle
     const trooper = new Trooper(scene, 100, 100);

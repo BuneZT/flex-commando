@@ -30,7 +30,8 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
 
   constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT') {
     const letter = weaponTypeToLetter(weaponType);
-    super(scene, x, y, `tex_pickup_${letter}`);
+    const hasPickupsSheet = Boolean(scene?.textures?.exists?.('tex_pickups'));
+    super(scene, x, y, hasPickupsSheet ? 'tex_pickups' : `tex_pickup_${letter}`);
 
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);
@@ -46,7 +47,31 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
     this.setPosition(x, y);
     this.weaponType = weaponType;
     this.letter = weaponTypeToLetter(weaponType);
-    this.setTexture(`tex_pickup_${this.letter}`);
+
+    if (this.scene?.textures?.exists?.('tex_pickups')) {
+      let badgeFrame = 2;
+      switch (this.letter) {
+        case 'S':
+          badgeFrame = 2;
+          break;
+        case 'L':
+          badgeFrame = 3;
+          break;
+        case 'F':
+          badgeFrame = 4;
+          break;
+        case 'M':
+          badgeFrame = 5;
+          break;
+        case 'B':
+          badgeFrame = 6;
+          break;
+      }
+      this.setTexture('tex_pickups', badgeFrame);
+    } else {
+      this.setTexture(`tex_pickup_${this.letter}`);
+    }
+
     this.setActive(true);
     this.setVisible(true);
 
@@ -83,8 +108,16 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
   private flightTime: number = 0;
   private startY: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT', texture: string = 'tex_capsule_flying') {
-    super(scene, x, y, texture);
+  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT', texture?: string) {
+    const hasPickupsSheet = Boolean(scene?.textures?.exists?.('tex_pickups'));
+    const defaultTexture = hasPickupsSheet ? 'tex_pickups' : 'tex_capsule_flying';
+    super(scene, x, y, texture || defaultTexture);
+
+    if (hasPickupsSheet && (!texture || texture === 'tex_pickups')) {
+      if (typeof this.setFrame === 'function') {
+        this.setFrame(0);
+      }
+    }
 
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);

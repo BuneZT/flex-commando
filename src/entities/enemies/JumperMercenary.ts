@@ -50,9 +50,10 @@ export class JumperMercenary extends EnemyBase {
 
     const isGrounded = body.blocked?.down || body.touching?.down || false;
 
+    const anims = this.scene?.anims || this.scene?.sys?.anims;
     if (this.anims && typeof this.anims.play === 'function') {
       if (!isGrounded) {
-        if (this.anims.currentAnim?.key !== 'jumper_jump') {
+        if (anims?.exists?.('jumper_jump') && this.anims.currentAnim?.key !== 'jumper_jump') {
           this.anims.play('jumper_jump', true);
         }
       } else {
@@ -68,7 +69,7 @@ export class JumperMercenary extends EnemyBase {
     if (isGrounded && this.jumpTimer <= 0) {
       body.setVelocityY(this.jumpVelocity);
       this.jumpTimer = this.jumpCooldownMs;
-      if (this.anims && typeof this.anims.play === 'function') {
+      if (this.anims && typeof this.anims.play === 'function' && anims?.exists?.('jumper_jump')) {
         this.anims.play('jumper_jump', true);
       }
     }
