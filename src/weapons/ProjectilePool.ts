@@ -61,16 +61,25 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = true;
-      body.reset(x, y);
+      if (typeof body.reset === 'function') {
+        body.reset(x, y);
+      }
       const velX = Math.cos(rad) * config.speed;
       const velY = Math.sin(rad) * config.speed;
-      body.setVelocity(velX, velY);
+      if (typeof body.setVelocity === 'function') {
+        body.setVelocity(velX, velY);
+      }
 
       // Adjust hitbox size based on weapon type
       const targetW = weaponType === 'LASER' ? 16 : (weaponType === 'FLAME' ? 12 : 6);
       const targetH = weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 12 : 6);
-      if (body.width !== targetW || body.height !== targetH) {
+      if (typeof body.setSize === 'function' && (body.width !== targetW || body.height !== targetH)) {
         body.setSize(targetW, targetH);
+      }
+      if (typeof body.setOffset === 'function') {
+        const offX = weaponType === 'LASER' ? 4 : (weaponType === 'FLAME' ? 1 : 0);
+        const offY = weaponType === 'LASER' ? 1 : (weaponType === 'FLAME' ? 1 : 0);
+        body.setOffset(offX, offY);
       }
     }
   }
@@ -98,7 +107,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
       const offset = Math.sin(this.travelDistance * 0.1) * 12;
 
       const body = this.body as Phaser.Physics.Arcade.Body;
-      if (body) {
+      if (body && typeof body.setVelocity === 'function') {
         const vx = Math.cos(this.baseAngleRad) * config.speed + Math.cos(perpAngle) * offset * 10;
         const vy = Math.sin(this.baseAngleRad) * config.speed + Math.sin(perpAngle) * offset * 10;
         body.setVelocity(vx, vy);
@@ -140,7 +149,9 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = false;
-      body.setVelocity(0, 0);
+      if (typeof body.setVelocity === 'function') {
+        body.setVelocity(0, 0);
+      }
     }
   }
 }

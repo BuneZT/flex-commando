@@ -19,17 +19,16 @@ function createMockScene(): Phaser.Scene {
 
 function createMockBody(): Phaser.Physics.Arcade.Body {
   let width = 16;
-  let height = 24;
-  let offsetX = 0;
-  let offsetY = 0;
+  let height = 22;
+  let offsetX = 4;
+  let offsetY = 2;
   let velX = 0;
   let velY = 0;
 
   return {
     get width() { return width; },
     get height() { return height; },
-    get offsetX() { return offsetX; },
-    get offsetY() { return offsetY; },
+    get offset() { return { x: offsetX, y: offsetY }; },
     get velocityX() { return velX; },
     get velocityY() { return velY; },
     velocity: {
@@ -78,7 +77,7 @@ describe('Player entity', () => {
     expect(player.getAimAngle()).toBe(-135);
   });
 
-  it('should handle grounded down aim without shrinking hitbox', () => {
+  it('should shrink hitbox and enter crouch state when grounded and aiming down', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
     const body = createMockBody();
@@ -96,7 +95,34 @@ describe('Player entity', () => {
     };
     player.updatePlayer(input);
     expect(player.aimDirection).toBe('DOWN');
-    expect(body.height).toBe(24);
+    expect(player.isCrouching).toBe(true);
+    expect(body.width).toBe(16);
+    expect(body.height).toBe(14);
+    expect(body.offset.x).toBe(4);
+    expect(body.offset.y).toBe(10);
+  });
+
+  it('should maintain standing hitbox (16x22, offset 4,2) when standing or running', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    const body = createMockBody();
+    player.body = body;
+
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: true,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+    });
+    expect(player.isCrouching).toBe(false);
+    expect(body.width).toBe(16);
+    expect(body.height).toBe(22);
+    expect(body.offset.x).toBe(4);
+    expect(body.offset.y).toBe(2);
   });
 
   it('should calculate muzzle position correctly', () => {
@@ -194,5 +220,68 @@ describe('Player entity', () => {
     expect(body.velocity.x).toBe(-120);
     // Aim angle points towards cursor
     expect(player.getAimAngle()).toBeCloseTo(0, 0);
+  });
+
+  it('should calibrate getMuzzleOffset accurately across all 8 directions and crouching', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+
+    // Facing right (0 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 12, y: -4 });
+    // Up-forward right (-45 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 9, y: -12 });
+    // Up straight (-90 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'UP', facingLeft: false, isCrouching: false })).toEqual({ x: 2, y: -16 });
+    // Down-forward right (45 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 9, y: 4 });
+    // Down straight right (90 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN', facingLeft: false, isCrouching: false })).toEqual({ x: 2, y: 8 });
+
+    // Facing left (180 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -12, y: -4 });
+    // Up-forward left (-135 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -9, y: -12 });
+    // Up straight left (-90 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'UP', facingLeft: true, isCrouching: false })).toEqual({ x: -2, y: -16 });
+    // Down-forward left (135 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -9, y: 4 });
+    // Down straight left (90 deg)
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN', facingLeft: true, isCrouching: false })).toEqual({ x: -2, y: 8 });
+
+    // Crouching (lowered rifle barrel)
+    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: false })).toEqual({ x: 12, y: 2 });
+    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: true })).toEqual({ x: -12, y: 2 });
+  });
+
+  it('should safely guard anims and select correct animation keys', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    const body = createMockBody();
+    player.body = body;
+
+    let playedAnim = '';
+    player.anims = {
+      play: (key: string) => { playedAnim = key; },
+      currentAnim: null,
+    } as any;
+    (mockScene.sys.anims as any).exists = () => true;
+
+    // Idle
+    player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_idle');
+
+    // Run
+    player.updatePlayer({ up: false, down: false, left: true, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run');
+
+    // Crouch
+    player.updatePlayer({ up: false, down: true, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_crouch');
+
+    // Jump (airborne)
+    (body as any).blocked.down = false;
+    (body as any).touching.down = false;
+    player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_jump');
   });
 });

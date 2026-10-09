@@ -53,11 +53,12 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = true;
-      body.reset(x, y);
-      body.setSize(14, 14);
-      body.setGravityY(100); // Gently falls to ground
-      body.setVelocityY(20);
-      body.setBounce(0.4, 0.4);
+      if (typeof body.reset === 'function') body.reset(x, y);
+      if (typeof body.setSize === 'function') body.setSize(14, 14);
+      if (typeof body.setOffset === 'function') body.setOffset(1, 1);
+      if (typeof body.setGravityY === 'function') body.setGravityY(100); // Gently falls to ground
+      if (typeof body.setVelocityY === 'function') body.setVelocityY(20);
+      if (typeof body.setBounce === 'function') body.setBounce(0.4, 0.4);
     }
   }
 
@@ -68,7 +69,7 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = false;
-      body.setVelocity(0, 0);
+      if (typeof body.setVelocity === 'function') body.setVelocity(0, 0);
     }
 
     return this.weaponType;
@@ -115,10 +116,11 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = true;
-      body.reset(x, y);
-      body.setAllowGravity(false);
-      body.setSize(20, 12);
-      body.setVelocityX(this.speed);
+      if (typeof body.reset === 'function') body.reset(x, y);
+      if (typeof body.setAllowGravity === 'function') body.setAllowGravity(false);
+      if (typeof body.setSize === 'function') body.setSize(20, 12);
+      if (typeof body.setOffset === 'function') body.setOffset(0, 2);
+      if (typeof body.setVelocityX === 'function') body.setVelocityX(this.speed);
     }
   }
 
@@ -130,7 +132,7 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
     this.setY(this.startY + waveY);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    if (body) {
+    if (body && typeof body.setVelocityX === 'function') {
       body.setVelocityX(this.speed);
     }
 
@@ -138,7 +140,10 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
     if (this.x < -50 || this.x > 1400) {
       this.setActive(false);
       this.setVisible(false);
-      if (body) body.enable = false;
+      if (body) {
+        body.enable = false;
+        if (typeof body.setVelocity === 'function') body.setVelocity(0, 0);
+      }
     }
   }
 
@@ -157,7 +162,7 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.enable = false;
-      body.setVelocity(0, 0);
+      if (typeof body.setVelocity === 'function') body.setVelocity(0, 0);
     }
 
     return new PickupItem(this.scene, this.x, this.y, this.weaponType);
