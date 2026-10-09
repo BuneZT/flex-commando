@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   public controls?: Controls;
   public projectilePool?: ProjectilePool;
   public hud?: HUD;
+  public parallaxBg?: Phaser.GameObjects.TileSprite;
 
   public enemies: EnemyBase[] = [];
   public enemyGroup?: Phaser.Physics.Arcade.Group;
@@ -65,6 +66,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.parallaxBg = undefined;
     this.enemies = [];
     this.enemyGroup = undefined;
     this.activeEnemies = [];
@@ -98,6 +100,21 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.physics && typeof this.physics.add?.group === 'function') {
       this.enemyGroup = this.physics.add.group();
+    }
+
+    // 0.5. Parallax cyber hangar background
+    if (this.textures?.exists?.('cyber_hangar_bg') && typeof this.add?.tileSprite === 'function') {
+      const bg = this.add.tileSprite(0, 0, 320, 240, 'cyber_hangar_bg');
+      if (bg && typeof bg.setOrigin === 'function') {
+        bg.setOrigin(0, 0);
+      }
+      if (bg && typeof bg.setScrollFactor === 'function') {
+        bg.setScrollFactor(0);
+      }
+      if (bg && typeof bg.setDepth === 'function') {
+        bg.setDepth(-10);
+      }
+      this.parallaxBg = bg;
     }
 
     // 1. Generate room grid
@@ -321,6 +338,12 @@ export class GameScene extends Phaser.Scene {
         this.lastCullGridX = currentGridX;
         this.lastCullGridY = currentGridY;
       }
+    }
+
+    // 3.5. Update parallax background scroll position
+    if (this.parallaxBg && this.cameras?.main) {
+      this.parallaxBg.tilePositionX = (this.cameras.main.scrollX || 0) * 0.25;
+      this.parallaxBg.tilePositionY = (this.cameras.main.scrollY || 0) * 0.15;
     }
 
     // 4. Boss Room Trigger on Column 3 or BOSS room cell

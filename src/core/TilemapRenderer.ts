@@ -84,7 +84,7 @@ export class TilemapRenderer {
         });
       }
     } else if (groundLayer && typeof groundLayer.setCollisionByExclusion === 'function') {
-      groundLayer.setCollisionByExclusion([0]);
+      groundLayer.setCollisionByExclusion([0, 4]);
     }
 
     return {

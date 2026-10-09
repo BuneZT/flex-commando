@@ -138,4 +138,74 @@ describe('stitchGridTilemap', () => {
     expect(setCollisionCalls[0]).toEqual({ indexes: [1, 3], collides: true, recalculateFaces: true });
     expect(setCollisionCalls[1]).toEqual({ indexes: 2, collides: true, recalculateFaces: false });
   });
+
+  it('should configure one-way collision specifically on tile 2 during forEachTile', () => {
+    const tile2Collision: { left?: boolean; right?: boolean; up?: boolean; down?: boolean } = {};
+    const tile1Collision: { left?: boolean; right?: boolean; up?: boolean; down?: boolean } = {};
+
+    const mockGroundLayer = {
+      forEachTile: (cb: (tile: any) => void) => {
+        cb({
+          index: 2,
+          setCollision: (l: boolean, r: boolean, u: boolean, d: boolean) => {
+            tile2Collision.left = l;
+            tile2Collision.right = r;
+            tile2Collision.up = u;
+            tile2Collision.down = d;
+          },
+        });
+        cb({
+          index: 1,
+          setCollision: (l: boolean, r: boolean, u: boolean, d: boolean) => {
+            tile1Collision.left = l;
+            tile1Collision.right = r;
+            tile1Collision.up = u;
+            tile1Collision.down = d;
+          },
+        });
+      },
+    };
+    const mockMap = {
+      addTilesetImage: () => ({}),
+      createLayer: () => mockGroundLayer,
+      setCollision: () => {},
+    };
+    const mockScene = {
+      make: {
+        tilemap: () => mockMap,
+      },
+    } as any;
+
+    const grid = generateRoomGrid(42);
+    TilemapRenderer.renderLevel(mockScene, grid);
+
+    expect(tile2Collision).toEqual({ left: false, right: false, up: true, down: false });
+    expect(tile1Collision).toEqual({}); // tile 1 should not have individual setCollision called
+  });
+
+  it('should exclude air (0) and exit portal (4) when using fallback setCollisionByExclusion', () => {
+    let excludedIndexes: number[] = [];
+    const mockGroundLayer = {
+      setCollisionByExclusion: (indexes: number[]) => {
+        excludedIndexes = indexes;
+      },
+    };
+    const mockMap = {
+      addTilesetImage: () => ({}),
+      createLayer: () => mockGroundLayer,
+      // Note: no map.setCollision, forcing the setCollisionByExclusion branch
+    };
+    const mockScene = {
+      make: {
+        tilemap: () => mockMap,
+      },
+    } as any;
+
+    const grid = generateRoomGrid(42);
+    const result = TilemapRenderer.renderLevel(mockScene, grid);
+
+    expect(result).not.toBeNull();
+    expect(excludedIndexes).toEqual([0, 4]);
+  });
 });
+

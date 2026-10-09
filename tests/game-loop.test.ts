@@ -177,6 +177,115 @@ describe('GameScene Group Physics Consolidation', () => {
   });
 });
 
+describe('GameScene Parallax Background', () => {
+  it('should initialize parallaxBg TileSprite when cyber_hangar_bg texture exists', () => {
+    const scene = new GameScene();
+    const mock = createMockScene();
+    scene.sys = mock.sys;
+    scene.cameras = mock.cameras;
+    scene.physics = mock.physics;
+
+    let tileSpriteConfig: any = null;
+    let originSet: [number, number] | null = null;
+    let scrollFactorSet: number | null = null;
+    let depthSet: number | null = null;
+
+    const mockTileSprite = {
+      tilePositionX: 0,
+      tilePositionY: 0,
+      setOrigin: (x: number, y: number) => {
+        originSet = [x, y];
+        return mockTileSprite;
+      },
+      setScrollFactor: (factor: number) => {
+        scrollFactorSet = factor;
+        return mockTileSprite;
+      },
+      setDepth: (d: number) => {
+        depthSet = d;
+        return mockTileSprite;
+      },
+    };
+
+    scene.add = {
+      ...mock.add,
+      tileSprite: (x: number, y: number, w: number, h: number, key: string) => {
+        tileSpriteConfig = { x, y, w, h, key };
+        return mockTileSprite as any;
+      },
+    } as any;
+
+    (scene as any).textures = {
+      exists: (key: string) => key === 'cyber_hangar_bg',
+    };
+
+    scene.create();
+
+    expect(scene.parallaxBg).toBe(mockTileSprite);
+    expect(tileSpriteConfig).toEqual({
+      x: 0,
+      y: 0,
+      w: 320,
+      h: 240,
+      key: 'cyber_hangar_bg',
+    });
+    expect(originSet).toEqual([0, 0]);
+    expect(scrollFactorSet).toBe(0);
+    expect(depthSet).toBe(-10);
+  });
+
+  it('should safely leave parallaxBg undefined if texture or tileSprite is unavailable', () => {
+    const scene = new GameScene();
+    const mock = createMockScene();
+    scene.sys = mock.sys;
+    scene.cameras = mock.cameras;
+    scene.add = mock.add;
+    scene.physics = mock.physics;
+
+    scene.create();
+
+    expect(scene.parallaxBg).toBeUndefined();
+  });
+
+  it('should update tilePositionX and tilePositionY at 0.25x and 0.15x scroll ratios', () => {
+    const scene = new GameScene();
+    const mockTileSprite: any = {
+      tilePositionX: 0,
+      tilePositionY: 0,
+    };
+    scene.parallaxBg = mockTileSprite;
+    scene.cameras = {
+      main: {
+        scrollX: 400,
+        scrollY: 200,
+      },
+    } as any;
+
+    scene.update(1000, 16);
+
+    expect(mockTileSprite.tilePositionX).toBe(400 * 0.25); // 100
+    expect(mockTileSprite.tilePositionY).toBe(200 * 0.15); // 30
+  });
+
+  it('should default parallax offsets to 0 when camera scroll is zero or undefined', () => {
+    const scene = new GameScene();
+    const mockTileSprite: any = {
+      tilePositionX: 100,
+      tilePositionY: 100,
+    };
+    scene.parallaxBg = mockTileSprite;
+    scene.cameras = {
+      main: {} as any,
+    } as any;
+
+    scene.update(1000, 16);
+
+    expect(mockTileSprite.tilePositionX).toBe(0);
+    expect(mockTileSprite.tilePositionY).toBe(0);
+  });
+});
+
+
 
 
 
