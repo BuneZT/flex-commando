@@ -30,8 +30,15 @@ export class FalconDrone extends EnemyBase {
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      body.setAllowGravity(false);
-      body.setSize(16, 16);
+      if (typeof body.setAllowGravity === 'function') {
+        body.setAllowGravity(false);
+      }
+      if (typeof body.setSize === 'function') {
+        body.setSize(28, 16);
+      }
+      if (typeof body.setOffset === 'function') {
+        body.setOffset(2, 2);
+      }
     }
   }
 

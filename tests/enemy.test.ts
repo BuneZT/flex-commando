@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Phaser from 'phaser';
 import { calculateDroneSinePosition, FalconDrone } from '../src/entities/enemies/FalconDrone';
 import { EnemyBase } from '../src/entities/enemies/EnemyBase';
@@ -7,6 +7,35 @@ import { Turret } from '../src/entities/enemies/Turret';
 import { JumperMercenary } from '../src/entities/enemies/JumperMercenary';
 import { Boss } from '../src/entities/enemies/Boss';
 import { ProjectilePool } from '../src/weapons/ProjectilePool';
+
+function createMockBody(): Phaser.Physics.Arcade.Body {
+  let width = 0;
+  let height = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+  let enable = true;
+  const velocity = { x: 0, y: 0 };
+
+  return {
+    get width() { return width; },
+    get height() { return height; },
+    get offset() { return { x: offsetX, y: offsetY }; },
+    get enable() { return enable; },
+    set enable(val: boolean) { enable = val; },
+    velocity,
+    setCollideWorldBounds: () => {},
+    setImmovable: () => {},
+    setAllowGravity: () => {},
+    reset: (_x?: number, _y?: number) => {},
+    setSize: (w: number, h: number) => { width = w; height = h; },
+    setOffset: (x: number, y: number) => { offsetX = x; offsetY = y; },
+    setVelocityX: (vx: number) => { velocity.x = vx; },
+    setVelocityY: (vy: number) => { velocity.y = vy; },
+    setVelocity: (vx: number, vy: number) => { velocity.x = vx; velocity.y = vy; },
+    blocked: { down: true, left: false, right: false, up: false },
+    touching: { down: true, left: false, right: false, up: false },
+  } as unknown as Phaser.Physics.Arcade.Body;
+}
 
 function createMockScene(): Phaser.Scene {
   return {
@@ -18,29 +47,16 @@ function createMockScene(): Phaser.Scene {
       textures: { get: (key?: string) => ({ key: key || '', get: () => ({}) }) },
     },
     add: { existing: () => {} },
-    physics: { add: { existing: () => {} } },
+    physics: {
+      add: {
+        existing: (obj: any) => {
+          if (!obj.body) {
+            obj.body = createMockBody();
+          }
+        },
+      },
+    },
   } as unknown as Phaser.Scene;
-}
-
-function createMockBody(): Phaser.Physics.Arcade.Body {
-  let width = 16;
-  let height = 24;
-  const velocity = { x: 0, y: 0 };
-
-  return {
-    get width() { return width; },
-    get height() { return height; },
-    velocity,
-    setCollideWorldBounds: () => {},
-    setImmovable: () => {},
-    setSize: (w: number, h: number) => { width = w; height = h; },
-    setOffset: () => {},
-    setVelocityX: (vx: number) => { velocity.x = vx; },
-    setVelocityY: (vy: number) => { velocity.y = vy; },
-    setVelocity: (vx: number, vy: number) => { velocity.x = vx; velocity.y = vy; },
-    blocked: { down: true, left: false, right: false, up: false },
-    touching: { down: true, left: false, right: false, up: false },
-  } as unknown as Phaser.Physics.Arcade.Body;
 }
 
 describe('FalconDrone Sine Movement', () => {
@@ -161,5 +177,120 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     expect(hit).toBe(true);
     expect(drone.isAlive).toBe(false);
   });
+
+  it('configures proper expanded physics body sizes matching new silhouettes', () => {
+    const scene = createMockScene();
+    const trooper = new Trooper(scene, 100, 100);
+    const turret = new Turret(scene, 100, 100);
+    const drone = new FalconDrone(scene, 100, 100);
+    const jumper = new JumperMercenary(scene, 100, 100);
+    const boss = new Boss(scene, 100, 100);
+
+    // Trooper body size: 16x22, offset 4, 2
+    expect(trooper.body!.width).toBe(16);
+    expect(trooper.body!.height).toBe(22);
+    expect((trooper.body as any).offset).toEqual({ x: 4, y: 2 });
+
+    // Turret body size: 24x20, offset 4, 2
+    expect(turret.body!.width).toBe(24);
+    expect(turret.body!.height).toBe(20);
+    expect((turret.body as any).offset).toEqual({ x: 4, y: 2 });
+
+    // Drone body size: 28x16, offset 2, 2
+    expect(drone.body!.width).toBe(28);
+    expect(drone.body!.height).toBe(16);
+    expect((drone.body as any).offset).toEqual({ x: 2, y: 2 });
+
+    // Jumper body size: 16x24, offset 4, 2
+    expect(jumper.body!.width).toBe(16);
+    expect(jumper.body!.height).toBe(24);
+    expect((jumper.body as any).offset).toEqual({ x: 4, y: 2 });
+
+    // Boss body size: 64x58, offset 0, 6
+    expect(boss.body!.width).toBe(64);
+    expect(boss.body!.height).toBe(58);
+    expect((boss.body as any).offset).toEqual({ x: 0, y: 6 });
+  });
+
+  it('should play multi-frame animations or switch frames for enemy states', () => {
+    const scene = createMockScene();
+
+    // Trooper: play trooper_run on moving, stop on idle
+    const trooper = new Trooper(scene, 100, 100);
+    const trooperAnims: string[] = [];
+    let trooperStopped = false;
+    (trooper as any).anims = {
+      play: (key: string) => trooperAnims.push(key),
+      stop: () => { trooperStopped = true; },
+      currentAnim: null,
+    };
+    trooper.updateAI(0, 16, { x: 200, y: 100 });
+    expect(trooperAnims).toContain('trooper_run');
+
+    (trooper.body as any).velocity.x = 0;
+    trooper.moveSpeed = 0;
+    trooper.updateAI(16, 16, { x: 200, y: 100 });
+    expect(trooperStopped).toBe(true);
+
+    // FalconDrone: play drone_fly
+    const drone = new FalconDrone(scene, 100, 100);
+    const droneAnims: string[] = [];
+    (drone as any).anims = {
+      play: (key: string) => droneAnims.push(key),
+      currentAnim: null,
+    };
+    drone.updateAI(0, 16, { x: 200, y: 100 });
+    expect(droneAnims).toContain('drone_fly');
+
+    // JumperMercenary: jump animation when in air, stopped when grounded
+    const jumper = new JumperMercenary(scene, 100, 100);
+    const jumperAnims: string[] = [];
+    let jumperStopped = false;
+    (jumper as any).anims = {
+      play: (key: string) => jumperAnims.push(key),
+      stop: () => { jumperStopped = true; },
+      currentAnim: null,
+    };
+    // In air (not grounded)
+    (jumper.body as any).blocked.down = false;
+    (jumper.body as any).touching.down = false;
+    jumper.updateAI(0, 16, { x: 200, y: 100 });
+    expect(jumperAnims).toContain('jumper_jump');
+
+    // Grounded
+    (jumper.body as any).blocked.down = true;
+    jumper.jumpTimer = 500;
+    jumper.updateAI(0, 16, { x: 200, y: 100 });
+    expect(jumperStopped).toBe(true);
+
+    // Boss: play boss_drive
+    const boss = new Boss(scene, 100, 100);
+    const bossAnims: string[] = [];
+    (boss as any).anims = {
+      play: (key: string) => bossAnims.push(key),
+      currentAnim: null,
+    };
+    boss.updateAI(0, 16, { x: 200, y: 100 });
+    expect(bossAnims).toContain('boss_drive');
+  });
+
+  it('Turret should switch frames for muzzle flash when firing and revert', () => {
+    const scene = createMockScene();
+    const turret = new Turret(scene, 100, 100);
+    const turretFrames: number[] = [];
+    turret.setFrame = ((frame: number) => {
+      turretFrames.push(frame);
+      return turret;
+    }) as any;
+    const pool = new ProjectilePool(scene);
+
+    turret.shootTimer = 0;
+    turret.updateAI(0, 16, { x: 150, y: 100 }, pool);
+    expect(turretFrames).toContain(1);
+
+    turret.updateAI(0, 200, { x: 150, y: 100 }, pool);
+    expect(turretFrames[turretFrames.length - 1]).toBe(0);
+  });
 });
+
 

@@ -12,7 +12,12 @@ export class Trooper extends EnemyBase {
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      body.setSize(16, 24);
+      if (typeof body.setSize === 'function') {
+        body.setSize(16, 22);
+      }
+      if (typeof body.setOffset === 'function') {
+        body.setOffset(4, 2);
+      }
     }
   }
 
@@ -39,13 +44,22 @@ export class Trooper extends EnemyBase {
       this.setFlipX(this.facingLeft);
     }
 
+    body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);
+
     if (this.anims && typeof this.anims.play === 'function') {
-      if (this.anims.currentAnim?.key !== 'trooper_run') {
-        this.anims.play('trooper_run', true);
+      if (body.velocity && body.velocity.x !== 0) {
+        if (this.anims.currentAnim?.key !== 'trooper_run') {
+          this.anims.play('trooper_run', true);
+        }
+      } else {
+        if (typeof this.anims.stop === 'function') {
+          this.anims.stop();
+        }
+        if (typeof this.setFrame === 'function') {
+          this.setFrame(0);
+        }
       }
     }
-
-    body.setVelocityX(this.facingLeft ? -this.moveSpeed : this.moveSpeed);
 
     const isGrounded = body.blocked?.down || body.touching?.down || false;
     const isBlockedSide = (this.facingLeft && (body.blocked?.left || body.touching?.left)) ||

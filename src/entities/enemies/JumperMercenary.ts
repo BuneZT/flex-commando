@@ -14,7 +14,12 @@ export class JumperMercenary extends EnemyBase {
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      body.setSize(16, 24);
+      if (typeof body.setSize === 'function') {
+        body.setSize(16, 24);
+      }
+      if (typeof body.setOffset === 'function') {
+        body.setOffset(4, 2);
+      }
     }
   }
 
@@ -45,9 +50,27 @@ export class JumperMercenary extends EnemyBase {
 
     const isGrounded = body.blocked?.down || body.touching?.down || false;
 
+    if (this.anims && typeof this.anims.play === 'function') {
+      if (!isGrounded) {
+        if (this.anims.currentAnim?.key !== 'jumper_jump') {
+          this.anims.play('jumper_jump', true);
+        }
+      } else {
+        if (typeof this.anims.stop === 'function') {
+          this.anims.stop();
+        }
+        if (typeof this.setFrame === 'function') {
+          this.setFrame(0);
+        }
+      }
+    }
+
     if (isGrounded && this.jumpTimer <= 0) {
       body.setVelocityY(this.jumpVelocity);
       this.jumpTimer = this.jumpCooldownMs;
+      if (this.anims && typeof this.anims.play === 'function') {
+        this.anims.play('jumper_jump', true);
+      }
     }
   }
 }

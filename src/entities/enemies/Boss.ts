@@ -16,8 +16,15 @@ export class Boss extends EnemyBase {
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      body.setSize(32, 48);
-      body.setImmovable(true);
+      if (typeof body.setImmovable === 'function') {
+        body.setImmovable(true);
+      }
+      if (typeof body.setSize === 'function') {
+        body.setSize(64, 58);
+      }
+      if (typeof body.setOffset === 'function') {
+        body.setOffset(0, 6);
+      }
     }
   }
 
@@ -47,6 +54,12 @@ export class Boss extends EnemyBase {
 
     if (body) {
       body.setVelocityX(speed * this.moveDirection);
+    }
+
+    if (this.anims && typeof this.anims.play === 'function') {
+      if (this.anims.currentAnim?.key !== 'boss_drive') {
+        this.anims.play('boss_drive', true);
+      }
     }
 
     // Facing direction facing player
