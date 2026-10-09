@@ -32,6 +32,10 @@ function createMockBody(): Phaser.Physics.Arcade.Body {
     get offsetY() { return offsetY; },
     get velocityX() { return velX; },
     get velocityY() { return velY; },
+    velocity: {
+      get x() { return velX; },
+      get y() { return velY; },
+    },
     setCollideWorldBounds: () => {},
     setSize: (w: number, h: number) => { width = w; height = h; },
     setOffset: (x: number, y: number) => { offsetX = x; offsetY = y; },
@@ -110,5 +114,85 @@ describe('Player entity', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
     expect(Math.abs(player.jumpVelocity)).toBeGreaterThanOrEqual(340);
+  });
+
+  it('should aim and face toward mouse cursor when mouseX and mouseY are provided', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    player.body = createMockBody();
+
+    // Aim left at muzzle pivot height (y = 96)
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+      mouseX: 50,
+      mouseY: 96,
+    });
+    expect(player.facingLeft).toBe(true);
+    expect(Math.abs(player.getAimAngle())).toBeCloseTo(180, 0);
+
+    // Aim right at muzzle pivot height (y = 96)
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+      mouseX: 150,
+      mouseY: 96,
+    });
+    expect(player.facingLeft).toBe(false);
+    expect(player.getAimAngle()).toBeCloseTo(0, 0);
+
+    // Aim straight up (above player's muzzle origin y = 96)
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+      mouseX: 100,
+      mouseY: 0,
+    });
+    expect(player.getAimAngle()).toBeCloseTo(-90, 0);
+  });
+
+  it('should allow strafing: move left while facing and aiming right toward mouse cursor', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    const body = createMockBody();
+    player.body = body;
+
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: true,
+      right: false,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+      mouseX: 200,
+      mouseY: 96,
+    });
+
+    // Character faces right because cursor is at x=200 (> player x=100)
+    expect(player.facingLeft).toBe(false);
+    // Character moves left because left key is held
+    expect(body.velocity.x).toBe(-120);
+    // Aim angle points towards cursor
+    expect(player.getAimAngle()).toBeCloseTo(0, 0);
   });
 });

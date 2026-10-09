@@ -19,6 +19,9 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(): void {
+    if (this.input && typeof this.input.setDefaultCursor === 'function') {
+      this.input.setDefaultCursor('default');
+    }
     const { width, height } = this.cameras.main;
 
     const titleText = this.victory ? 'VICTORY!' : 'GAME OVER';
@@ -29,24 +32,28 @@ export class GameOverScene extends Phaser.Scene {
       fontFamily: 'monospace',
       fontSize: '20px',
       color: titleColor,
+      resolution: 2,
     }).setOrigin(0.5);
 
     this.add.text(width / 2, height / 2 - 10, subText, {
       fontFamily: 'monospace',
       fontSize: '12px',
       color: '#ffffff',
+      resolution: 2,
     }).setOrigin(0.5);
 
     this.add.text(width / 2, height / 2 + 25, 'PRESS SPACE TO RESTART', {
       fontFamily: 'monospace',
       fontSize: '10px',
       color: '#aaaaaa',
+      resolution: 2,
     }).setOrigin(0.5);
 
     this.add.text(width / 2, height - 12, 'PRESS M TO TOGGLE MUTE', {
       fontFamily: 'monospace',
       fontSize: '8px',
-      color: '#888888'
+      color: '#888888',
+      resolution: 2,
     }).setOrigin(0.5);
 
     if (typeof this.input.keyboard?.on === 'function') {
@@ -60,6 +67,7 @@ export class GameOverScene extends Phaser.Scene {
         fontFamily: 'monospace',
         fontSize: '9px',
         color: '#00ffff',
+        resolution: 2,
       }).setOrigin(0.5);
 
       this.input.keyboard?.once('keydown-I', () => {

@@ -10,6 +10,12 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
   width: 320,
   height: 240,
   pixelArt: true,
+  roundPixels: true,
+  render: {
+    pixelArt: true,
+    antialias: false,
+    roundPixels: true,
+  },
   scale: {
     mode: 3, // Phaser.Scale.FIT
     autoCenter: 1 // Phaser.Scale.CENTER_BOTH

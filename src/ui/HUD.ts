@@ -30,6 +30,7 @@ export class HUD {
       fontFamily: 'monospace',
       fontSize: '9px',
       color: '#ff4444',
+      resolution: 2,
     }).setScrollFactor(0).setDepth(100);
 
     // Top-left: Weapon display
@@ -37,6 +38,7 @@ export class HUD {
       fontFamily: 'monospace',
       fontSize: '8px',
       color: '#00ffff',
+      resolution: 2,
     }).setScrollFactor(0).setDepth(100);
 
     // Top-center: Boss HP text
@@ -44,6 +46,7 @@ export class HUD {
       fontFamily: 'monospace',
       fontSize: '9px',
       color: '#ff0055',
+      resolution: 2,
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100);
 
     // Top-right: Minimap graphics

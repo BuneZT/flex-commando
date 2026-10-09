@@ -40,6 +40,7 @@ export class GameScene extends Phaser.Scene {
 
   public pickupCapsules: PickupCapsule[] = [];
   public pickupItems: PickupItem[] = [];
+  public crosshair?: Phaser.GameObjects.Sprite;
   public exitDoor?: Phaser.GameObjects.Sprite;
   public exitDoors: Phaser.GameObjects.Sprite[] = [];
 
@@ -72,11 +73,17 @@ export class GameScene extends Phaser.Scene {
     this.pickupItems = [];
     this.exitDoor = undefined;
     this.exitDoors = [];
+    this.crosshair = undefined;
     this.invulnerableTimer = 0;
     this.isGameOver = false;
     this.isVictory = false;
     this.lastCullGridX = -1;
     this.lastCullGridY = -1;
+
+    // Hide default OS cursor during gameplay
+    if (this.input && typeof this.input.setDefaultCursor === 'function') {
+      this.input.setDefaultCursor('none');
+    }
 
     // 0. Set atmospheric background color & 4x4 grid physics world bounds
     if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
@@ -116,6 +123,20 @@ export class GameScene extends Phaser.Scene {
       this.controls = new Controls(this);
     }
 
+    // 7.5 Initialize in-game crosshair sprite
+    if (this.add && typeof this.add.sprite === 'function') {
+      const crosshair = this.add.sprite(startX + 30, startY, 'tex_crosshair');
+      if (crosshair) {
+        if (typeof crosshair.setOrigin === 'function') {
+          crosshair.setOrigin(0.5, 0.5);
+        }
+        if (typeof crosshair.setDepth === 'function') {
+          crosshair.setDepth(100);
+        }
+        this.crosshair = crosshair;
+      }
+    }
+
     // 8. Initialize Projectile Pool
     this.projectilePool = new ProjectilePool(this);
 
@@ -139,9 +160,11 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.add && typeof this.add.text === 'function') {
       this.add.text(exitX, exitY - 18, 'EXIT PORTAL', {
+        fontFamily: 'monospace',
         fontSize: '9px',
         color: '#00ff88',
         fontStyle: 'bold',
+        resolution: 2,
       }).setOrigin(0.5);
     }
 
@@ -232,6 +255,9 @@ export class GameScene extends Phaser.Scene {
 
     if (this.player.lives <= 0) {
       this.isGameOver = true;
+      if (this.input && typeof this.input.setDefaultCursor === 'function') {
+        this.input.setDefaultCursor('default');
+      }
       this.scene.start('GameOverScene', { victory: false });
     }
   }
@@ -251,8 +277,20 @@ export class GameScene extends Phaser.Scene {
 
     // 2. Player input & movement
     if (this.controls && this.player) {
-      const input = this.controls.getInputState();
+      const input = this.controls.getInputState(this.cameras?.main);
       this.player.updatePlayer(input, delta, this.projectilePool);
+
+      if (this.crosshair && typeof this.crosshair.setPosition === 'function') {
+        const cx = input.mouseX ?? this.input?.activePointer?.worldX ?? this.player.x;
+        const cy = input.mouseY ?? this.input?.activePointer?.worldY ?? this.player.y;
+        this.crosshair.setPosition(cx, cy);
+      }
+    } else if (this.crosshair && this.input?.activePointer && typeof this.crosshair.setPosition === 'function') {
+      const pointer = this.input.activePointer;
+      const worldPoint = (this.cameras?.main && typeof this.cameras.main.getWorldPoint === 'function')
+        ? this.cameras.main.getWorldPoint(pointer.x, pointer.y)
+        : { x: pointer.worldX ?? pointer.x ?? 0, y: pointer.worldY ?? pointer.y ?? 0 };
+      this.crosshair.setPosition(worldPoint.x, worldPoint.y);
     }
 
     let currentGridX = 0;
@@ -334,6 +372,9 @@ export class GameScene extends Phaser.Scene {
     if (this.isVictory) return;
     this.isVictory = true;
     this.isGameOver = true;
+    if (this.input && typeof this.input.setDefaultCursor === 'function') {
+      this.input.setDefaultCursor('default');
+    }
     if (this.time && typeof this.time.delayedCall === 'function') {
       this.time.delayedCall(500, () => {
         this.scene.start('GameOverScene', { victory: true });

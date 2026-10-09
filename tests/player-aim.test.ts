@@ -1,5 +1,50 @@
 import { describe, it, expect } from 'vitest';
-import { calculateAimDirection, getAimAngleDegrees } from '../src/entities/PlayerAim';
+import {
+  calculateAimDirection,
+  getAimAngleDegrees,
+  calculateMouseAimAngle,
+  calculateFacingDirection,
+} from '../src/entities/PlayerAim';
+
+describe('calculateMouseAimAngle', () => {
+  it('should calculate accurate 360-degree angles relative to origin', () => {
+    // Direct right
+    expect(calculateMouseAimAngle(100, 100, 200, 100)).toBeCloseTo(0, 1);
+    // Direct down
+    expect(calculateMouseAimAngle(100, 100, 100, 200)).toBeCloseTo(90, 1);
+    // Direct left
+    expect(Math.abs(calculateMouseAimAngle(100, 100, 0, 100))).toBeCloseTo(180, 1);
+    // Direct up
+    expect(calculateMouseAimAngle(100, 100, 100, 0)).toBeCloseTo(-90, 1);
+
+    // Diagonals
+    expect(calculateMouseAimAngle(100, 100, 200, 200)).toBeCloseTo(45, 1);
+    expect(calculateMouseAimAngle(100, 100, 200, 0)).toBeCloseTo(-45, 1);
+    expect(calculateMouseAimAngle(100, 100, 0, 200)).toBeCloseTo(135, 1);
+    expect(calculateMouseAimAngle(100, 100, 0, 0)).toBeCloseTo(-135, 1);
+
+    // Arbitrary angle (e.g. 30 degrees down-right)
+    const rad30 = (30 * Math.PI) / 180;
+    const targetX = 100 + Math.cos(rad30) * 50;
+    const targetY = 100 + Math.sin(rad30) * 50;
+    expect(calculateMouseAimAngle(100, 100, targetX, targetY)).toBeCloseTo(30, 1);
+  });
+});
+
+describe('calculateFacingDirection', () => {
+  it('should return true when target is to the left of origin', () => {
+    expect(calculateFacingDirection(100, 50)).toBe(true);
+  });
+
+  it('should return false when target is to the right of origin', () => {
+    expect(calculateFacingDirection(100, 150)).toBe(false);
+  });
+
+  it('should preserve previous facing direction when targetX equals originX', () => {
+    expect(calculateFacingDirection(100, 100, true)).toBe(true);
+    expect(calculateFacingDirection(100, 100, false)).toBe(false);
+  });
+});
 
 describe('calculateAimDirection', () => {
   it('should return UP when holding Up key without left/right', () => {

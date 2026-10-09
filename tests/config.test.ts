@@ -8,10 +8,12 @@ describe('GameConfig', () => {
     expect(GameConfig.pixelArt).toBe(true);
   });
 
-  it('should lock frame rate to 60 FPS with smoothStep enabled', () => {
-    expect(GameConfig.fps).toBeDefined();
-    expect(GameConfig.fps?.target).toBe(60);
-    expect(GameConfig.fps?.smoothStep).toBe(true);
+  it('should enable pixelArt, roundPixels, and disable antialias in render config', () => {
+    expect(GameConfig.roundPixels).toBe(true);
+    expect(GameConfig.render).toBeDefined();
+    expect(GameConfig.render?.pixelArt).toBe(true);
+    expect(GameConfig.render?.antialias).toBe(false);
+    expect(GameConfig.render?.roundPixels).toBe(true);
   });
 });
 

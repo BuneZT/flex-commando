@@ -1,5 +1,11 @@
 import Phaser from 'phaser';
-import { AimDirection, calculateAimDirection, getAimAngleDegrees } from './PlayerAim';
+import {
+  AimDirection,
+  calculateAimDirection,
+  getAimAngleDegrees,
+  calculateMouseAimAngle,
+  calculateFacingDirection,
+} from './PlayerAim';
 import { RawInputState } from '../config/Controls';
 import { WeaponType, getSpreadShotAngles, WEAPON_CONFIGS } from '../weapons/WeaponTypes';
 import { ProjectilePool } from '../weapons/ProjectilePool';
@@ -7,6 +13,7 @@ import { SoundManager } from '../core/SoundManager';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   public aimDirection: AimDirection = 'FORWARD';
+  public aimAngle: number = 0;
   public facingLeft: boolean = false;
   public lives: number = 3;
   public moveSpeed: number = 120;
@@ -63,24 +70,34 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     const isGrounded = body.blocked?.down || body.touching?.down || false;
 
-    // Update Facing Direction
-    if (input.left && !input.right) {
-      this.facingLeft = true;
-    } else if (input.right && !input.left) {
-      this.facingLeft = false;
+    // Update Facing Direction and Aim Angle
+    if (input.mouseX !== undefined && input.mouseY !== undefined) {
+      this.facingLeft = calculateFacingDirection(this.x, input.mouseX, this.facingLeft);
+      this.aimAngle = calculateMouseAimAngle(this.x, this.y - 4, input.mouseX, input.mouseY);
+      this.aimDirection = calculateAimDirection(
+        input.up,
+        input.down,
+        input.left,
+        input.right
+      );
+    } else {
+      if (input.left && !input.right) {
+        this.facingLeft = true;
+      } else if (input.right && !input.left) {
+        this.facingLeft = false;
+      }
+      this.aimDirection = calculateAimDirection(
+        input.up,
+        input.down,
+        input.left,
+        input.right
+      );
+      this.aimAngle = getAimAngleDegrees(this.aimDirection, this.facingLeft);
     }
 
     if (typeof this.setFlipX === 'function') {
       this.setFlipX(this.facingLeft);
     }
-
-    // Calculate Aim Direction
-    this.aimDirection = calculateAimDirection(
-      input.up,
-      input.down,
-      input.left,
-      input.right
-    );
 
     if (this.anims && typeof this.anims.play === 'function') {
       const targetAnim = !isGrounded ? 'player_jump' : (input.left || input.right ? 'player_run' : 'player_idle');
@@ -158,7 +175,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   public getAimAngle(): number {
-    return getAimAngleDegrees(this.aimDirection, this.facingLeft);
+    return this.aimAngle;
   }
 
   private muzzlePos: { x: number; y: number } = { x: 0, y: 0 };

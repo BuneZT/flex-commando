@@ -9,9 +9,13 @@ export interface RawInputState {
   jumpJustPressed: boolean;
   shoot: boolean;
   shootJustPressed: boolean;
+  mouseX?: number;
+  mouseY?: number;
 }
 
 export class Controls {
+  private scene: Phaser.Scene;
+  private wasPointerDown: boolean = false;
   private keys: {
     w: Phaser.Input.Keyboard.Key;
     a: Phaser.Input.Keyboard.Key;
@@ -22,8 +26,6 @@ export class Controls {
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
     space: Phaser.Input.Keyboard.Key;
-    x: Phaser.Input.Keyboard.Key;
-    j: Phaser.Input.Keyboard.Key;
   };
 
   private cachedInputState: RawInputState = {
@@ -35,9 +37,12 @@ export class Controls {
     jumpJustPressed: false,
     shoot: false,
     shootJustPressed: false,
+    mouseX: 0,
+    mouseY: 0,
   };
 
   constructor(scene: Phaser.Scene) {
+    this.scene = scene;
     if (!scene.input || !scene.input.keyboard) {
       throw new Error('Scene input keyboard is missing.');
     }
@@ -52,20 +57,38 @@ export class Controls {
       left: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
       right: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
       space: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
-      x: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
-      j: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
     };
   }
 
-  public getInputState(): RawInputState {
+  public getInputState(camera?: Phaser.Cameras.Scene2D.Camera): RawInputState {
+    const pointer = this.scene.input?.activePointer;
+    let isPointerDown = false;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    if (pointer) {
+      isPointerDown = pointer.isDown;
+      if (camera && typeof camera.getWorldPoint === 'function') {
+        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+        mouseX = worldPoint.x;
+        mouseY = worldPoint.y;
+      } else {
+        mouseX = pointer.worldX ?? pointer.x ?? 0;
+        mouseY = pointer.worldY ?? pointer.y ?? 0;
+      }
+    }
+
     this.cachedInputState.up = this.keys.w.isDown || this.keys.up.isDown;
     this.cachedInputState.down = this.keys.s.isDown || this.keys.down.isDown;
     this.cachedInputState.left = this.keys.a.isDown || this.keys.left.isDown;
     this.cachedInputState.right = this.keys.d.isDown || this.keys.right.isDown;
     this.cachedInputState.jump = this.keys.space.isDown;
     this.cachedInputState.jumpJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.space);
-    this.cachedInputState.shoot = this.keys.x.isDown || this.keys.j.isDown;
-    this.cachedInputState.shootJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.x) || Phaser.Input.Keyboard.JustDown(this.keys.j);
+    this.cachedInputState.shoot = isPointerDown;
+    this.cachedInputState.shootJustPressed = isPointerDown && !this.wasPointerDown;
+    this.wasPointerDown = isPointerDown;
+    this.cachedInputState.mouseX = mouseX;
+    this.cachedInputState.mouseY = mouseY;
 
     return this.cachedInputState;
   }

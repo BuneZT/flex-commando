@@ -45,6 +45,7 @@ describe('TextureFactory', () => {
       'tex_pickup_M',
       'tex_pickup_B',
       'tileset',
+      'tex_crosshair',
     ];
 
     keys.forEach((key) => {

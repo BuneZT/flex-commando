@@ -21,6 +21,7 @@ export class TextureFactory {
       this.createBulletTextures(scene);
       this.createCapsuleAndPickupTextures(scene);
       this.createTilesetTexture(scene);
+      this.createCrosshairTexture(scene);
       this.createAnimations(scene);
     } finally {
       if (createdDummyRenderer) {
@@ -383,5 +384,27 @@ export class TextureFactory {
     g.generateTexture('tileset', 80, 16);
     g.destroy();
   }
+
+  private static createCrosshairTexture(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tex_crosshair')) return;
+    const g = scene.add.graphics();
+    // 9x9 crosshair with dark shadow outline and bright cyan reticle
+    g.fillStyle(0x000000, 0.7);
+    g.fillRect(3, 0, 3, 4); // top outline
+    g.fillRect(3, 5, 3, 4); // bottom outline
+    g.fillRect(0, 3, 4, 3); // left outline
+    g.fillRect(5, 3, 4, 3); // right outline
+
+    g.fillStyle(0x00ffff, 1.0); // Neon cyan
+    g.fillRect(4, 1, 1, 2); // top tick
+    g.fillRect(4, 6, 1, 2); // bottom tick
+    g.fillRect(1, 4, 2, 1); // left tick
+    g.fillRect(6, 4, 2, 1); // right tick
+    g.fillRect(4, 4, 1, 1); // center dot
+
+    g.generateTexture('tex_crosshair', 9, 9);
+    g.destroy();
+  }
 }
+
 
