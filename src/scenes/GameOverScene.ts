@@ -28,6 +28,23 @@ export class GameOverScene extends Phaser.Scene {
     }
     const { width, height } = this.cameras.main;
 
+    if (this.textures?.exists('logo')) {
+      const logo = this.add.image(Math.round(width / 2), 35, 'logo');
+      if (logo && typeof logo.setOrigin === 'function') {
+        logo.setOrigin(0.5);
+      }
+      if (this.tweens && typeof this.tweens.add === 'function') {
+        this.tweens.add({
+          targets: logo,
+          y: (logo.y || 35) - 3,
+          duration: 1200,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+    }
+
     const titleText = this.victory ? 'VICTORY!' : 'GAME OVER';
     const titleColor = this.victory ? '#00ff66' : '#ff2222';
     const subText = this.victory ? 'MISSION ACCOMPLISHED' : 'YOU DIED';

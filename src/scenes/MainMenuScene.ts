@@ -18,16 +18,34 @@ export class MainMenuScene extends Phaser.Scene {
     SoundManager.getInstance().startBGM();
 
     const { width, height } = this.cameras.main;
-    this.add.text(
-      Math.round(width / 2),
-      Math.round(height / 2 - 35),
-      'FLEX COMMANDO: ROGUE BEEF',
-      createRetroTextStyle({
-        fontSize: '14px',
-        color: '#ffffff',
-        strokeThickness: 2,
-      })
-    ).setOrigin(0.5);
+
+    if (this.textures?.exists('logo')) {
+      const logo = this.add.image(Math.round(width / 2), Math.round(height / 2 - 45), 'logo');
+      if (logo && typeof logo.setOrigin === 'function') {
+        logo.setOrigin(0.5);
+      }
+      if (this.tweens && typeof this.tweens.add === 'function') {
+        this.tweens.add({
+          targets: logo,
+          y: (logo.y || Math.round(height / 2 - 45)) - 3,
+          duration: 1200,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+    } else {
+      this.add.text(
+        Math.round(width / 2),
+        Math.round(height / 2 - 35),
+        'FLEX COMMANDO: ROGUE BEEF',
+        createRetroTextStyle({
+          fontSize: '14px',
+          color: '#ffffff',
+          strokeThickness: 2,
+        })
+      ).setOrigin(0.5);
+    }
 
     this.add.text(
       Math.round(width / 2),

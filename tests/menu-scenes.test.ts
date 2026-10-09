@@ -128,4 +128,146 @@ describe('Menu Scenes', () => {
     listeners['keydown-I']();
     expect(startSpy).toHaveBeenCalledWith('GameScene', { infiniteLives: true });
   });
+
+  it('renders the logo sprite in MainMenuScene when logo texture exists', () => {
+    const mainMenu = new MainMenuScene();
+    const originSpy = vi.fn();
+    const mockImage = { x: 160, y: 75, setOrigin: originSpy };
+    const imageSpy = vi.fn().mockReturnValue(mockImage);
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+    const tweenAddSpy = vi.fn();
+
+    (mainMenu as any).cameras = { main: { width: 320, height: 240 } };
+    (mainMenu as any).textures = {
+      exists: vi.fn((key: string) => key === 'logo'),
+    };
+    (mainMenu as any).add = {
+      image: imageSpy,
+      text: textSpy,
+    };
+    (mainMenu as any).tweens = {
+      add: tweenAddSpy,
+    };
+    (mainMenu as any).input = {
+      keyboard: {
+        once: vi.fn(),
+        on: vi.fn(),
+      },
+    };
+
+    mainMenu.create();
+
+    expect(imageSpy).toHaveBeenCalledWith(160, 75, 'logo');
+    expect(originSpy).toHaveBeenCalledWith(0.5);
+    expect(tweenAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targets: mockImage,
+        y: 72,
+        duration: 1200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      })
+    );
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).not.toContain('FLEX COMMANDO: ROGUE BEEF');
+  });
+
+  it('renders fallback text in MainMenuScene when logo texture does not exist', () => {
+    const mainMenu = new MainMenuScene();
+    const imageSpy = vi.fn();
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+
+    (mainMenu as any).cameras = { main: { width: 320, height: 240 } };
+    (mainMenu as any).textures = {
+      exists: vi.fn(() => false),
+    };
+    (mainMenu as any).add = {
+      image: imageSpy,
+      text: textSpy,
+    };
+    (mainMenu as any).input = {
+      keyboard: {
+        once: vi.fn(),
+        on: vi.fn(),
+      },
+    };
+
+    mainMenu.create();
+
+    expect(imageSpy).not.toHaveBeenCalled();
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).toContain('FLEX COMMANDO: ROGUE BEEF');
+  });
+
+  it('renders logo sprite in GameOverScene when logo texture exists', () => {
+    const gameOver = new GameOverScene();
+    const originSpy = vi.fn();
+    const mockImage = { x: 160, y: 35, setOrigin: originSpy };
+    const imageSpy = vi.fn().mockReturnValue(mockImage);
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+    const tweenAddSpy = vi.fn();
+
+    (gameOver as any).cameras = { main: { width: 320, height: 240 } };
+    (gameOver as any).textures = {
+      exists: vi.fn((key: string) => key === 'logo'),
+    };
+    (gameOver as any).add = {
+      image: imageSpy,
+      text: textSpy,
+    };
+    (gameOver as any).tweens = {
+      add: tweenAddSpy,
+    };
+    (gameOver as any).input = {
+      keyboard: {
+        once: vi.fn(),
+        on: vi.fn(),
+      },
+    };
+
+    gameOver.create();
+
+    expect(imageSpy).toHaveBeenCalledWith(160, 35, 'logo');
+    expect(originSpy).toHaveBeenCalledWith(0.5);
+    expect(tweenAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targets: mockImage,
+        duration: 1200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      })
+    );
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).toContain('GAME OVER');
+  });
+
+  it('does not render logo image in GameOverScene when logo texture does not exist', () => {
+    const gameOver = new GameOverScene();
+    const imageSpy = vi.fn();
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+
+    (gameOver as any).cameras = { main: { width: 320, height: 240 } };
+    (gameOver as any).textures = {
+      exists: vi.fn(() => false),
+    };
+    (gameOver as any).add = {
+      image: imageSpy,
+      text: textSpy,
+    };
+    (gameOver as any).input = {
+      keyboard: {
+        once: vi.fn(),
+        on: vi.fn(),
+      },
+    };
+
+    gameOver.create();
+
+    expect(imageSpy).not.toHaveBeenCalled();
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).toContain('GAME OVER');
+  });
 });
+
