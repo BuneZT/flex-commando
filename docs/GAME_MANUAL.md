@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../public/assets/ui/logo.png" alt="Flex Commando: Rogue Beef" width="480" />
+</p>
+
 # Flex Commando: Rogue Beef — Game Manual & Architecture Guide
 
 A comprehensive guide to the concept, enemies, weapons, visuals, and win/loss conditions of **Flex Commando: Rogue Beef**.
@@ -9,7 +13,7 @@ A comprehensive guide to the concept, enemies, weapons, visuals, and win/loss co
 ### Overview
 *Flex Commando: Rogue Beef* is an action-packed 2D retro run-and-gun platformer heavily inspired by arcade classics like *Contra*, combined with procedural multi-directional grid room generation reminiscent of *Spelunky* and *Rogue Legacy*.
 
-Players step into the combat boots of an over-the-top 80s action hero—featuring a red headband and blue tactical uniform—battling through a procedurally generated cybernetic fortress to eliminate hostile robotic forces and conquer the fortress guardian.
+Players step into the combat boots of an over-the-top 80s action hero—featuring a crimson headband, cobalt tactical vest with chrome harness, high-contrast desert khaki pants, and white wrist wraps—battling through a procedurally generated cybernetic fortress to eliminate hostile robotic forces and conquer the fortress guardian.
 
 ### Technical & Design Highlights
 * **Native Resolution:** 320×240 pixels (`pixelArt: true`). Each room consists of a 20×15 tile matrix at 16×16px per tile.
@@ -19,8 +23,8 @@ Players step into the combat boots of an over-the-top 80s action hero—featurin
   * **Critical Path:** Carved via a random walk algorithm with backtrack prevention to guarantee a valid route from entrance to exit.
   * **Branch Rooms:** Optional side corridors offering extra weapon capsules and enemy challenges.
   * **Door Bitmask Matching:** Rooms connect dynamically using 4-bit doorway masks (`N=1, S=2, E=4, W=8`) matched to 15 modular room templates.
-* **Zero External Assets (Fully Procedural):**
-  * **Graphics:** All sprites, tiles, bullets, and UI elements are generated programmatically at boot using Phaser Graphics in `TextureFactory.ts`.
+* **Authentic 16-Bit Graphics & Headless Safety:**
+  * **Graphics:** Preloaded 16-bit arcade pixel-art PNG assets located in `public/assets/` (title logo, seamless parallax cyber hangar backdrop, multi-frame enemy sheets, player commando, and neon projectiles) with an automated procedural fallback in `TextureFactory.ts` guaranteeing 100% headless Vitest test execution without HTTP dependencies.
   * **Audio:** 100% synthesized Web Audio API sound effects and chiptune background music (arpeggios, laser blasts, hits, explosions) in `SoundManager.ts`. No audio files required.
 * **Seamless Room Camera & Culling:** Smooth pan transitions between rooms; off-screen rooms pause enemy AI and physics to maintain 60 FPS performance.
 
