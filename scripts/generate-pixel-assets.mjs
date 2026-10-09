@@ -501,6 +501,8 @@ function generateTileset() {
  * 4. public/assets/sprites/player.png (144x24)
  * 6 frames of 24x24:
  * 0: Idle, 1: Run1, 2: Run2, 3: Jump, 4: Crouch, 5: Shoot
+ * High-visibility Action Hero palette: Desert khaki pants, bright cobalt vest,
+ * white/chrome harness, white wrist wraps, and crimson headband.
  */
 function generatePlayer() {
   const canvas = new PixelCanvas(144, 24);
@@ -509,9 +511,9 @@ function generatePlayer() {
     const ox = f * 24;
 
     // Headband & hair
-    canvas.fillRect(ox + 8, 2, 8, 3, '#E02020'); // Red headband
-    canvas.fillRect(ox + 6, 3, 2, 2, '#FF4040'); // Trailing ribbon
-    canvas.fillRect(ox + 4, 4, 2, 2, '#CC1111'); // Ribbon tail
+    canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E'); // Vibrant crimson headband
+    canvas.fillRect(ox + 6, 3, 2, 2, '#FF5555'); // Trailing ribbon
+    canvas.fillRect(ox + 4, 4, 2, 2, '#D01010'); // Ribbon tail
     canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A'); // Hair spikes
 
     // Face / skin
@@ -521,60 +523,86 @@ function generatePlayer() {
 
     if (f === 4) {
       // --- CROUCH FRAME ---
-      // Torso lowered
-      canvas.fillRect(ox + 8, 10, 8, 6, '#2652B5'); // Tactical vest
-      canvas.fillRect(ox + 9, 11, 6, 4, '#4477DD'); // Chest armor
-      // Kneeling legs
-      canvas.fillRect(ox + 6, 16, 12, 5, '#1C2840');
-      canvas.fillRect(ox + 5, 19, 14, 4, '#101520'); // Boots
+      // Torso lowered: Cobalt vest with white/chrome harness
+      canvas.fillRect(ox + 8, 10, 8, 6, '#1E58E8'); // Electric cobalt vest
+      canvas.fillRect(ox + 9, 11, 6, 4, '#3878FF'); // Chest highlight
+      canvas.fillRect(ox + 8, 10, 2, 6, '#FFFFFF'); // Chrome shoulder strap
+      canvas.fillRect(ox + 14, 10, 2, 6, '#D0DCF2');
+      // Kneeling legs: High-contrast Desert Khaki
+      canvas.fillRect(ox + 6, 16, 12, 5, '#E5C28A'); // Khaki base
+      canvas.fillRect(ox + 8, 17, 8, 3, '#BA945A'); // Khaki crease/shadow
+      canvas.fillRect(ox + 5, 19, 14, 4, '#302016'); // Polished combat boots
+      canvas.fillRect(ox + 6, 20, 12, 1, '#EDE5DC'); // Silver boot lace trim
       // Weapon lowered forward
-      canvas.fillRect(ox + 14, 12, 8, 3, '#505868'); // Barrel
-      canvas.fillRect(ox + 19, 11, 2, 2, '#00E5FF'); // Cyan optic
+      canvas.fillRect(ox + 11, 12, 4, 3, '#FFCCA0'); // Arm
+      canvas.fillRect(ox + 13, 12, 2, 3, '#FFFFFF'); // White wrist wrap
+      canvas.fillRect(ox + 14, 12, 8, 3, '#707A8C'); // Rifle barrel
+      canvas.fillRect(ox + 19, 11, 2, 2, '#00FFFF'); // Cyan optic
     } else if (f === 3) {
       // --- JUMP FRAME ---
       // Torso angled
-      canvas.fillRect(ox + 8, 9, 8, 7, '#2652B5');
-      canvas.fillRect(ox + 9, 10, 6, 5, '#4477DD');
-      // Legs tucked up
-      canvas.fillRect(ox + 7, 16, 5, 5, '#1C2840');
-      canvas.fillRect(ox + 13, 15, 5, 5, '#1C2840');
-      canvas.fillRect(ox + 6, 18, 5, 4, '#101520');
-      canvas.fillRect(ox + 13, 18, 5, 4, '#101520');
+      canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
+      canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF'); // Chrome strap
+      canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
+      // Legs tucked up: Desert Khaki
+      canvas.fillRect(ox + 7, 16, 5, 5, '#E5C28A');
+      canvas.fillRect(ox + 13, 15, 5, 5, '#E5C28A');
+      canvas.fillRect(ox + 8, 17, 3, 3, '#BA945A');
+      canvas.fillRect(ox + 14, 16, 3, 3, '#BA945A');
+      canvas.fillRect(ox + 6, 18, 5, 4, '#302016');
+      canvas.fillRect(ox + 13, 18, 5, 4, '#302016');
+      canvas.fillRect(ox + 7, 19, 3, 1, '#EDE5DC');
+      canvas.fillRect(ox + 14, 19, 3, 1, '#EDE5DC');
       // Weapon aimed
-      canvas.fillRect(ox + 14, 10, 8, 3, '#505868');
-      canvas.fillRect(ox + 19, 9, 2, 2, '#00E5FF');
+      canvas.fillRect(ox + 11, 10, 4, 3, '#FFCCA0'); // Arm
+      canvas.fillRect(ox + 13, 10, 2, 3, '#FFFFFF'); // White wrist wrap
+      canvas.fillRect(ox + 14, 10, 8, 3, '#707A8C');
+      canvas.fillRect(ox + 19, 9, 2, 2, '#00FFFF');
     } else {
       // --- STANDING / RUNNING / SHOOTING FRAMES ---
-      // Torso
-      canvas.fillRect(ox + 8, 9, 8, 7, '#2652B5');
-      canvas.fillRect(ox + 9, 10, 6, 5, '#4477DD');
-      canvas.fillRect(ox + 8, 15, 8, 2, '#182030'); // Belt
+      // Torso: Cobalt vest with white/chrome shoulder harness
+      canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
+      canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF'); // Chrome harness
+      canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
+      canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016'); // Utility belt
+      canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700'); // Brass buckle
 
-      // Legs animation
+      // Legs animation: Vivid Desert Khaki with contrast shading
       if (f === 1) {
         // Run 1: left forward, right back
-        canvas.fillRect(ox + 6, 16, 4, 5, '#1C2840');
-        canvas.fillRect(ox + 14, 16, 4, 4, '#1C2840');
-        canvas.fillRect(ox + 5, 20, 5, 4, '#101520');
-        canvas.fillRect(ox + 15, 19, 5, 4, '#101520');
+        canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 14, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 5, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 20, 3, 1, '#EDE5DC');
       } else if (f === 2) {
         // Run 2: right forward, left back
-        canvas.fillRect(ox + 6, 16, 4, 4, '#1C2840');
-        canvas.fillRect(ox + 14, 16, 4, 5, '#1C2840');
-        canvas.fillRect(ox + 5, 19, 5, 4, '#101520');
-        canvas.fillRect(ox + 15, 20, 5, 4, '#101520');
+        canvas.fillRect(ox + 6, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 14, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 5, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 20, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 21, 3, 1, '#EDE5DC');
       } else {
         // Idle / Shoot: solid stance
-        canvas.fillRect(ox + 7, 16, 4, 5, '#1C2840');
-        canvas.fillRect(ox + 13, 16, 4, 5, '#1C2840');
-        canvas.fillRect(ox + 6, 20, 5, 4, '#101520');
-        canvas.fillRect(ox + 13, 20, 5, 4, '#101520');
+        canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 14, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 6, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 13, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 7, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
       }
 
-      // Arms & Weapon
-      canvas.fillRect(ox + 11, 11, 5, 4, '#FFCCA0'); // Muscular arm
-      canvas.fillRect(ox + 14, 11, 8, 3, '#505868'); // Rifle barrel
-      canvas.fillRect(ox + 19, 10, 2, 2, '#00E5FF'); // Cyan optic
+      // Arms & Weapon with white wrist wrap
+      canvas.fillRect(ox + 11, 11, 4, 4, '#FFCCA0'); // Muscular arm
+      canvas.fillRect(ox + 13, 11, 2, 4, '#FFFFFF'); // White wrist wrap
+      canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C'); // Polished rifle
+      canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF'); // Cyan optic
 
       if (f === 5) {
         // Shoot frame: muzzle flash flare!

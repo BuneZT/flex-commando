@@ -41,40 +41,62 @@ export class TextureFactory {
     for (let f = 0; f < 6; f++) {
       const ox = f * 24;
       // Headband & Head
-      g.fillStyle(0xcc3333, 1);
+      g.fillStyle(0xff2222, 1);
       g.fillRect(ox + 8, 2, 8, 2);
       g.fillStyle(0xffcc99, 1);
       g.fillRect(ox + 8, 4, 8, 5);
 
-      // Uniform Body
-      g.fillStyle(0x3366cc, 1);
-      g.fillRect(ox + 7, 9, 10, 8);
+      // Uniform Body (Cobalt vest & chrome harness)
+      g.fillStyle(0x1e58e8, 1);
+      g.fillRect(ox + 7, 9, 10, 7);
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(ox + 8, 9, 2, 7);
 
-      // Legs / Animation offset
-      g.fillStyle(0x112244, 1);
+      // Belt
+      g.fillStyle(0x2a2016, 1);
+      g.fillRect(ox + 8, 15, 8, 2);
+
+      // Legs / Animation offset (Desert Khaki pants & boots)
+      g.fillStyle(0xe5c28a, 1);
       if (f === 4) {
         // Crouch
-        g.fillRect(ox + 6, 16, 12, 6);
+        g.fillRect(ox + 6, 16, 12, 5);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 5, 20, 14, 3);
       } else if (f === 1) {
         // Walk 1
-        g.fillRect(ox + 6, 17, 5, 7);
-        g.fillRect(ox + 13, 17, 5, 5);
+        g.fillRect(ox + 6, 17, 5, 4);
+        g.fillRect(ox + 13, 17, 5, 3);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 5, 21, 5, 3);
+        g.fillRect(ox + 14, 20, 5, 3);
       } else if (f === 2) {
         // Walk 2
-        g.fillRect(ox + 6, 17, 5, 5);
-        g.fillRect(ox + 13, 17, 5, 7);
+        g.fillRect(ox + 6, 17, 5, 3);
+        g.fillRect(ox + 13, 17, 5, 4);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 5, 20, 5, 3);
+        g.fillRect(ox + 14, 21, 5, 3);
       } else if (f === 3) {
         // Jump
-        g.fillRect(ox + 7, 16, 4, 5);
-        g.fillRect(ox + 13, 15, 4, 5);
+        g.fillRect(ox + 7, 16, 4, 4);
+        g.fillRect(ox + 13, 15, 4, 4);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 6, 19, 5, 3);
+        g.fillRect(ox + 13, 19, 5, 3);
       } else {
         // Idle (0) / Shoot (5)
-        g.fillRect(ox + 7, 17, 4, 7);
-        g.fillRect(ox + 13, 17, 4, 7);
+        g.fillRect(ox + 7, 17, 4, 4);
+        g.fillRect(ox + 13, 17, 4, 4);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 6, 21, 5, 3);
+        g.fillRect(ox + 13, 21, 5, 3);
       }
 
-      // Gun
-      g.fillStyle(0xaaaaaa, 1);
+      // Gun & white wrist wrap
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(ox + 12, 11, 2, 3);
+      g.fillStyle(0x707a8c, 1);
       g.fillRect(ox + 14, 11, 6, 3);
       if (f === 5) {
         g.fillStyle(0xffcc00, 1);
