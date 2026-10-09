@@ -51,9 +51,9 @@ flex-commando/
 │   │   └── HUD.ts                # On-screen HUD (formatHUDLives, HP bar, weapon, 4x4 minimap)
 │   └── main.ts                   # Entry point initializing Phaser.Game
 ├── tests/                        # Vitest unit test suites
-└── docs/superpowers/
-    ├── specs/                    # Design specification documents
-    └── plans/                    # Step-by-step implementation plans
+└── docs/
+    ├── assets/                   # Visual showcases and pixel art assets
+    └── GAME_MANUAL.md            # Comprehensive game manual and architecture guide
 ```
 
 ---

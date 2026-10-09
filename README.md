@@ -65,10 +65,7 @@ npm run build
 
 ---
 
-## 📚 Specifications, Manual & Plans
+## 📚 Documentation & Manual
 
-Detailed design specifications, gameplay manuals, and architectural plans are available in:
 - [**Game Manual & Visual Guide**](docs/GAME_MANUAL.md) — Comprehensive guide to enemies, weapons, visuals, and win states.
-- [`docs/superpowers/specs/2026-08-11-flex-commando-design.md`](docs/superpowers/specs/2026-08-11-flex-commando-design.md)
-- [`docs/superpowers/plans/2026-08-11-flex-commando-implementation.md`](docs/superpowers/plans/2026-08-11-flex-commando-implementation.md)
 - [`AGENTS.md`](AGENTS.md) (Context guide for AI agents)
