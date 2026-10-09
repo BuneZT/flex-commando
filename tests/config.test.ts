@@ -17,6 +17,43 @@ describe('GameConfig', () => {
     expect(GameConfig.render?.antialias).toBe(false);
     expect(GameConfig.render?.roundPixels).toBe(true);
   });
+
+  it('should configure scale manager with game-container, FIT mode, and CENTER_BOTH', () => {
+    expect(GameConfig.parent).toBe('game-container');
+    expect(GameConfig.scale).toBeDefined();
+    expect(GameConfig.scale?.mode).toBe(Phaser.Scale.FIT);
+    expect(GameConfig.scale?.autoCenter).toBe(Phaser.Scale.CENTER_BOTH);
+  });
+});
+
+describe('index.html layout and container styling', () => {
+  it('should not apply flexbox centering to game-container or body to avoid conflicting with Phaser autoCenter', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf-8');
+
+    // Confirm game-container exists
+    expect(html).toContain('id="game-container"');
+
+    // body must not use flex centering
+    const bodyMatch = html.match(/(?:html,\s*)?body\s*\{([^}]+)\}/);
+    expect(bodyMatch).not.toBeNull();
+    const bodyCss = bodyMatch![1];
+    expect(bodyCss).not.toMatch(/display\s*:\s*flex/);
+
+    // #game-container must not use flex centering which shifts Phaser autoCenter margins
+    const containerMatch = html.match(/#game-container\s*\{([^}]+)\}/);
+    expect(containerMatch).not.toBeNull();
+    const containerCss = containerMatch![1];
+    expect(containerCss).not.toMatch(/display\s*:\s*flex/);
+    expect(containerCss).not.toMatch(/justify-content\s*:\s*center/);
+
+    // canvas should have display: block to prevent inline whitespace issues
+    const canvasMatch = html.match(/canvas\s*\{([^}]+)\}/);
+    expect(canvasMatch).not.toBeNull();
+    const canvasCss = canvasMatch![1];
+    expect(canvasCss).toMatch(/display\s*:\s*block/);
+  });
 });
 
 describe('Controls input handling', () => {
