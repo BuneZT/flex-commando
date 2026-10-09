@@ -82,8 +82,11 @@ export class Controls {
     this.cachedInputState.down = this.keys.s.isDown || this.keys.down.isDown;
     this.cachedInputState.left = this.keys.a.isDown || this.keys.left.isDown;
     this.cachedInputState.right = this.keys.d.isDown || this.keys.right.isDown;
-    this.cachedInputState.jump = this.keys.space.isDown;
-    this.cachedInputState.jumpJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.space);
+    this.cachedInputState.jump = this.keys.space.isDown || this.keys.w.isDown || this.keys.up.isDown;
+    this.cachedInputState.jumpJustPressed =
+      Phaser.Input.Keyboard.JustDown(this.keys.space) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.w) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.up);
     this.cachedInputState.shoot = isPointerDown;
     this.cachedInputState.shootJustPressed = isPointerDown && !this.wasPointerDown;
     this.wasPointerDown = isPointerDown;
