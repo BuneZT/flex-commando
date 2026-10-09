@@ -38,6 +38,9 @@ export class CameraManager {
     roomHeightPx: number = 240
   ) {
     this.camera = camera;
+    if (this.camera && typeof this.camera.setRoundPixels === 'function') {
+      this.camera.setRoundPixels(true);
+    }
     this.roomWidthPx = roomWidthPx;
     this.roomHeightPx = roomHeightPx;
     this.activeBounds = { x: 0, y: 0, width: roomWidthPx, height: roomHeightPx };

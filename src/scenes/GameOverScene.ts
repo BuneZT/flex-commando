@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { isDevEnvironment } from '../config/Environment';
 import { SoundManager } from '../core/SoundManager';
+import { createRetroTextStyle } from '../ui/TextStyle';
 
 export interface GameOverData {
   victory?: boolean;
@@ -22,39 +23,58 @@ export class GameOverScene extends Phaser.Scene {
     if (this.input && typeof this.input.setDefaultCursor === 'function') {
       this.input.setDefaultCursor('default');
     }
+    if (this.cameras?.main && typeof this.cameras.main.setRoundPixels === 'function') {
+      this.cameras.main.setRoundPixels(true);
+    }
     const { width, height } = this.cameras.main;
 
     const titleText = this.victory ? 'VICTORY!' : 'GAME OVER';
-    const titleColor = this.victory ? '#00ff66' : '#ff0000';
+    const titleColor = this.victory ? '#00ff66' : '#ff2222';
     const subText = this.victory ? 'MISSION ACCOMPLISHED' : 'YOU DIED';
 
-    this.add.text(width / 2, height / 2 - 40, titleText, {
-      fontFamily: 'monospace',
-      fontSize: '20px',
-      color: titleColor,
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 - 45),
+      titleText,
+      createRetroTextStyle({
+        fontSize: '22px',
+        color: titleColor,
+        strokeThickness: 3,
+      })
+    ).setOrigin(0.5);
 
-    this.add.text(width / 2, height / 2 - 10, subText, {
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#ffffff',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 - 12),
+      subText,
+      createRetroTextStyle({
+        fontSize: '13px',
+        color: '#ffffff',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
-    this.add.text(width / 2, height / 2 + 25, 'PRESS SPACE TO RESTART', {
-      fontFamily: 'monospace',
-      fontSize: '10px',
-      color: '#aaaaaa',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 + 18),
+      'PRESS SPACE TO RESTART',
+      createRetroTextStyle({
+        fontSize: '11px',
+        color: '#ffcc00',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
-    this.add.text(width / 2, height - 12, 'PRESS M TO TOGGLE MUTE', {
-      fontFamily: 'monospace',
-      fontSize: '8px',
-      color: '#888888',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height - 14),
+      'PRESS M TO TOGGLE MUTE',
+      createRetroTextStyle({
+        fontSize: '9px',
+        color: '#aaaaaa',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
     if (typeof this.input.keyboard?.on === 'function') {
       this.input.keyboard.on('keydown-M', () => {
@@ -63,12 +83,16 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     if (isDevEnvironment()) {
-      this.add.text(width / 2, height / 2 + 45, 'PRESS I FOR INFINITE LIVES', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
-        color: '#00ffff',
-        resolution: 2,
-      }).setOrigin(0.5);
+      this.add.text(
+        Math.round(width / 2),
+        Math.round(height / 2 + 38),
+        'PRESS I FOR INFINITE LIVES',
+        createRetroTextStyle({
+          fontSize: '10px',
+          color: '#00ffff',
+          strokeThickness: 2,
+        })
+      ).setOrigin(0.5);
 
       this.input.keyboard?.once('keydown-I', () => {
         SoundManager.getInstance().ensureContext();

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { Boss } from '../entities/enemies/Boss';
 import { GridCell } from '../core/GridGenerator';
+import { createRetroTextStyle } from './TextStyle';
 
 export function formatHUDLives(lives: number, infiniteLives?: boolean): string {
   if (infiniteLives) return '∞';
@@ -26,28 +27,40 @@ export class HUD {
     this.scene = scene;
 
     // Top-left: Lives display
-    this.livesText = this.scene.add.text(8, 6, 'LIVES: ❤❤❤', {
-      fontFamily: 'monospace',
-      fontSize: '9px',
-      color: '#ff4444',
-      resolution: 2,
-    }).setScrollFactor(0).setDepth(100);
+    this.livesText = this.scene.add.text(
+      8,
+      6,
+      'LIVES: ❤❤❤',
+      createRetroTextStyle({
+        fontSize: '10px',
+        color: '#ff4444',
+        strokeThickness: 2,
+      })
+    ).setScrollFactor(0).setDepth(100);
 
     // Top-left: Weapon display
-    this.weaponText = this.scene.add.text(8, 16, 'WEAPON: PEA_SHOOTER', {
-      fontFamily: 'monospace',
-      fontSize: '8px',
-      color: '#00ffff',
-      resolution: 2,
-    }).setScrollFactor(0).setDepth(100);
+    this.weaponText = this.scene.add.text(
+      8,
+      19,
+      'WEAPON: PEA_SHOOTER',
+      createRetroTextStyle({
+        fontSize: '9px',
+        color: '#00ffff',
+        strokeThickness: 2,
+      })
+    ).setScrollFactor(0).setDepth(100);
 
     // Top-center: Boss HP text
-    this.bossHpText = this.scene.add.text(160, 6, '', {
-      fontFamily: 'monospace',
-      fontSize: '9px',
-      color: '#ff0055',
-      resolution: 2,
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100);
+    this.bossHpText = this.scene.add.text(
+      160,
+      6,
+      '',
+      createRetroTextStyle({
+        fontSize: '9px',
+        color: '#ff0055',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100);
 
     // Top-right: Minimap graphics
     this.minimapGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(100);

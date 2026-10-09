@@ -15,6 +15,7 @@ import { PickupCapsule, PickupItem } from '../entities/PickupCapsule';
 import { getRandomPickupWeapon } from '../weapons/WeaponTypes';
 import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
+import { createRetroTextStyle } from '../ui/TextStyle';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
@@ -88,6 +89,9 @@ export class GameScene extends Phaser.Scene {
     // 0. Set atmospheric background color & 4x4 grid physics world bounds
     if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
       this.cameras.main.setBackgroundColor('#121726');
+      if (typeof this.cameras.main.setRoundPixels === 'function') {
+        this.cameras.main.setRoundPixels(true);
+      }
     }
     if (this.physics && this.physics.world && typeof this.physics.world.setBounds === 'function') {
       this.physics.world.setBounds(0, 0, 1280, 960);
@@ -159,13 +163,16 @@ export class GameScene extends Phaser.Scene {
       this.exitDoors.push(portal);
     }
     if (this.add && typeof this.add.text === 'function') {
-      this.add.text(exitX, exitY - 18, 'EXIT PORTAL', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
-        color: '#00ff88',
-        fontStyle: 'bold',
-        resolution: 2,
-      }).setOrigin(0.5);
+      this.add.text(
+        exitX,
+        exitY - 18,
+        'EXIT PORTAL',
+        createRetroTextStyle({
+          fontSize: '10px',
+          color: '#00ff88',
+          strokeThickness: 2,
+        })
+      ).setOrigin(0.5);
     }
 
     // 12. Initialize HUD overlay

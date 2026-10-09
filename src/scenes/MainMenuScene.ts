@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { isDevEnvironment } from '../config/Environment';
 import { SoundManager } from '../core/SoundManager';
+import { createRetroTextStyle } from '../ui/TextStyle';
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -11,29 +12,44 @@ export class MainMenuScene extends Phaser.Scene {
     if (this.input && typeof this.input.setDefaultCursor === 'function') {
       this.input.setDefaultCursor('default');
     }
+    if (this.cameras?.main && typeof this.cameras.main.setRoundPixels === 'function') {
+      this.cameras.main.setRoundPixels(true);
+    }
     SoundManager.getInstance().startBGM();
 
     const { width, height } = this.cameras.main;
-    this.add.text(width / 2, height / 2 - 30, 'FLEX COMMANDO: ROGUE BEEF', {
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#ffffff',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 - 35),
+      'FLEX COMMANDO: ROGUE BEEF',
+      createRetroTextStyle({
+        fontSize: '14px',
+        color: '#ffffff',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
-    this.add.text(width / 2, height / 2 + 10, 'PRESS SPACE TO START', {
-      fontFamily: 'monospace',
-      fontSize: '10px',
-      color: '#ffcc00',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 + 8),
+      'PRESS SPACE TO START',
+      createRetroTextStyle({
+        fontSize: '11px',
+        color: '#ffcc00',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
-    this.add.text(width / 2, height - 12, 'PRESS M TO TOGGLE MUTE', {
-      fontFamily: 'monospace',
-      fontSize: '8px',
-      color: '#888888',
-      resolution: 2,
-    }).setOrigin(0.5);
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height - 14),
+      'PRESS M TO TOGGLE MUTE',
+      createRetroTextStyle({
+        fontSize: '9px',
+        color: '#aaaaaa',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
     if (typeof this.input.keyboard?.on === 'function') {
       this.input.keyboard.on('keydown-M', () => {
@@ -42,12 +58,16 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     if (isDevEnvironment()) {
-      this.add.text(width / 2, height / 2 + 30, 'PRESS I FOR INFINITE LIVES', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
-        color: '#00ffff',
-        resolution: 2,
-      }).setOrigin(0.5);
+      this.add.text(
+        Math.round(width / 2),
+        Math.round(height / 2 + 28),
+        'PRESS I FOR INFINITE LIVES',
+        createRetroTextStyle({
+          fontSize: '10px',
+          color: '#00ffff',
+          strokeThickness: 2,
+        })
+      ).setOrigin(0.5);
 
       this.input.keyboard?.once('keydown-I', () => {
         SoundManager.getInstance().ensureContext();
