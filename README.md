@@ -29,7 +29,7 @@ Step into the combat boots of an unstoppable action commando armed with an arsen
 ### Key Features
 * **16-Bit Cyber-Arcade Aesthetics**: Authentic pixel-art sprites, glowing neon projectiles, animated tank-tread bosses, and dual-layer parallax cyber hangar backdrops.
 * **Procedural 4×4 Room Matrix Engine**: Every run generates a unique level layout with a guaranteed critical route from entrance `(0, y)` to the Boss chamber `(3, y)` plus hazard/reward branches.
-* **Dual Aiming Modes**: Smooth 360-degree mouse aiming with dynamic crosshair or classic 8-directional keyboard aiming.
+* **Smooth 360-Degree Mouse Aiming**: In-game crosshair reticle tracking mouse cursor with responsive auto-fire.
 * **Weapon Upgrades & Recyclable Bullet Pool**:
   * **[Default] Pea-Shooter**: Starting rapid-fire golden energy darts.
   * **[S] Spread Shot**: 5-pellet wide fan spray (`[-30°, -15°, 0°, +15°, +30°]`).
@@ -58,17 +58,17 @@ Step into the combat boots of an unstoppable action commando armed with an arsen
 
 ### Controls
 
-| Action | Modern Controls (Mouse + Keys) | Classic Keyboard Controls |
-|---|---|---|
-| **Move Left / Right** | `A` / `D` or `Left` / `Right` Arrows | `A` / `D` or `Left` / `Right` Arrows |
-| **Aim Weapon** | **Mouse Cursor** (360° Reticle) | `W` / `S` or `Up` / `Down` (8 directions) |
-| **Fire Weapon** | **Left Mouse Button** (Hold to fire) | `X` or `J` Key (Hold for auto-fire) |
-| **Jump** | `Space` bar | `Space` / `W` / `Up` Arrow |
-| **Crouch** | `S` or `Down` Arrow | `S` or `Down` Arrow |
-| **Drop Through Platform** | `S` + `Space` or `Down` + `Space` | `S` + `Space` or `Down` + `Space` |
-| **Toggle Audio Mute** | `M` Key | `M` Key |
-| **Infinite Lives (Dev)** | `I` Key on Main Menu | `I` Key on Main Menu |
-| **Restart Game** | `Space` bar on Game Over / Victory | `Space` bar on Game Over / Victory |
+| Action | Controls |
+|---|---|
+| **Move Left / Right** | `A` / `D` or `Left` / `Right` Arrow Keys |
+| **Aim Weapon** | **Mouse Cursor** (360° Reticle) |
+| **Fire Weapon** | **Left Mouse Button** (Hold for auto-fire) |
+| **Jump** | `Space` bar |
+| **Crouch** | `S` or `Down` Arrow |
+| **Drop Through Platform** | `S` + `Space` or `Down` + `Space` |
+| **Toggle Audio Mute** | `M` Key |
+| **Infinite Lives (Dev)** | `I` Key on Main Menu |
+| **Restart Game** | `Space` bar on Game Over / Victory |
 
 ---
 
