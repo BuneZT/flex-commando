@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { HUD, formatHUDLives } from '../src/ui/HUD';
+import { HUD, formatHUDLives, formatHUDWeaponName } from '../src/ui/HUD';
 import type Phaser from 'phaser';
 
 describe('formatHUDLives', () => {
@@ -11,6 +11,17 @@ describe('formatHUDLives', () => {
   it('should return hearts string when infiniteLives is false', () => {
     expect(formatHUDLives(3, false)).toBe('❤❤❤');
     expect(formatHUDLives(0, false)).toBe('DEAD');
+  });
+});
+
+describe('formatHUDWeaponName', () => {
+  it('should replace underscores with spaces in weapon display names', () => {
+    expect(formatHUDWeaponName('SPREAD_SHOT')).toBe('SPREAD SHOT');
+    expect(formatHUDWeaponName('PEA_SHOOTER')).toBe('PEA SHOOTER');
+    expect(formatHUDWeaponName('MACHINE_GUN')).toBe('MACHINE GUN');
+    expect(formatHUDWeaponName('LASER')).toBe('LASER');
+    expect(formatHUDWeaponName('FLAME')).toBe('FLAME');
+    expect(formatHUDWeaponName('BARRIER')).toBe('BARRIER');
   });
 });
 
@@ -101,7 +112,7 @@ describe('HUD Memoization and Dirty-State Caching', () => {
     // Frame 1: Initial render
     hud.update(mockPlayer, mockGrid, 0, 0);
     expect(mockWeaponText.setText).toHaveBeenCalledTimes(1);
-    expect(mockWeaponText.setText).toHaveBeenCalledWith('WEAPON: PEA_SHOOTER');
+    expect(mockWeaponText.setText).toHaveBeenCalledWith('WEAPON: PEA SHOOTER');
 
     // Frame 2: Same state -> NO setText call
     hud.update(mockPlayer, mockGrid, 0, 0);
@@ -112,13 +123,13 @@ describe('HUD Memoization and Dirty-State Caching', () => {
     mockPlayer.barrierHits = 3;
     hud.update(mockPlayer, mockGrid, 0, 0);
     expect(mockWeaponText.setText).toHaveBeenCalledTimes(2);
-    expect(mockWeaponText.setText).toHaveBeenLastCalledWith('WEAPON: PEA_SHOOTER [SHIELD:3]');
+    expect(mockWeaponText.setText).toHaveBeenLastCalledWith('WEAPON: PEA SHOOTER [SHIELD:3]');
 
     // Frame 4: Shield hit count changed -> setText called
     mockPlayer.barrierHits = 2;
     hud.update(mockPlayer, mockGrid, 0, 0);
     expect(mockWeaponText.setText).toHaveBeenCalledTimes(3);
-    expect(mockWeaponText.setText).toHaveBeenLastCalledWith('WEAPON: PEA_SHOOTER [SHIELD:2]');
+    expect(mockWeaponText.setText).toHaveBeenLastCalledWith('WEAPON: PEA SHOOTER [SHIELD:2]');
   });
 
   it('should only update bossHpText when boss HP changes or boss becomes active/inactive', () => {

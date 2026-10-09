@@ -10,6 +10,10 @@ export function formatHUDLives(lives: number, infiniteLives?: boolean): string {
   return '❤'.repeat(lives);
 }
 
+export function formatHUDWeaponName(weapon: string): string {
+  return weapon.replace(/_/g, ' ');
+}
+
 export class HUD {
   private scene: Phaser.Scene;
   private livesText: Phaser.GameObjects.Text;
@@ -42,7 +46,7 @@ export class HUD {
     this.weaponText = this.scene.add.text(
       8,
       19,
-      'WEAPON: PEA_SHOOTER',
+      `WEAPON: ${formatHUDWeaponName('PEA_SHOOTER')}`,
       createRetroTextStyle({
         fontSize: '9px',
         color: '#00ffff',
@@ -92,7 +96,7 @@ export class HUD {
       player.barrierHits !== this.lastBarrierHits ||
       player.isBarrierActive !== this.lastIsBarrierActive
     ) {
-      let weaponStr = `WEAPON: ${player.currentWeapon}`;
+      let weaponStr = `WEAPON: ${formatHUDWeaponName(player.currentWeapon)}`;
       if (player.isBarrierActive) {
         weaponStr += ` [SHIELD:${player.barrierHits}]`;
       }
