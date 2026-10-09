@@ -942,12 +942,12 @@ function generateProjectiles() {
 }
 
 /**
- * 11. public/assets/vfx/pickups.png (96x16)
- * Six 16x16 frames:
- * 0: Capsule 1, 1: Capsule 2, 2: Badge 'S', 3: Badge 'L', 4: Badge 'F', 5: Badge 'M'
+ * 11. public/assets/vfx/pickups.png (112x16)
+ * Seven 16x16 frames:
+ * 0: Capsule 1, 1: Capsule 2, 2: Badge 'S', 3: Badge 'L', 4: Badge 'F', 5: Badge 'M', 6: Badge 'B'
  */
 function generatePickups() {
-  const canvas = new PixelCanvas(96, 16);
+  const canvas = new PixelCanvas(112, 16);
 
   // --- Capsule Frames (0 & 1) ---
   for (let f = 0; f < 2; f++) {
@@ -964,12 +964,13 @@ function generatePickups() {
     canvas.fillRect(ox + 14, 6, 1, 4, '#586474');
   }
 
-  // --- Badges: S, L, F, M ---
+  // --- Badges: S, L, F, M, B ---
   const badges = [
     { key: 'S', color: '#00FFFF', bg: '#003A4D' },
     { key: 'L', color: '#3388FF', bg: '#0D2452' },
     { key: 'F', color: '#FF5500', bg: '#541700' },
     { key: 'M', color: '#FFD700', bg: '#524000' },
+    { key: 'B', color: '#FF44AA', bg: '#550033' },
   ];
 
   badges.forEach((b, idx) => {

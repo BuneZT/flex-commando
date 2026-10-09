@@ -14,7 +14,8 @@ describe('Asset Integrity', () => {
     { path: 'public/assets/sprites/jumper.png', width: 96, height: 28 },
     { path: 'public/assets/sprites/boss.png', width: 256, height: 64 },
     { path: 'public/assets/vfx/projectiles.png', width: 80, height: 16 },
-    { path: 'public/assets/vfx/pickups.png', width: 96, height: 16 },
+    { path: 'public/assets/vfx/pickups.png', width: 112, height: 16 },
+    { path: 'public/assets/vfx/crosshair.png', width: 16, height: 16 },
   ];
 
   it('verifies all expected pixel-art asset files exist and have non-zero size', () => {
