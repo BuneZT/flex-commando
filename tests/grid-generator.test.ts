@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateRoomGrid, GridCell, calculateDoorMask, DOOR_FLAGS } from '../src/core/GridGenerator';
+import { generateRoomGrid, GridCell, calculateDoorMask, DOOR_FLAGS, selectCapsuleRoomCoords } from '../src/core/GridGenerator';
 import { ROOM_TEMPLATES, getMatchingRoomTemplates, RoomTemplate } from '../src/core/RoomTemplate';
 
 describe('GridGenerator', () => {
@@ -183,5 +183,65 @@ describe('RoomTemplate', () => {
       // Top row (r=0) cols 8..11 should be open air (tile 0)
       expect(northTemplate.tiles[0][9]).toBe(0);
     }
+  });
+});
+
+describe('selectCapsuleRoomCoords', () => {
+  it('should select 2 to 3 rooms for weapon capsules across multiple seeds', () => {
+    for (const seed of [12345, 99999, 42, 777, 2026]) {
+      const grid = generateRoomGrid(seed);
+      const coords = selectCapsuleRoomCoords(grid);
+      expect(coords.length).toBeGreaterThanOrEqual(2);
+      expect(coords.length).toBeLessThanOrEqual(3);
+
+      // Verify no duplicates
+      const keys = new Set(coords.map((c) => `${c.x},${c.y}`));
+      expect(keys.size).toBe(coords.length);
+
+      // Verify START and BOSS rooms are never selected
+      for (const coord of coords) {
+        const cell = grid[coord.y][coord.x];
+        expect(cell.type).not.toBe('START');
+        expect(cell.type).not.toBe('BOSS');
+        expect(cell.type).not.toBe('EMPTY');
+      }
+    }
+  });
+
+  it('should prioritize BRANCH rooms and pre-boss PATH room', () => {
+    const grid = generateRoomGrid(12345);
+    const coords = selectCapsuleRoomCoords(grid);
+    const branchCells = grid.flat().filter((c) => c.type === 'BRANCH');
+    if (branchCells.length > 0) {
+      const selectedBranches = coords.filter((c) => grid[c.y][c.x].type === 'BRANCH');
+      expect(selectedBranches.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('should fallback gracefully to mid-stage PATH room when zero BRANCH rooms exist', () => {
+    // Construct a synthetic grid with only START, PATH, and BOSS
+    const mockGrid: GridCell[][] = Array.from({ length: 4 }, (_, y) =>
+      Array.from({ length: 4 }, (_, x) => ({
+        x,
+        y,
+        type: 'EMPTY' as const,
+        doors: { north: false, south: false, east: false, west: false },
+        doorMask: 0,
+      }))
+    );
+    mockGrid[0][0].type = 'START';
+    mockGrid[0][1].type = 'PATH';
+    mockGrid[0][1].doors.west = true;
+    mockGrid[0][1].doors.east = true;
+    mockGrid[0][2].type = 'PATH';
+    mockGrid[0][2].doors.west = true;
+    mockGrid[0][2].doors.east = true;
+    mockGrid[0][3].type = 'BOSS';
+    mockGrid[0][3].doors.west = true;
+
+    const coords = selectCapsuleRoomCoords(mockGrid);
+    expect(coords.length).toBe(2);
+    expect(coords).toContainEqual({ x: 2, y: 0 }); // Pre-boss
+    expect(coords).toContainEqual({ x: 1, y: 0 }); // Mid-path
   });
 });

@@ -150,3 +150,56 @@ export function generateRoomGrid(seed: number): GridCell[][] {
 
   return grid;
 }
+
+export interface RoomCoord {
+  x: number;
+  y: number;
+}
+
+export function selectCapsuleRoomCoords(grid: GridCell[][]): RoomCoord[] {
+  const result: RoomCoord[] = [];
+  const flat = grid.flat();
+
+  // 1. Locate BOSS cell
+  const bossCell = flat.find((c) => c.type === 'BOSS');
+
+  // 2. Locate pre-boss PATH cell
+  let preBossCell: GridCell | undefined;
+  if (bossCell) {
+    const neighbors: GridCell[] = [];
+    if (bossCell.y > 0) neighbors.push(grid[bossCell.y - 1][bossCell.x]);
+    if (bossCell.y < 3) neighbors.push(grid[bossCell.y + 1][bossCell.x]);
+    if (bossCell.x > 0) neighbors.push(grid[bossCell.y][bossCell.x - 1]);
+    if (bossCell.x < 3) neighbors.push(grid[bossCell.y][bossCell.x + 1]);
+
+    preBossCell = neighbors.find((n) => n.type === 'PATH');
+  }
+
+  // 3. Locate all BRANCH cells
+  const branchCells = flat.filter((c) => c.type === 'BRANCH');
+
+  // Allocate branch rooms (up to 2)
+  for (let i = 0; i < Math.min(2, branchCells.length); i++) {
+    result.push({ x: branchCells[i].x, y: branchCells[i].y });
+  }
+
+  // Add pre-boss room if found and not already included
+  if (preBossCell && !result.some((c) => c.x === preBossCell!.x && c.y === preBossCell!.y)) {
+    result.push({ x: preBossCell.x, y: preBossCell.y });
+  }
+
+  // Fallback if fewer than 2 total capsules selected
+  if (result.length < 2) {
+    const pathCells = flat.filter(
+      (c) =>
+        c.type === 'PATH' &&
+        !result.some((r) => r.x === c.x && r.y === c.y)
+    );
+    if (pathCells.length > 0) {
+      const midPath = pathCells[Math.floor(pathCells.length / 2)];
+      result.push({ x: midPath.x, y: midPath.y });
+    }
+  }
+
+  return result.slice(0, 3);
+}
