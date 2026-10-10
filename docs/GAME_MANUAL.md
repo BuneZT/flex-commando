@@ -55,7 +55,7 @@ Players step into the combat boots of an over-the-top 80s action hero—featurin
 
 ## 4. Enemy Roster & Behaviors
 
-All enemies extend `EnemyBase` and inherit contact damage, health tracking, and active room camera culling. Defeating regular enemies provides a **20% chance** to drop a weapon upgrade badge.
+All enemies extend `EnemyBase` and inherit contact damage, health tracking, and active room camera culling. Regular enemies have a **0% drop rate** for weapon items on death—weapon upgrades are discovered exclusively via rare curated flying capsules scattered across the grid.
 
 ```
        [Trooper]              [Turret]             [Falcon Drone]
@@ -119,9 +119,14 @@ Projectiles are recycled at runtime through `ProjectilePool` to eliminate memory
 | **[F]** | **Flame Thrower** | 2 | 200 ms | 180 | **Yes** | 14×14 fiery orb (`#ff4400`). Moves in an undulating **sinusoidal spiral wave** (`Math.sin(...) * 12px`), burning and piercing all targets in its path. |
 | **[B]** | **Barrier Shield** | — | — | — | — | Defensive energy bubble. Absorbs up to **3 incoming hits** (`[SHIELD: 3]`) without losing lives, granting 500ms invulnerability per hit. |
 
-### Pickups & Floating Capsules
-* **Flying Capsule (`PickupCapsule`):** A silver/red capsule drone that flies across the room in a smooth sine wave (`waveY = sin(t) * 15px`). Shooting it once (1 HP) causes it to drop a floating weapon badge.
-* **Weapon Badges (`PickupItem`):** Floating badges labeled `S`, `L`, `M`, `F`, or `B` that gently fall with gravity (`gravityY: 100`, `bounce: 0.4`) and equip immediately when touched.
+### Pickups & Curated Floating Capsules
+* **Starting Loadout & Discovery Philosophy:** The player starts each run armed exclusively with the default Pea-Shooter. Weapons are rare, high-impact discoveries rather than common enemy drops—regular enemies have a **0% drop rate** for weapon items on death. Players must explore the cybernetic fortress to discover weapon upgrades.
+* **Curated Capsule Placement (2–3 Per Run):** Exactly **2 to 3** flying weapon capsules (`PickupCapsule`) spawn per 4×4 level grid, placed strategically by `selectCapsuleRoomCoords`:
+  * **Branch Rooms:** Positioned in optional branch dead-ends to reward players who venture off the critical path.
+  * **Pre-Boss Staging Room:** 1 capsule is placed in the gateway room immediately preceding the Boss chamber to prepare the hero for the final battle.
+  * **Exploration Fallback:** If a procedural layout generates fewer than 2 branch corridors, capsules are placed in mid-stage path rooms so that every run consistently guarantees 2–3 upgrade opportunities. The starting room and the boss chamber never spawn capsules.
+* **Flying Capsule (`PickupCapsule`):** A silver/red robotic capsule drone that flies across curated rooms in a smooth sine wave (`waveY = sin(t) * 15px`). Shooting it once (1 HP) causes it to drop a floating weapon badge.
+* **Weapon Badges (`PickupItem`):** Floating badges labeled `S`, `L`, `M`, `F`, or `B` that gently fall with gravity (`gravityY: 100`, `bounce: 0.4`) and equip immediately when touched without intrusive popups or gameplay interruptions.
 
 ---
 
