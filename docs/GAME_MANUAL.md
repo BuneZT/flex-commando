@@ -136,12 +136,11 @@ Projectiles are recycled at runtime through `ProjectilePool` to eliminate memory
 flowchart TD
     Start["Start Run (3 Lives)"] --> Explore["Explore 4x4 Grid Matrix"]
     Explore --> Combat["Fight Troopers, Turrets, Drones"]
-    Combat --> BossRoom["Enter Boss Room (Column 3)"]
-
-    BossRoom --> WinCondition{"Victory Trigger"}
-    WinCondition -->|"1. Kill Level Boss (50 HP)"| Victory["VICTORY! Mission Accomplished"]
-    WinCondition -->|"2. Enter Exit Portal"| Victory
-    WinCondition -->|"3. Eliminate All Enemies on Grid"| Victory
+    Combat --> BossRoom["Locate Boss Chamber (BOSS cell)"]
+    BossRoom --> DefeatBoss["Defeat Level Boss (50 HP)"]
+    DefeatBoss --> UnlockPortal["Exit Portal Powers Up (Unlocked)"]
+    UnlockPortal --> ExitChamber["Step into Exit Portal"]
+    ExitChamber --> Victory["VICTORY! Mission Accomplished"]
 
     Combat --> LoseCondition{"Lives Depleted (0 HP)?"}
     LoseCondition -->|"Yes (Permadeath)"| GameOver["GAME OVER - YOU DIED"]
@@ -149,10 +148,10 @@ flowchart TD
 ```
 
 ### Winning State (`VICTORY! MISSION ACCOMPLISHED`)
-A run can be successfully won in **three distinct ways**:
-1. **Defeating the Level Boss (Primary Objective):** Navigating through the matrix to the final boss chamber on Column 3 and reducing the 50 HP Boss Mech to zero.
-2. **Reaching the Exit Portal:** Stepping directly into the glowing green **Exit Portal** located in the boss chamber.
-3. **Total Annihilation:** Eliminating every single enemy spawned throughout the entire 4×4 grid level.
+A run has a **single strict victory condition**:
+1. **Locate the Boss Chamber:** Navigate through the 4×4 cybernetic matrix to reach the final chamber (`type === 'BOSS'`).
+2. **Defeat the Boss Mech:** Reduce the 50 HP Boss Mech to zero. Upon destruction, the facility lockdown disengages and the **Exit Portal** powers up (shifting from locked dim red to active glowing green).
+3. **Extract via Exit Portal:** Step into the unlocked Exit Portal to trigger mission victory.
 
 When victory occurs, the screen transitions to the Victory Screen displaying `MISSION ACCOMPLISHED` and offering `PRESS SPACE TO RESTART`.
 
