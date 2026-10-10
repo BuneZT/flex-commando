@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { generateRoomGrid, GridCell } from '../core/GridGenerator';
+import { generateRoomGrid, GridCell, selectCapsuleRoomCoords } from '../core/GridGenerator';
 import { TilemapRenderer, TilemapRenderResult } from '../core/TilemapRenderer';
 import { CameraManager } from '../core/CameraManager';
 import { Player } from '../entities/Player';
@@ -142,7 +142,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 6. Initialize camera manager focused on START room
-    this.cameraManager = new CameraManager(this.cameras.main, startRoom.x, startRoom.y);
+    if (this.cameras?.main) {
+      this.cameraManager = new CameraManager(this.cameras.main, startRoom.x, startRoom.y);
+    }
 
     // 7. Initialize user controls
     if (this.input && this.input.keyboard) {
@@ -169,12 +171,7 @@ export class GameScene extends Phaser.Scene {
     // 9. Populate initial enemies in PATH / BRANCH rooms
     this.spawnRoomEnemies();
 
-    // 10. Spawn flying weapon pickup capsule in starting area
-    const startWeapon = getRandomPickupWeapon();
-    const capsule = new PickupCapsule(this, startX + 100, startY - 80, startWeapon);
-    this.pickupCapsules.push(capsule);
-
-    // 11. Spawn Exit Door in final/BOSS room
+    // 10. Spawn Exit Door in final/BOSS room
     const exitCell = this.grid.flat().find((cell) => cell.type === 'BOSS') || { x: 3, y: 0 };
     const exitX = exitCell.x * 320 + 260;
     const exitY = exitCell.y * 240 + 180;
@@ -197,10 +194,12 @@ export class GameScene extends Phaser.Scene {
       ).setOrigin(0.5);
     }
 
-    // 12. Initialize HUD overlay
-    this.hud = new HUD(this);
+    // 11. Initialize HUD overlay
+    if (this.add && typeof this.add.text === 'function') {
+      this.hud = new HUD(this);
+    }
 
-    // 13. Start BGM & setup M mute toggle key
+    // 12. Start BGM & setup M mute toggle key
     SoundManager.getInstance().startBGM('STAGE', this);
     if (typeof this.input?.keyboard?.on === 'function') {
       this.input.keyboard.on('keydown-M', () => {
@@ -208,12 +207,14 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
-    // 14. Initial spatial culling for START room
+    // 13. Initial spatial culling for START room
     this.cullEntities(startRoom.x, startRoom.y);
   }
 
   private spawnRoomEnemies(): void {
     if (!this.grid) return;
+
+    const capsuleRooms = this.grid ? selectCapsuleRoomCoords(this.grid) : [];
 
     for (let r = 0; r < 4; r++) {
       for (let c = 0; c < 4; c++) {
@@ -240,10 +241,13 @@ export class GameScene extends Phaser.Scene {
           this.enemies.push(jumper);
           if (this.enemyGroup) this.enemyGroup.add(jumper);
 
-          // Spawn flying weapon capsule per room
-          const roomCapsuleWeapon = getRandomPickupWeapon();
-          const roomCapsule = new PickupCapsule(this, roomX + 40, roomY + 70, roomCapsuleWeapon);
-          this.pickupCapsules.push(roomCapsule);
+          // Spawn flying weapon capsule in curated rooms
+          const shouldSpawnCapsule = capsuleRooms.some((cr) => cr.x === c && cr.y === r);
+          if (shouldSpawnCapsule) {
+            const roomCapsuleWeapon = getRandomPickupWeapon();
+            const roomCapsule = new PickupCapsule(this, roomX + 40, roomY + 70, roomCapsuleWeapon);
+            this.pickupCapsules.push(roomCapsule);
+          }
         }
       }
     }
@@ -415,6 +419,8 @@ export class GameScene extends Phaser.Scene {
   public cullEntities(gridX: number, gridY: number): void {
     if (this.cameraManager) {
       this.activeEnemies = this.cameraManager.cullEnemies(this.enemies, this.activeEnemies);
+    } else {
+      this.activeEnemies = [...this.enemies];
     }
     this.activePickupCapsules = this.cullCapsules(this.pickupCapsules, gridX, gridY, this.activePickupCapsules);
     this.lastCullGridX = gridX;
@@ -526,13 +532,8 @@ export class GameScene extends Phaser.Scene {
                 if (killed) {
                   if (enemy === this.boss) {
                     this.triggerVictory();
-                  } else if (Math.random() < 0.2) {
-                    const droppedItem = new PickupItem(this, enemy.x, enemy.y, getRandomPickupWeapon());
-                    this.pickupItems.push(droppedItem);
-                    if (this.pickupItemGroup) {
-                      this.pickupItemGroup.add(droppedItem);
-                    }
                   }
+                  // Regular enemies drop nothing
                 }
                 break;
               }

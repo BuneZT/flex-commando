@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { formatHUDLives } from '../src/ui/HUD';
 import { Boss } from '../src/entities/enemies/Boss';
 import { GameScene } from '../src/scenes/GameScene';
@@ -345,9 +345,52 @@ describe('Pickup Capsule Spatial Culling', () => {
   });
 });
 
+describe('Curated Weapon Capsules and Enemy Drops', () => {
+  function createInitializedGameScene(): GameScene {
+    const scene = new GameScene();
+    const mock = createMockScene();
+    scene.sys = mock.sys;
+    scene.cameras = mock.cameras;
+    scene.add = mock.add;
+    scene.physics = mock.physics;
+    return scene;
+  }
 
+  it('should spawn weapon capsules only in curated rooms (2 to 3 per level)', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+    expect(scene.pickupCapsules.length).toBeGreaterThanOrEqual(2);
+    expect(scene.pickupCapsules.length).toBeLessThanOrEqual(3);
+  });
 
+  it('should not drop pickup items when regular enemies are killed', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+    const initialItemsCount = scene.pickupItems.length;
 
+    // Cull to a room containing regular enemies
+    expect(scene.enemies.length).toBeGreaterThan(0);
+    const firstEnemy = scene.enemies[0];
+    const enemyRoomX = Math.floor(firstEnemy.x / 320);
+    const enemyRoomY = Math.floor(firstEnemy.y / 240);
+    scene.cameraManager?.setRoom(enemyRoomX, enemyRoomY);
+    scene.cullEntities(enemyRoomX, enemyRoomY);
 
-
-
+    if (scene.activeEnemies.length > 0) {
+      const enemy = scene.activeEnemies[0];
+      // Spawn player bullet overlapping enemy with lethal damage
+      const bullet = scene.projectilePool?.spawn(enemy.x, enemy.y, 0, 'PEA_SHOOTER', true);
+      if (bullet) {
+        bullet.damage = 9999;
+      }
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+      try {
+        (scene as any).handleCollisions();
+        expect(enemy.isAlive).toBe(false);
+        expect(scene.pickupItems.length).toBe(initialItemsCount);
+      } finally {
+        randomSpy.mockRestore();
+      }
+    }
+  });
+});
