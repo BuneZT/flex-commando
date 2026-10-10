@@ -454,16 +454,16 @@ export class GameScene extends Phaser.Scene {
 
   public unlockExitPortal(): void {
     this.isPortalUnlocked = true;
-    if (this.exitDoor) {
-      if (typeof this.exitDoor.clearTint === 'function') {
-        this.exitDoor.clearTint();
-      }
-      if (typeof this.exitDoor.setTint === 'function') {
-        this.exitDoor.setTint(0x00ff88);
-      }
-      if (typeof this.exitDoor.setAlpha === 'function') {
-        this.exitDoor.setAlpha(1.0);
-      }
+    for (let i = 0; i < this.exitDoors.length; i++) {
+      const door = this.exitDoors[i];
+      if (typeof door.clearTint === 'function') door.clearTint();
+      if (typeof door.setTint === 'function') door.setTint(0x00ff88);
+      if (typeof door.setAlpha === 'function') door.setAlpha(1.0);
+    }
+    if (this.exitDoor && !this.exitDoors.includes(this.exitDoor)) {
+      if (typeof this.exitDoor.clearTint === 'function') this.exitDoor.clearTint();
+      if (typeof this.exitDoor.setTint === 'function') this.exitDoor.setTint(0x00ff88);
+      if (typeof this.exitDoor.setAlpha === 'function') this.exitDoor.setAlpha(1.0);
     }
     if (this.exitPortalText) {
       if (typeof this.exitPortalText.setText === 'function') {
@@ -628,9 +628,6 @@ export class GameScene extends Phaser.Scene {
           this.triggerVictory();
           break;
         }
-      }
-      if (this.exitDoor && this.checkOverlap(this.player, this.exitDoor, 8)) {
-        this.triggerVictory();
       }
     }
   }
