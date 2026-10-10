@@ -33,7 +33,7 @@
   - `GameScene.exitPortalText?: Phaser.GameObjects.Text`
   - `GameScene.unlockExitPortal(): void`
 
-- [ ] **Step 1: Write failing tests in `tests/game-loop.test.ts`**
+- [x] **Step 1: Write failing tests in `tests/game-loop.test.ts`**
 
 Add tests to `tests/game-loop.test.ts` verifying:
 1. Portal starts in locked state (`isPortalUnlocked === false`).
@@ -43,12 +43,12 @@ Add tests to `tests/game-loop.test.ts` verifying:
 5. Player overlapping exit portal while `isPortalUnlocked === true` calls `triggerVictory()`.
 6. Entering a column 3 room where `cell.type !== 'BOSS'` does not trigger the Boss encounter.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/game-loop.test.ts`
 Expected: FAIL due to missing `isPortalUnlocked`, premature victory on exit portal contact, or lingering all-enemies-dead trigger.
 
-- [ ] **Step 3: Update `src/scenes/GameScene.ts`**
+- [x] **Step 3: Update `src/scenes/GameScene.ts`**
 
 1. Add properties:
    ```ts
@@ -144,12 +144,12 @@ Expected: FAIL due to missing `isPortalUnlocked`, premature victory on exit port
      }
      ```
 
-- [ ] **Step 4: Run test suite to verify all tests pass**
+- [x] **Step 4: Run test suite to verify all tests pass**
 
 Run: `npx vitest run tests/game-loop.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
 
 ```bash
 git add src/scenes/GameScene.ts tests/game-loop.test.ts
@@ -163,7 +163,7 @@ git commit -m "feat: enforce boss defeat and portal unlock as sole win condition
 **Files:**
 - Modify: `docs/GAME_MANUAL.md:133-165`
 
-- [ ] **Step 1: Update Winning & Losing Conditions in `docs/GAME_MANUAL.md`**
+- [x] **Step 1: Update Winning & Losing Conditions in `docs/GAME_MANUAL.md`**
 
 Update Section 6 mermaid diagram:
 ```mermaid
@@ -184,12 +184,12 @@ flowchart TD
 Update text:
 Explain that the sole victory condition is discovering the Boss Chamber, defeating the Boss Mech to disengage the security lockdown and power up the Exit Portal, and stepping through the portal to extract.
 
-- [ ] **Step 2: Run all repository tests and typechecks**
+- [x] **Step 2: Run all repository tests and typechecks**
 
 Run: `npm test && npx tsc --noEmit`
 Expected: PASS (all tests passing and zero TypeScript errors)
 
-- [ ] **Step 3: Commit documentation update**
+- [x] **Step 3: Commit documentation update**
 
 ```bash
 git add docs/GAME_MANUAL.md
