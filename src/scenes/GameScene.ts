@@ -47,6 +47,8 @@ export class GameScene extends Phaser.Scene {
   public crosshair?: Phaser.GameObjects.Sprite;
   public exitDoor?: Phaser.GameObjects.Sprite;
   public exitDoors: Phaser.GameObjects.Sprite[] = [];
+  public isPortalUnlocked: boolean = false;
+  public exitPortalText?: Phaser.GameObjects.Text;
 
   public invulnerableTimer: number = 0;
   public isGameOver: boolean = false;
@@ -80,6 +82,8 @@ export class GameScene extends Phaser.Scene {
     this.pickupItems = [];
     this.exitDoor = undefined;
     this.exitDoors = [];
+    this.isPortalUnlocked = false;
+    this.exitPortalText = undefined;
     this.crosshair = undefined;
     this.invulnerableTimer = 0;
     this.isGameOver = false;
@@ -178,17 +182,23 @@ export class GameScene extends Phaser.Scene {
 
     if (this.add && typeof this.add.sprite === 'function') {
       const portal = this.add.sprite(exitX, exitY, 'tileset', 4);
+      if (typeof portal.setTint === 'function') {
+        portal.setTint(0xff4444);
+      }
+      if (typeof portal.setAlpha === 'function') {
+        portal.setAlpha(0.75);
+      }
       this.exitDoor = portal;
       this.exitDoors.push(portal);
     }
     if (this.add && typeof this.add.text === 'function') {
-      this.add.text(
+      this.exitPortalText = this.add.text(
         exitX,
         exitY - 18,
-        'EXIT PORTAL',
+        'PORTAL LOCKED',
         createRetroTextStyle({
           fontSize: '10px',
-          color: '#00ff88',
+          color: '#ff4444',
           strokeThickness: 2,
         })
       ).setOrigin(0.5);
@@ -360,8 +370,8 @@ export class GameScene extends Phaser.Scene {
       this.parallaxBg.tilePositionY = (this.cameras.main.scrollY || 0) * 0.15;
     }
 
-    // 4. Boss Room Trigger on Column 3 or BOSS room cell
-    if (!this.bossTriggered && this.grid && (currentGridX === 3 || this.grid[currentGridY][currentGridX].type === 'BOSS')) {
+    // 4. Boss Room Trigger only in designated BOSS room cell
+    if (!this.bossTriggered && this.grid && this.grid[currentGridY] && this.grid[currentGridY][currentGridX]?.type === 'BOSS') {
       this.triggerBossEncounter(currentGridX, currentGridY);
     }
 
@@ -390,20 +400,6 @@ export class GameScene extends Phaser.Scene {
       const enemy = this.activeEnemies[i];
       if (enemy.isAlive && enemy.active) {
         enemy.updateAI(time, delta, this.player, this.projectilePool);
-      }
-    }
-
-    // 7.5 Check All Enemies Defeated Victory Condition
-    if (!this.isVictory && this.enemies.length > 0) {
-      let allDead = true;
-      for (let i = 0; i < this.enemies.length; i++) {
-        if (this.enemies[i].isAlive) {
-          allDead = false;
-          break;
-        }
-      }
-      if (allDead) {
-        this.triggerVictory();
       }
     }
 
@@ -454,6 +450,30 @@ export class GameScene extends Phaser.Scene {
       }
     }
     return activeCapsules;
+  }
+
+  public unlockExitPortal(): void {
+    this.isPortalUnlocked = true;
+    if (this.exitDoor) {
+      if (typeof this.exitDoor.clearTint === 'function') {
+        this.exitDoor.clearTint();
+      }
+      if (typeof this.exitDoor.setTint === 'function') {
+        this.exitDoor.setTint(0x00ff88);
+      }
+      if (typeof this.exitDoor.setAlpha === 'function') {
+        this.exitDoor.setAlpha(1.0);
+      }
+    }
+    if (this.exitPortalText) {
+      if (typeof this.exitPortalText.setText === 'function') {
+        this.exitPortalText.setText('EXIT PORTAL');
+      }
+      if (typeof this.exitPortalText.setColor === 'function') {
+        this.exitPortalText.setColor('#00ff88');
+      }
+    }
+    SoundManager.getInstance().playSfx('pickup');
   }
 
   private triggerVictory(): void {
@@ -531,7 +551,7 @@ export class GameScene extends Phaser.Scene {
 
                 if (killed) {
                   if (enemy === this.boss) {
-                    this.triggerVictory();
+                    this.unlockExitPortal();
                   }
                   // Regular enemies drop nothing
                 }
@@ -600,16 +620,18 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // D. Player vs Level Exit Doors / Portals
-    for (let i = 0; i < this.exitDoors.length; i++) {
-      const door = this.exitDoors[i];
-      if (this.checkOverlap(this.player, door, 8)) {
-        this.triggerVictory();
-        break;
+    // D. Player vs Level Exit Doors / Portals (requires unlocked portal)
+    if (this.isPortalUnlocked) {
+      for (let i = 0; i < this.exitDoors.length; i++) {
+        const door = this.exitDoors[i];
+        if (this.checkOverlap(this.player, door, 8)) {
+          this.triggerVictory();
+          break;
+        }
       }
-    }
-    if (this.exitDoor && this.checkOverlap(this.player, this.exitDoor, 8)) {
-      this.triggerVictory();
+      if (this.exitDoor && this.checkOverlap(this.player, this.exitDoor, 8)) {
+        this.triggerVictory();
+      }
     }
   }
 }

@@ -33,6 +33,13 @@ describe('SoundManager', () => {
     }).not.toThrow();
   });
 
+  it('should safely invoke playSfx without errors', () => {
+    const sm = SoundManager.getInstance();
+    expect(() => {
+      sm.playSfx('pickup');
+    }).not.toThrow();
+  });
+
   it('should start and stop BGM without errors', () => {
     const sm = SoundManager.getInstance();
     expect(() => {

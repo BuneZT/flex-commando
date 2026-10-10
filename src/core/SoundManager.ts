@@ -181,6 +181,34 @@ export class SoundManager {
     }
   }
 
+  public playSfx(sfx: 'pickup' | string = 'pickup'): void {
+    if (this.isMuted || !this.ctx || !this.sfxGain) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+    if (sfx === 'pickup') {
+      this.playPickupSound(t);
+    }
+  }
+
+  private playPickupSound(t: number): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, t);
+    osc.frequency.setValueAtTime(880, t + 0.06);
+
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(t);
+    osc.stop(t + 0.15);
+  }
+
   /** Transient sub-bass thump layer for punchiness */
   private playPunchKick(t: number, startFreq: number = 180, endFreq: number = 40, duration: number = 0.04): void {
     if (!this.ctx || !this.sfxGain) return;

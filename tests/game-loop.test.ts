@@ -17,20 +17,32 @@ function createMockScene() {
     add: {
       existing: () => {},
       group: () => ({ add: () => {} }),
-      text: () => {
+      text: (_x?: number, _y?: number, content?: string) => {
         const textObj: any = {
+          text: content ?? '',
+          color: '',
           setOrigin: () => textObj,
           setScrollFactor: () => textObj,
           setDepth: () => textObj,
-          setText: () => textObj,
-          setColor: () => textObj,
+          setText: (txt: string) => { textObj.text = txt; return textObj; },
+          setColor: (clr: string) => { textObj.color = clr; return textObj; },
+          setVisible: () => textObj,
         };
         return textObj;
       },
-      sprite: () => {
+      sprite: (x: number = 0, y: number = 0) => {
         const spriteObj: any = {
+          x,
+          y,
+          width: 16,
+          height: 16,
+          tint: undefined as number | undefined,
+          alpha: 1,
           setScrollFactor: () => spriteObj,
           setDepth: () => spriteObj,
+          setTint: (t: number) => { spriteObj.tint = t; return spriteObj; },
+          clearTint: () => { spriteObj.tint = undefined; return spriteObj; },
+          setAlpha: (a: number) => { spriteObj.alpha = a; return spriteObj; },
         };
         return spriteObj;
       },
@@ -51,11 +63,13 @@ function createMockScene() {
   } as any;
 }
 
-function createMockBody() {
+function createMockBody(x: number = 0, y: number = 0) {
   let width = 32;
   let height = 32;
   const velocity = { x: 0, y: 0 };
   return {
+    x,
+    y,
     get width() { return width; },
     get height() { return height; },
     velocity,
@@ -345,17 +359,18 @@ describe('Pickup Capsule Spatial Culling', () => {
   });
 });
 
-describe('Curated Weapon Capsules and Enemy Drops', () => {
-  function createInitializedGameScene(): GameScene {
-    const scene = new GameScene();
-    const mock = createMockScene();
-    scene.sys = mock.sys;
-    scene.cameras = mock.cameras;
-    scene.add = mock.add;
-    scene.physics = mock.physics;
-    return scene;
-  }
+function createInitializedGameScene(): GameScene {
+  const scene = new GameScene();
+  const mock = createMockScene();
+  scene.sys = mock.sys;
+  scene.cameras = mock.cameras;
+  scene.add = mock.add;
+  scene.physics = mock.physics;
+  scene.scene = { start: vi.fn() } as any;
+  return scene;
+}
 
+describe('Curated Weapon Capsules and Enemy Drops', () => {
   it('should spawn weapon capsules only in curated rooms (2 to 3 per level)', () => {
     const scene = createInitializedGameScene();
     scene.create();
@@ -394,3 +409,127 @@ describe('Curated Weapon Capsules and Enemy Drops', () => {
     }
   });
 });
+
+describe('Portal Lock State and Win Condition', () => {
+  it('should initialize portal in locked state with PORTAL LOCKED text', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    expect(scene.isPortalUnlocked).toBe(false);
+    expect(scene.exitDoor).toBeDefined();
+    expect(scene.exitPortalText).toBeDefined();
+    expect((scene.exitPortalText as any)?.text).toBe('PORTAL LOCKED');
+  });
+
+  it('should not trigger victory when player overlaps exit portal while locked', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    const triggerVictorySpy = vi.spyOn(scene as any, 'triggerVictory');
+    expect(scene.isPortalUnlocked).toBe(false);
+    expect(scene.exitDoor).toBeDefined();
+
+    // Position player directly over the exit portal
+    scene.player!.x = scene.exitDoor!.x;
+    scene.player!.y = scene.exitDoor!.y;
+    if (scene.player!.body) {
+      scene.player!.body.x = scene.exitDoor!.x;
+      scene.player!.body.y = scene.exitDoor!.y;
+    }
+
+    (scene as any).handleCollisions();
+
+    expect(triggerVictorySpy).not.toHaveBeenCalled();
+    expect(scene.isVictory).toBe(false);
+  });
+
+  it('should not trigger victory when all regular enemies are defeated', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    const triggerVictorySpy = vi.spyOn(scene as any, 'triggerVictory');
+
+    // Slay all regular enemies
+    expect(scene.enemies.length).toBeGreaterThan(0);
+    for (const enemy of scene.enemies) {
+      enemy.isAlive = false;
+    }
+
+    scene.update(1000, 16);
+
+    expect(triggerVictorySpy).not.toHaveBeenCalled();
+    expect(scene.isVictory).toBe(false);
+  });
+
+  it('should unlock exit portal, update text and play SFX when boss is defeated without triggering victory immediately', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    const boss = new Boss(scene, 200, 200);
+    boss.body = createMockBody(boss.x - 16, boss.y - 16);
+    scene.boss = boss;
+    scene.activeEnemies.push(boss);
+
+    const triggerVictorySpy = vi.spyOn(scene as any, 'triggerVictory');
+    const unlockSpy = vi.spyOn(scene as any, 'unlockExitPortal');
+
+    // Lethal bullet hit on boss
+    const bullet = scene.projectilePool?.spawn(boss.x, boss.y, 0, 'PEA_SHOOTER', true);
+    if (bullet) {
+      bullet.damage = 9999;
+    }
+
+    (scene as any).handleCollisions();
+
+    expect(boss.isAlive).toBe(false);
+    expect(unlockSpy).toHaveBeenCalled();
+    expect(scene.isPortalUnlocked).toBe(true);
+    expect((scene.exitPortalText as any)?.text).toBe('EXIT PORTAL');
+    expect(triggerVictorySpy).not.toHaveBeenCalled();
+    expect(scene.isVictory).toBe(false);
+  });
+
+  it('should trigger victory when player overlaps exit portal after it is unlocked', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    (scene as any).unlockExitPortal?.();
+    expect(scene.isPortalUnlocked).toBe(true);
+
+    const triggerVictorySpy = vi.spyOn(scene as any, 'triggerVictory');
+
+    // Position player directly over exit portal
+    scene.player!.x = scene.exitDoor!.x;
+    scene.player!.y = scene.exitDoor!.y;
+    if (scene.player!.body) {
+      scene.player!.body.x = scene.exitDoor!.x;
+      scene.player!.body.y = scene.exitDoor!.y;
+    }
+
+    (scene as any).handleCollisions();
+
+    expect(triggerVictorySpy).toHaveBeenCalled();
+    expect(scene.isVictory).toBe(true);
+  });
+
+  it('should not trigger boss encounter when entering column 3 room if cell type is not BOSS', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    expect(scene.grid).toBeDefined();
+    // Configure cell (3, 0) to be a non-boss room (e.g. PATH)
+    scene.grid![0][3] = { x: 3, y: 0, type: 'PATH', doorMask: 0 } as any;
+
+    expect(scene.bossTriggered).toBe(false);
+
+    // Position player in room (3, 0)
+    scene.player!.x = 3 * 320 + 160;
+    scene.player!.y = 0 * 240 + 120;
+
+    scene.update(1000, 16);
+
+    expect(scene.bossTriggered).toBe(false);
+    expect(scene.boss).toBeNull();
+  });
+});
+
