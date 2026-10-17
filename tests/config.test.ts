@@ -1,12 +1,29 @@
 import { describe, it, expect } from 'vitest';
 import Phaser from 'phaser';
 import { GameConfig } from '../src/config/GameConfig';
+import { GAME_CONSTANTS } from '../src/config/GameConstants';
 import { Controls } from '../src/config/Controls';
 
+describe('GameConstants', () => {
+  it('should define 16:9 widescreen dimensions and 32x18 tile metrics', () => {
+    expect(GAME_CONSTANTS.TILE_SIZE).toBe(16);
+    expect(GAME_CONSTANTS.ROOM_WIDTH_TILES).toBe(32);
+    expect(GAME_CONSTANTS.ROOM_HEIGHT_TILES).toBe(18);
+    expect(GAME_CONSTANTS.VIEW_WIDTH_PX).toBe(512);
+    expect(GAME_CONSTANTS.VIEW_HEIGHT_PX).toBe(288);
+    expect(GAME_CONSTANTS.GRID_COLS).toBe(4);
+    expect(GAME_CONSTANTS.GRID_ROWS).toBe(4);
+    expect(GAME_CONSTANTS.TOTAL_COLS_TILES).toBe(128);
+    expect(GAME_CONSTANTS.TOTAL_ROWS_TILES).toBe(72);
+    expect(GAME_CONSTANTS.WORLD_WIDTH_PX).toBe(2048);
+    expect(GAME_CONSTANTS.WORLD_HEIGHT_PX).toBe(1152);
+  });
+});
+
 describe('GameConfig', () => {
-  it('should define 320x240 pixel art arcade settings', () => {
-    expect(GameConfig.width).toBe(320);
-    expect(GameConfig.height).toBe(240);
+  it('should define 512x288 pixel art arcade settings', () => {
+    expect(GameConfig.width).toBe(512);
+    expect(GameConfig.height).toBe(288);
     expect(GameConfig.pixelArt).toBe(true);
   });
 

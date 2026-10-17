@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { GAME_CONSTANTS } from './GameConstants';
 import { BootScene } from '../scenes/BootScene';
 import { MainMenuScene } from '../scenes/MainMenuScene';
 import { GameScene } from '../scenes/GameScene';
@@ -7,8 +8,8 @@ import { GameOverScene } from '../scenes/GameOverScene';
 export const GameConfig: Phaser.Types.Core.GameConfig = {
   type: 0, // Phaser.AUTO
   parent: 'game-container',
-  width: 320,
-  height: 240,
+  width: GAME_CONSTANTS.VIEW_WIDTH_PX,
+  height: GAME_CONSTANTS.VIEW_HEIGHT_PX,
   pixelArt: true,
   roundPixels: true,
   render: {
