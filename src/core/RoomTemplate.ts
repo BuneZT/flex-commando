@@ -1,3 +1,5 @@
+import { GAME_CONSTANTS } from '../config/GameConstants';
+
 export const DOOR_FLAGS = {
   NORTH: 1,
   SOUTH: 2,
@@ -9,10 +11,10 @@ export interface RoomTemplate {
   id: string;
   doorMask: number;
   doors: { north: boolean; south: boolean; east: boolean; west: boolean };
-  width: number;  // 20 tiles
-  height: number; // 15 tiles
+  width: number;  // 32 tiles
+  height: number; // 18 tiles
   type?: 'START' | 'BOSS' | 'PATH' | 'BRANCH' | 'GENERIC';
-  tiles: number[][]; // 15 rows x 20 cols
+  tiles: number[][]; // 18 rows x 32 cols
 }
 
 export function calculateDoorMask(doors: { north: boolean; south: boolean; east: boolean; west: boolean }): number {
@@ -24,44 +26,171 @@ export function calculateDoorMask(doors: { north: boolean; south: boolean; east:
   return mask;
 }
 
-function createEmptyTileMatrix(
-  width = 20,
-  height = 15,
-  doors: { north: boolean; south: boolean; east: boolean; west: boolean } = { north: false, south: false, east: false, west: false }
+export type ArchetypeType = 'START' | 'BOSS' | 'HORIZ' | 'VERT' | 'CORNER' | 'JUNCTION';
+
+export function createArchetypeMatrix(
+  doors: { north: boolean; south: boolean; east: boolean; west: boolean } = {
+    north: false,
+    south: false,
+    east: false,
+    west: false,
+  },
+  archetypeType?: ArchetypeType
 ): number[][] {
+  const width = GAME_CONSTANTS.ROOM_WIDTH_TILES;
+  const height = GAME_CONSTANTS.ROOM_HEIGHT_TILES;
+
   const matrix: number[][] = [];
   for (let r = 0; r < height; r++) {
-    const row: number[] = [];
-    for (let c = 0; c < width; c++) {
-      if (r === height - 1) {
-        // Floor level (r = 14)
-        if (doors.south && c >= 8 && c <= 11) {
-          row.push(2); // One-way drop-through platform for South door
-        } else {
-          row.push(1); // Solid ground
-        }
-      } else if (r === 0) {
-        // Ceiling level (r = 0)
-        if (doors.north && c >= 8 && c <= 11) {
-          row.push(0); // Open ceiling gap for North door
-        } else {
-          row.push(3); // Solid ceiling wall
-        }
-      } else if (c === 0 && !doors.west) {
-        row.push(3); // West wall pillar if no West door
-      } else if (c === width - 1 && !doors.east) {
-        row.push(3); // East wall pillar if no East door
-      } else if ((doors.north || doors.south) && (r === 4 || r === 9) && c >= 7 && c <= 12) {
-        row.push(2); // Climbing platform ledges for vertical rooms
-      } else if (r === 9 && c >= 5 && c <= 14) {
-        row.push(2); // Standard platform bridge
-      } else {
-        row.push(0);
+    matrix.push(new Array(width).fill(0));
+  }
+
+  // Row 17: Ground (1), with cols 14-17 as one-way platform (2) if doors.south
+  for (let c = 0; c < width; c++) {
+    if (doors.south && c >= 14 && c <= 17) {
+      matrix[height - 1][c] = 2;
+    } else {
+      matrix[height - 1][c] = 1;
+    }
+  }
+
+  // Row 0: Ceiling (3), with cols 14-17 open (0) if doors.north
+  for (let c = 0; c < width; c++) {
+    if (doors.north && c >= 14 && c <= 17) {
+      matrix[0][c] = 0;
+    } else {
+      matrix[0][c] = 3;
+    }
+  }
+
+  // Col 0: West wall (3) for rows 1-16, unless doors.west (cols 0-1 open on rows 11-16)
+  for (let r = 1; r < height - 1; r++) {
+    if (doors.west && r >= 11 && r <= 16) {
+      matrix[r][0] = 0;
+      matrix[r][1] = 0;
+    } else {
+      matrix[r][0] = 3;
+    }
+  }
+
+  // Col 31: East wall (3) for rows 1-16, unless doors.east (cols 30-31 open on rows 11-16)
+  for (let r = 1; r < height - 1; r++) {
+    if (doors.east && r >= 11 && r <= 16) {
+      matrix[r][width - 1] = 0;
+      matrix[r][width - 2] = 0;
+    } else {
+      matrix[r][width - 1] = 3;
+    }
+  }
+
+  const addPlatform = (row: number, colStart: number, colEnd: number, tileType = 2) => {
+    for (let c = colStart; c <= colEnd; c++) {
+      if (row >= 0 && row < height && c >= 0 && c < width) {
+        if (doors.west && (c === 0 || c === 1) && row >= 11 && row <= 16) continue;
+        if (doors.east && (c === width - 1 || c === width - 2) && row >= 11 && row <= 16) continue;
+        if (doors.north && row === 0 && c >= 14 && c <= 17) continue;
+        if (doors.south && row === height - 1 && c >= 14 && c <= 17) continue;
+        matrix[row][c] = tileType;
       }
     }
-    matrix.push(row);
+  };
+
+  // Determine archetype layout
+  let arch = archetypeType;
+  if (!arch) {
+    if (doors.east && !doors.west && !doors.north && !doors.south) {
+      arch = 'START';
+    } else if (doors.west && !doors.east && !doors.north && !doors.south) {
+      arch = 'BOSS';
+    } else if (doors.east && doors.west && !doors.north && !doors.south) {
+      arch = 'HORIZ';
+    } else if ((doors.north || doors.south) && !doors.east && !doors.west) {
+      arch = 'VERT';
+    } else {
+      const doorCount = (doors.north ? 1 : 0) + (doors.south ? 1 : 0) + (doors.east ? 1 : 0) + (doors.west ? 1 : 0);
+      if (doorCount >= 3) {
+        arch = 'JUNCTION';
+      } else {
+        arch = 'CORNER';
+      }
+    }
   }
+
+  switch (arch) {
+    case 'START':
+      // Row 14 platform at cols 8–16, Row 11 platform at cols 17–25
+      addPlatform(14, 8, 16, 2);
+      addPlatform(11, 17, 25, 2);
+      break;
+
+    case 'BOSS':
+      // Row 12 grand bridge across cols 6–26, side platforms at Row 8 cols 2–8 and cols 24–30
+      addPlatform(12, 6, 26, 2);
+      addPlatform(8, 2, 8, 2);
+      addPlatform(8, 24, 30, 2);
+      break;
+
+    case 'HORIZ':
+      // Dual-tier corridor with high platform bridge at Row 11 cols 4–27, stepped perch at Row 7 cols 12–20
+      addPlatform(11, 4, 27, 2);
+      addPlatform(7, 12, 20, 2);
+      break;
+
+    case 'VERT':
+      // Zig-zag climbing platforms under portal: Row 14 cols 12–20, Row 11 cols 6–14, Row 8 cols 18–26, Row 5 cols 12–20
+      addPlatform(14, 12, 20, 2);
+      addPlatform(11, 6, 14, 2);
+      addPlatform(8, 18, 26, 2);
+      addPlatform(5, 12, 20, 2);
+      break;
+
+    case 'CORNER':
+      // Ascending terraces linking vertical portal cols 14–17 to horizontal portal rows 11–16
+      if (doors.north && doors.east) {
+        addPlatform(5, 12, 19, 2);
+        addPlatform(9, 16, 23, 2);
+        addPlatform(13, 20, 27, 2);
+      } else if (doors.north && doors.west) {
+        addPlatform(5, 12, 19, 2);
+        addPlatform(9, 8, 15, 2);
+        addPlatform(13, 4, 11, 2);
+      } else if (doors.south && doors.east) {
+        addPlatform(14, 12, 19, 2);
+        addPlatform(11, 16, 23, 2);
+        addPlatform(8, 20, 27, 2);
+      } else if (doors.south && doors.west) {
+        addPlatform(14, 12, 19, 2);
+        addPlatform(11, 8, 15, 2);
+        addPlatform(8, 4, 11, 2);
+      } else {
+        addPlatform(13, 10, 22, 2);
+        addPlatform(9, 12, 20, 2);
+        addPlatform(5, 14, 18, 2);
+      }
+      break;
+
+    case 'JUNCTION':
+      // Central floating plaza (Row 11 cols 10–22) and vertical jump ledges at Row 6 and Row 14
+      addPlatform(11, 10, 22, 2);
+      addPlatform(6, 12, 20, 2);
+      addPlatform(14, 12, 20, 2);
+      break;
+  }
+
   return matrix;
+}
+
+export function createEmptyTileMatrix(
+  _width = GAME_CONSTANTS.ROOM_WIDTH_TILES,
+  _height = GAME_CONSTANTS.ROOM_HEIGHT_TILES,
+  doors: { north: boolean; south: boolean; east: boolean; west: boolean } = {
+    north: false,
+    south: false,
+    east: false,
+    west: false,
+  }
+): number[][] {
+  return createArchetypeMatrix(doors);
 }
 
 export const ROOM_TEMPLATES: RoomTemplate[] = [
@@ -70,150 +199,150 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
     id: 'room_E_01',
     doorMask: DOOR_FLAGS.EAST,
     doors: { north: false, south: false, east: true, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'START',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: true, west: false }),
+    tiles: createArchetypeMatrix({ north: false, south: false, east: true, west: false }, 'START'),
   },
   // 2. West only (Boss / Dead-end West)
   {
     id: 'room_W_01',
     doorMask: DOOR_FLAGS.WEST,
     doors: { north: false, south: false, east: false, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'BOSS',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: false, west: true }),
+    tiles: createArchetypeMatrix({ north: false, south: false, east: false, west: true }, 'BOSS'),
   },
   // 3. North only
   {
     id: 'room_N_01',
     doorMask: DOOR_FLAGS.NORTH,
     doors: { north: true, south: false, east: false, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: false, west: false }),
+    tiles: createArchetypeMatrix({ north: true, south: false, east: false, west: false }, 'VERT'),
   },
   // 4. South only
   {
     id: 'room_S_01',
     doorMask: DOOR_FLAGS.SOUTH,
     doors: { north: false, south: true, east: false, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: false, west: false }),
+    tiles: createArchetypeMatrix({ north: false, south: true, east: false, west: false }, 'VERT'),
   },
   // 5. East-West horizontal corridor
   {
     id: 'room_EW_01',
     doorMask: DOOR_FLAGS.EAST | DOOR_FLAGS.WEST,
     doors: { north: false, south: false, east: true, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: false, east: true, west: true }),
+    tiles: createArchetypeMatrix({ north: false, south: false, east: true, west: true }, 'HORIZ'),
   },
   // 6. North-South vertical corridor
   {
     id: 'room_NS_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.SOUTH,
     doors: { north: true, south: true, east: false, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: false, west: false }),
+    tiles: createArchetypeMatrix({ north: true, south: true, east: false, west: false }, 'VERT'),
   },
   // 7. North-East
   {
     id: 'room_NE_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.EAST,
     doors: { north: true, south: false, east: true, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: true, west: false }),
+    tiles: createArchetypeMatrix({ north: true, south: false, east: true, west: false }, 'CORNER'),
   },
   // 8. North-West
   {
     id: 'room_NW_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.WEST,
     doors: { north: true, south: false, east: false, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: false, west: true }),
+    tiles: createArchetypeMatrix({ north: true, south: false, east: false, west: true }, 'CORNER'),
   },
   // 9. South-East
   {
     id: 'room_SE_01',
     doorMask: DOOR_FLAGS.SOUTH | DOOR_FLAGS.EAST,
     doors: { north: false, south: true, east: true, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: true, west: false }),
+    tiles: createArchetypeMatrix({ north: false, south: true, east: true, west: false }, 'CORNER'),
   },
   // 10. South-West
   {
     id: 'room_SW_01',
     doorMask: DOOR_FLAGS.SOUTH | DOOR_FLAGS.WEST,
     doors: { north: false, south: true, east: false, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: false, west: true }),
+    tiles: createArchetypeMatrix({ north: false, south: true, east: false, west: true }, 'CORNER'),
   },
   // 11. North-East-West T-junction
   {
     id: 'room_NEW_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.EAST | DOOR_FLAGS.WEST,
     doors: { north: true, south: false, east: true, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: false, east: true, west: true }),
+    tiles: createArchetypeMatrix({ north: true, south: false, east: true, west: true }, 'JUNCTION'),
   },
   // 12. South-East-West T-junction
   {
     id: 'room_SEW_01',
     doorMask: DOOR_FLAGS.SOUTH | DOOR_FLAGS.EAST | DOOR_FLAGS.WEST,
     doors: { north: false, south: true, east: true, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: false, south: true, east: true, west: true }),
+    tiles: createArchetypeMatrix({ north: false, south: true, east: true, west: true }, 'JUNCTION'),
   },
   // 13. North-South-East T-junction
   {
     id: 'room_NSE_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.SOUTH | DOOR_FLAGS.EAST,
     doors: { north: true, south: true, east: true, west: false },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: true, west: false }),
+    tiles: createArchetypeMatrix({ north: true, south: true, east: true, west: false }, 'JUNCTION'),
   },
   // 14. North-South-West T-junction
   {
     id: 'room_NSW_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.SOUTH | DOOR_FLAGS.WEST,
     doors: { north: true, south: true, east: false, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: false, west: true }),
+    tiles: createArchetypeMatrix({ north: true, south: true, east: false, west: true }, 'JUNCTION'),
   },
   // 15. North-South-East-West 4-way crossroad
   {
     id: 'room_NSEW_01',
     doorMask: DOOR_FLAGS.NORTH | DOOR_FLAGS.SOUTH | DOOR_FLAGS.EAST | DOOR_FLAGS.WEST,
     doors: { north: true, south: true, east: true, west: true },
-    width: 20,
-    height: 15,
+    width: GAME_CONSTANTS.ROOM_WIDTH_TILES,
+    height: GAME_CONSTANTS.ROOM_HEIGHT_TILES,
     type: 'GENERIC',
-    tiles: createEmptyTileMatrix(20, 15, { north: true, south: true, east: true, west: true }),
+    tiles: createArchetypeMatrix({ north: true, south: true, east: true, west: true }, 'JUNCTION'),
   },
 ];
 
