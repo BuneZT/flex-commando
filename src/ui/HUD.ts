@@ -80,6 +80,8 @@ export class HUD {
   private lastBossHpStr: string = '';
   private lastMinimapGridX: number = -1;
   private lastMinimapGridY: number = -1;
+  private visitedMask: number = 0;
+  private lastVisitedMask: number = -1;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -181,10 +183,17 @@ export class HUD {
     }
 
     // 4. Render 4x4 minimap grid
-    if (currentGridX !== this.lastMinimapGridX || currentGridY !== this.lastMinimapGridY) {
+    this.visitedMask = markRoomVisited(this.visitedMask, currentGridX, currentGridY);
+
+    if (
+      currentGridX !== this.lastMinimapGridX ||
+      currentGridY !== this.lastMinimapGridY ||
+      this.visitedMask !== this.lastVisitedMask
+    ) {
       this.renderMinimap(grid, currentGridX, currentGridY);
       this.lastMinimapGridX = currentGridX;
       this.lastMinimapGridY = currentGridY;
+      this.lastVisitedMask = this.visitedMask;
     }
   }
 
@@ -210,24 +219,19 @@ export class HUD {
         const y = startY + r * (cellSize + gap);
 
         const cell = grid[r] && grid[r][c];
-        let color = 0x333333; // Default empty
+        const visited = isRoomVisited(this.visitedMask, c, r);
+        const isCurrent = c === currentGridX && r === currentGridY;
+        const color = getMinimapCellColor(cell, visited, isCurrent);
 
-        if (cell) {
-          if (cell.type === 'START') color = 0x0088ff;
-          else if (cell.type === 'BOSS') color = 0xff0044;
-          else if (cell.type === 'PATH' || cell.type === 'BRANCH') color = 0x666666;
-        }
-
-        // Highlight player location
-        if (c === currentGridX && r === currentGridY) {
-          color = 0x00ff00;
+        if (color === null) {
+          continue;
         }
 
         this.minimapGraphics.fillStyle(color, 0.9);
         this.minimapGraphics.fillRect(x, y, cellSize, cellSize);
 
         // Active room border
-        if (c === currentGridX && r === currentGridY) {
+        if (isCurrent) {
           this.minimapGraphics.lineStyle(1, 0xffffff, 1);
           this.minimapGraphics.strokeRect(x, y, cellSize, cellSize);
         }

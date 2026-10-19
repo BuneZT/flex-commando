@@ -302,3 +302,89 @@ describe('HUD Memoization and Dirty-State Caching', () => {
     expect(mockMinimapGraphics.clear).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('Minimap Fog of War Room Discovery & Rendering', () => {
+  it('should only render visited rooms and keep unvisited rooms hidden', () => {
+    const { mockScene, mockMinimapGraphics } = createMockScene();
+    const hud = new HUD(mockScene);
+    const mockPlayer = { lives: 3, currentWeapon: 'PEA_SHOOTER', isBarrierActive: false, barrierHits: 0 } as any;
+
+    const startX = GAME_CONSTANTS.VIEW_WIDTH_PX - 72; // 440
+    const startY = 6;
+    const cellSize = 10;
+    const gap = 1;
+
+    // Step 1: Frame 1 at START room (0, 0)
+    hud.update(mockPlayer, mockGrid, 0, 0);
+
+    // Should draw background panel + START room (0,0) only!
+    // Total fillRect calls = 2 (1 background + 1 room cell)
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledTimes(2);
+    // Background panel
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      startX - 2,
+      startY - 2,
+      expect.any(Number),
+      expect.any(Number)
+    );
+    // START room (0, 0)
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      startX,
+      startY,
+      cellSize,
+      cellSize
+    );
+    // Unvisited rooms (1,0), (2,0), (3,0 BOSS) must NOT have been drawn
+    expect(mockMinimapGraphics.fillRect).not.toHaveBeenCalledWith(
+      startX + 1 * (cellSize + gap),
+      startY,
+      cellSize,
+      cellSize
+    );
+    expect(mockMinimapGraphics.fillRect).not.toHaveBeenCalledWith(
+      startX + 3 * (cellSize + gap),
+      startY,
+      cellSize,
+      cellSize
+    );
+
+    // Step 2: Move to room (1, 0)
+    mockMinimapGraphics.fillRect.mockClear();
+    hud.update(mockPlayer, mockGrid, 1, 0);
+
+    // Should now draw background panel + 2 rooms: (0,0) and (1,0)
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledTimes(3);
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      startX,
+      startY,
+      cellSize,
+      cellSize
+    );
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      startX + 1 * (cellSize + gap),
+      startY,
+      cellSize,
+      cellSize
+    );
+    // Boss room (3, 0) is still unvisited and NOT drawn
+    expect(mockMinimapGraphics.fillRect).not.toHaveBeenCalledWith(
+      startX + 3 * (cellSize + gap),
+      startY,
+      cellSize,
+      cellSize
+    );
+
+    // Step 3: Move to BOSS room (3, 0)
+    mockMinimapGraphics.fillRect.mockClear();
+    hud.update(mockPlayer, mockGrid, 3, 0);
+
+    // Boss room (3, 0) is now revealed
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      startX + 3 * (cellSize + gap),
+      startY,
+      cellSize,
+      cellSize
+    );
+  });
+});
+
