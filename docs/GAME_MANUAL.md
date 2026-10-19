@@ -16,13 +16,14 @@ A comprehensive guide to the concept, enemies, weapons, visuals, and win/loss co
 Players step into the combat boots of an over-the-top 80s action hero—featuring a crimson headband, cobalt tactical vest with chrome harness, high-contrast desert khaki pants, and white wrist wraps—battling through a procedurally generated cybernetic fortress to eliminate hostile robotic forces and conquer the fortress guardian.
 
 ### Technical & Design Highlights
-* **Native Resolution:** 320×240 pixels (`pixelArt: true`). Each room consists of a 20×15 tile matrix at 16×16px per tile.
-* **Procedural 4×4 Grid Layout:** Every run constructs an 80×60 global tilemap (1280×960px world space) containing up to 16 room cells:
+* **Native Resolution:** 512×288 pixels (16:9 widescreen ratio, `pixelArt: true`). Each room consists of a 32×18 tile matrix at 16×16px per tile.
+* **Procedural 4×4 Grid Layout:** Every run constructs a 128×72 global tilemap (2048×1152px world space) containing up to 16 room cells:
   * **Start Room:** Spawns on column 0 (`(0, randY)`).
   * **Boss Room:** Placed on column 3 (`(3, randY)`).
   * **Critical Path:** Carved via a random walk algorithm with backtrack prevention to guarantee a valid route from entrance to exit.
   * **Branch Rooms:** Optional side corridors offering extra weapon capsules and enemy challenges.
-  * **Door Bitmask Matching:** Rooms connect dynamically using 4-bit doorway masks (`N=1, S=2, E=4, W=8`) matched to 15 modular room templates.
+  * **Door Bitmask Matching:** Rooms connect dynamically using 4-bit doorway masks (`N=1, S=2, E=4, W=8`) matched to 15 modular 32×18 room templates.
+  * **Hybrid Platforming (`RoomDecorator`):** Combines hand-crafted structural archetypes with deterministic seed-based micro-decorations (procedural ledges, cover, and platform accents) powered by the Mulberry32 PRNG while guaranteeing unobstructed door clearance and traversable paths.
   * **Graphics:** Preloaded 16-bit arcade pixel-art PNG assets located in `public/assets/` (title logo, seamless parallax cyber hangar backdrop, multi-frame enemy sheets, player commando, and neon projectiles) with an automated procedural fallback in `TextureFactory.ts` guaranteeing 100% headless Vitest test execution without HTTP dependencies.
   * **Audio:** Preloaded CC0 chiptune audio tracks (`bgm_stage`, `bgm_boss`) in `public/assets/audio/` with automated procedural Web Audio synthesis fallback in `SoundManager.ts` ensuring rich sound and 100% headless Vitest test execution without HTTP dependencies.
 * **Seamless Room Camera & Culling:** Smooth pan transitions between rooms; off-screen rooms pause enemy AI and physics to maintain 60 FPS performance.
