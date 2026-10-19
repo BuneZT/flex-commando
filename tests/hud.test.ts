@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HUD, formatHUDLives, formatHUDWeaponName } from '../src/ui/HUD';
+import { GAME_CONSTANTS } from '../src/config/GameConstants';
 import type Phaser from 'phaser';
 
 describe('formatHUDLives', () => {
@@ -25,63 +26,103 @@ describe('formatHUDWeaponName', () => {
   });
 });
 
+function createMockScene() {
+  const mockLivesText = {
+    setScrollFactor: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    setText: vi.fn().mockReturnThis(),
+    setVisible: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+  };
+  const mockWeaponText = {
+    setScrollFactor: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    setText: vi.fn().mockReturnThis(),
+    setVisible: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+  };
+  const mockBossHpText = {
+    setScrollFactor: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    setOrigin: vi.fn().mockReturnThis(),
+    setText: vi.fn().mockReturnThis(),
+    setVisible: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+  };
+  const mockMinimapGraphics = {
+    setScrollFactor: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    clear: vi.fn().mockReturnThis(),
+    fillStyle: vi.fn().mockReturnThis(),
+    fillRect: vi.fn().mockReturnThis(),
+    lineStyle: vi.fn().mockReturnThis(),
+    strokeRect: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+  };
+
+  let textCallCount = 0;
+  const mockScene = {
+    add: {
+      text: vi.fn().mockImplementation(() => {
+        textCallCount++;
+        if (textCallCount === 1) return mockLivesText;
+        if (textCallCount === 2) return mockWeaponText;
+        return mockBossHpText;
+      }),
+      graphics: vi.fn().mockReturnValue(mockMinimapGraphics),
+    },
+  } as unknown as Phaser.Scene;
+
+  return { mockScene, mockLivesText, mockWeaponText, mockBossHpText, mockMinimapGraphics };
+}
+
+const mockGrid = [
+  [{ type: 'START' }, { type: 'PATH' }, { type: 'PATH' }, { type: 'BOSS' }],
+  [null, null, null, null],
+  [null, null, null, null],
+  [null, null, null, null],
+] as any;
+
+describe('HUD Positioning for 512px Viewport', () => {
+  it('should place bossHpText centered at X = 256 (half of 512)', () => {
+    const { mockScene } = createMockScene();
+    new HUD(mockScene);
+
+    expect(mockScene.add.text).toHaveBeenNthCalledWith(
+      3,
+      Math.round(GAME_CONSTANTS.VIEW_WIDTH_PX / 2),
+      6,
+      '',
+      expect.anything()
+    );
+  });
+
+  it('should anchor minimapGraphics with startX = 440 (VIEW_WIDTH_PX - 72)', () => {
+    const { mockScene, mockMinimapGraphics } = createMockScene();
+    const hud = new HUD(mockScene);
+    const mockPlayer = { lives: 3, currentWeapon: 'PEA_SHOOTER', isBarrierActive: false, barrierHits: 0 } as any;
+
+    hud.update(mockPlayer, mockGrid, 0, 0);
+
+    const expectedStartX = GAME_CONSTANTS.VIEW_WIDTH_PX - 72; // 440
+    // Minimap background is drawn at startX - 2 (438)
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      expectedStartX - 2,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
+    // First cell (c=0, r=0) is drawn at startX (440)
+    expect(mockMinimapGraphics.fillRect).toHaveBeenCalledWith(
+      expectedStartX,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
+  });
+});
+
 describe('HUD Memoization and Dirty-State Caching', () => {
-  function createMockScene() {
-    const mockLivesText = {
-      setScrollFactor: vi.fn().mockReturnThis(),
-      setDepth: vi.fn().mockReturnThis(),
-      setText: vi.fn().mockReturnThis(),
-      setVisible: vi.fn().mockReturnThis(),
-      destroy: vi.fn(),
-    };
-    const mockWeaponText = {
-      setScrollFactor: vi.fn().mockReturnThis(),
-      setDepth: vi.fn().mockReturnThis(),
-      setText: vi.fn().mockReturnThis(),
-      setVisible: vi.fn().mockReturnThis(),
-      destroy: vi.fn(),
-    };
-    const mockBossHpText = {
-      setScrollFactor: vi.fn().mockReturnThis(),
-      setDepth: vi.fn().mockReturnThis(),
-      setOrigin: vi.fn().mockReturnThis(),
-      setText: vi.fn().mockReturnThis(),
-      setVisible: vi.fn().mockReturnThis(),
-      destroy: vi.fn(),
-    };
-    const mockMinimapGraphics = {
-      setScrollFactor: vi.fn().mockReturnThis(),
-      setDepth: vi.fn().mockReturnThis(),
-      clear: vi.fn().mockReturnThis(),
-      fillStyle: vi.fn().mockReturnThis(),
-      fillRect: vi.fn().mockReturnThis(),
-      lineStyle: vi.fn().mockReturnThis(),
-      strokeRect: vi.fn().mockReturnThis(),
-      destroy: vi.fn(),
-    };
-
-    let textCallCount = 0;
-    const mockScene = {
-      add: {
-        text: vi.fn().mockImplementation(() => {
-          textCallCount++;
-          if (textCallCount === 1) return mockLivesText;
-          if (textCallCount === 2) return mockWeaponText;
-          return mockBossHpText;
-        }),
-        graphics: vi.fn().mockReturnValue(mockMinimapGraphics),
-      },
-    } as unknown as Phaser.Scene;
-
-    return { mockScene, mockLivesText, mockWeaponText, mockBossHpText, mockMinimapGraphics };
-  }
-
-  const mockGrid = [
-    [{ type: 'START' }, { type: 'PATH' }, { type: 'PATH' }, { type: 'BOSS' }],
-    [null, null, null, null],
-    [null, null, null, null],
-    [null, null, null, null],
-  ] as any;
 
   it('should only update livesText when lives or infiniteLives state changes', () => {
     const { mockScene, mockLivesText } = createMockScene();

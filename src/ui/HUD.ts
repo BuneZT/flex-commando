@@ -3,6 +3,7 @@ import { Player } from '../entities/Player';
 import { Boss } from '../entities/enemies/Boss';
 import { GridCell } from '../core/GridGenerator';
 import { createRetroTextStyle } from './TextStyle';
+import { GAME_CONSTANTS } from '../config/GameConstants';
 
 export function formatHUDLives(lives: number, infiniteLives?: boolean): string {
   if (infiniteLives) return '∞';
@@ -56,7 +57,7 @@ export class HUD {
 
     // Top-center: Boss HP text
     this.bossHpText = this.scene.add.text(
-      160,
+      Math.round(GAME_CONSTANTS.VIEW_WIDTH_PX / 2),
       6,
       '',
       createRetroTextStyle({
@@ -136,9 +137,9 @@ export class HUD {
 
   private renderMinimap(grid: GridCell[][], currentGridX: number, currentGridY: number): void {
     this.minimapGraphics.clear();
-    const startX = 270;
+    const startX = GAME_CONSTANTS.VIEW_WIDTH_PX - 72; // 440
     const startY = 6;
-    const cellSize = 8;
+    const cellSize = 10;
     const gap = 1;
 
     // Draw background panel
