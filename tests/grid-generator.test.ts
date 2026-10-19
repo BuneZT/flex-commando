@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateRoomGrid, GridCell, calculateDoorMask, DOOR_FLAGS, selectCapsuleRoomCoords } from '../src/core/GridGenerator';
 import { ROOM_TEMPLATES, getMatchingRoomTemplates, RoomTemplate } from '../src/core/RoomTemplate';
+import { GAME_CONSTANTS } from '../src/config/GameConstants';
 
 describe('GridGenerator', () => {
   it('should generate a 4x4 grid with a continuous path from start to boss room', () => {
@@ -157,14 +158,14 @@ describe('GridGenerator', () => {
 });
 
 describe('RoomTemplate', () => {
-  it('should export templates for 20x15 tile dimensions', () => {
+  it('should export templates for 32x18 tile dimensions', () => {
     expect(ROOM_TEMPLATES.length).toBeGreaterThan(0);
     for (const template of ROOM_TEMPLATES) {
-      expect(template.width).toBe(20);
-      expect(template.height).toBe(15);
-      expect(template.tiles.length).toBe(15);
+      expect(template.width).toBe(GAME_CONSTANTS.ROOM_WIDTH_TILES);
+      expect(template.height).toBe(GAME_CONSTANTS.ROOM_HEIGHT_TILES);
+      expect(template.tiles.length).toBe(18);
       for (const row of template.tiles) {
-        expect(row.length).toBe(20);
+        expect(row.length).toBe(32);
       }
     }
   });
@@ -173,15 +174,15 @@ describe('RoomTemplate', () => {
     const southTemplate = ROOM_TEMPLATES.find((t) => t.doors.south);
     expect(southTemplate).toBeDefined();
     if (southTemplate) {
-      // Bottom row (r=14) cols 8..11 should not be solid ground (tile 1)
-      expect(southTemplate.tiles[14][9]).not.toBe(1);
+      // Bottom row (r=17) cols 14..17 should not be solid ground (tile 1)
+      expect(southTemplate.tiles[17][15]).not.toBe(1);
     }
 
     const northTemplate = ROOM_TEMPLATES.find((t) => t.doors.north);
     expect(northTemplate).toBeDefined();
     if (northTemplate) {
-      // Top row (r=0) cols 8..11 should be open air (tile 0)
-      expect(northTemplate.tiles[0][9]).toBe(0);
+      // Top row (r=0) cols 14..17 should be open air (tile 0)
+      expect(northTemplate.tiles[0][15]).toBe(0);
     }
   });
 });
@@ -244,4 +245,21 @@ describe('selectCapsuleRoomCoords', () => {
     expect(coords).toContainEqual({ x: 2, y: 0 }); // Pre-boss
     expect(coords).toContainEqual({ x: 1, y: 0 }); // Mid-path
   });
+
+  it('should attach decoratedTiles to all non-EMPTY cells in generateRoomGrid', () => {
+    const grid = generateRoomGrid(42);
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        const cell = grid[y][x];
+        if (cell.type !== 'EMPTY') {
+          expect(cell.decoratedTiles).toBeDefined();
+          expect(cell.decoratedTiles!.length).toBe(18);
+          expect(cell.decoratedTiles![0].length).toBe(32);
+        } else {
+          expect(cell.decoratedTiles).toBeUndefined();
+        }
+      }
+    }
+  });
 });
+

@@ -1,4 +1,5 @@
 import { calculateDoorMask, DOOR_FLAGS, getMatchingRoomTemplates, RoomTemplate } from './RoomTemplate';
+import { decorateRoomTiles } from './RoomDecorator';
 
 export { calculateDoorMask, DOOR_FLAGS };
 
@@ -9,6 +10,7 @@ export interface GridCell {
   doors: { north: boolean; south: boolean; east: boolean; west: boolean };
   doorMask: number;
   templateId?: string;
+  decoratedTiles?: number[][];
 }
 
 export class SeededRNG {
@@ -144,6 +146,7 @@ export function generateRoomGrid(seed: number): GridCell[][] {
         const templates: RoomTemplate[] = getMatchingRoomTemplates(cell.doorMask, cell.type);
         const selected = rng.choice(templates);
         cell.templateId = selected.id;
+        cell.decoratedTiles = decorateRoomTiles(selected.tiles, cell.doors, cell.type, rng);
       }
     }
   }
