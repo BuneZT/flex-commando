@@ -64,29 +64,48 @@ describe('CameraManager', () => {
 });
 
 describe('stitchGridTilemap', () => {
-  it('should stitch 4x4 room grid into an 80x60 tile matrix', () => {
+  it('should stitch 4x4 room grid into an 128x72 tile matrix', () => {
     const grid = generateRoomGrid(12345);
-    const tileMatrix = stitchGridTilemap(grid, 20, 15);
+    const tileMatrix = stitchGridTilemap(grid, 32, 18);
 
-    expect(tileMatrix.length).toBe(60); // 4 * 15
-    expect(tileMatrix[0].length).toBe(80); // 4 * 20
+    expect(tileMatrix.length).toBe(72); // 4 * 18
+    expect(tileMatrix[0].length).toBe(128); // 4 * 32
   });
 
-  it('should populate non-empty room tiles into the stitched matrix', () => {
+  it('should use default dimensions of 32x18 when unspecified', () => {
     const grid = generateRoomGrid(12345);
-    const tileMatrix = stitchGridTilemap(grid, 20, 15);
+    const tileMatrix = stitchGridTilemap(grid);
 
-    // Find a non-empty cell in grid
+    expect(tileMatrix.length).toBe(72);
+    expect(tileMatrix[0].length).toBe(128);
+  });
+
+  it('should prefer decoratedTiles if present on cell', () => {
+    const grid = generateRoomGrid(12345);
+    const tileMatrix = stitchGridTilemap(grid, 32, 18);
     const nonEmpty = grid.flat().find((c) => c.type !== 'EMPTY');
     expect(nonEmpty).toBeDefined();
-
     if (nonEmpty) {
-      const startRow = nonEmpty.y * 15;
-      const startCol = nonEmpty.x * 20;
-      // Bottom row of any room template should have ground tiles (value 1)
-      const bottomRowTile = tileMatrix[startRow + 14][startCol];
-      expect(bottomRowTile).toBe(1);
+      const startRow = nonEmpty.y * 18;
+      const startCol = nonEmpty.x * 32;
+      expect(tileMatrix[startRow + 17][startCol]).toBe(1);
     }
+  });
+
+  it('should use decoratedTiles instead of template.tiles when present', () => {
+    const mockCell = {
+      x: 0,
+      y: 0,
+      type: 'START' as const,
+      doors: { north: false, south: false, east: false, west: false },
+      doorMask: 0,
+      templateId: 'room_0',
+      decoratedTiles: Array.from({ length: 18 }, () => new Array(32).fill(99)),
+    };
+    const singleCellGrid = [[mockCell]];
+    const tileMatrix = stitchGridTilemap(singleCellGrid, 32, 18);
+    expect(tileMatrix[0][0]).toBe(99);
+    expect(tileMatrix[17][31]).toBe(99);
   });
 
   it('should configure Tile 2 as a one-way platform allowing upward passage', () => {

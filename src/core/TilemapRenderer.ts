@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_CONSTANTS } from '../config/GameConstants';
 import { GridCell } from './GridGenerator';
 import { getRoomTemplateById } from './RoomTemplate';
 
@@ -9,8 +10,8 @@ export interface TilemapRenderResult {
 
 export function stitchGridTilemap(
   grid: GridCell[][],
-  roomWidthTiles: number = 20,
-  roomHeightTiles: number = 15
+  roomWidthTiles: number = GAME_CONSTANTS.ROOM_WIDTH_TILES,
+  roomHeightTiles: number = GAME_CONSTANTS.ROOM_HEIGHT_TILES
 ): number[][] {
   const gridRows = grid.length;
   const gridCols = grid[0]?.length || 0;
@@ -24,20 +25,21 @@ export function stitchGridTilemap(
   for (let gy = 0; gy < gridRows; gy++) {
     for (let gx = 0; gx < gridCols; gx++) {
       const cell = grid[gy][gx];
-      if (cell.type === 'EMPTY' || !cell.templateId) {
+      if (cell.type === 'EMPTY') {
         continue;
       }
 
-      const template = getRoomTemplateById(cell.templateId);
-      if (!template || !template.tiles) continue;
+      const template = cell.templateId ? getRoomTemplateById(cell.templateId) : undefined;
+      const sourceTiles = cell.decoratedTiles || template?.tiles;
+      if (!sourceTiles) continue;
 
       const startRow = gy * roomHeightTiles;
       const startCol = gx * roomWidthTiles;
 
       for (let r = 0; r < roomHeightTiles; r++) {
         for (let c = 0; c < roomWidthTiles; c++) {
-          if (template.tiles[r] && template.tiles[r][c] !== undefined) {
-            fullMatrix[startRow + r][startCol + c] = template.tiles[r][c];
+          if (sourceTiles[r] && sourceTiles[r][c] !== undefined) {
+            fullMatrix[startRow + r][startCol + c] = sourceTiles[r][c];
           }
         }
       }
