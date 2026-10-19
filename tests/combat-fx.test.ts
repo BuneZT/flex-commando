@@ -25,7 +25,9 @@ describe('CombatFX', () => {
     expect(delayedCallMock).toHaveBeenCalledWith(90, expect.any(Function));
 
     // Simulate timer firing
-    timerCallback?.();
+    if (timerCallback) {
+      (timerCallback as Function)();
+    }
     expect(spriteMock.clearTint).toHaveBeenCalled();
   });
 
@@ -67,7 +69,9 @@ describe('CombatFX', () => {
     expect(spriteMock.anims.play).toHaveBeenCalledWith('enemy_explosion');
     expect(spriteMock.once).toHaveBeenCalledWith('animationcomplete', expect.any(Function));
 
-    animCompleteCb?.();
+    if (animCompleteCb) {
+      (animCompleteCb as Function)();
+    }
     expect(spriteMock.destroy).toHaveBeenCalled();
     expect(result).toBe(spriteMock);
   });

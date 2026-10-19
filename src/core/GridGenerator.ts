@@ -78,7 +78,8 @@ export function generateRoomGrid(seed: number): GridCell[][] {
       if (currentY < bossY) nextDirs.push('SOUTH');
     }
 
-    const choice = nextDirs.length > 0 ? rng.choice(nextDirs) : 'EAST';
+    const fallback: 'EAST' | 'NORTH' | 'SOUTH' = currentX < 3 ? 'EAST' : (currentY < bossY ? 'SOUTH' : 'NORTH');
+    const choice = nextDirs.length > 0 ? rng.choice(nextDirs) : fallback;
     lastChoice = choice;
 
     if (choice === 'EAST') {

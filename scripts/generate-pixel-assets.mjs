@@ -322,14 +322,14 @@ function generateLogo() {
 
 /**
  * 2. public/assets/bg/cyber_hangar_bg.png (512x288)
- * Cosmic deep space nebula backdrop with toroidal wrapping and 3-tier starfield
+ * Seamless continuous cosmic nebula backdrop with 3-tier starfield
  */
 function generateCyberHangarBg() {
   const width = 512;
   const height = 288;
   const canvas = new PixelCanvas(width, height);
 
-  // Simple deterministic Mulberry32 PRNG
+  // Deterministic Mulberry32 PRNG
   let seed = 42891;
   function rnd() {
     seed |= 0;
@@ -339,79 +339,83 @@ function generateCyberHangarBg() {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  // 1. Base void gradient (deep indigo to dark violet void)
+  // Periodic Perlin Noise permutation table
+  const p = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const tmp = p[i];
+    p[i] = p[j];
+    p[j] = tmp;
+  }
+  for (let i = 0; i < 256; i++) p[256 + i] = p[i];
+
+  function fade(t) {
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  }
+
+  function grad(hash, x, y) {
+    const h = hash & 3;
+    const u = h < 2 ? x : y;
+    const v = h < 2 ? y : x;
+    return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+  }
+
+  function pnoise(x, y, px, py) {
+    const xi = Math.floor(x) % px;
+    const yi = Math.floor(y) % py;
+    const xf = x - Math.floor(x);
+    const yf = y - Math.floor(y);
+    const u = fade(xf);
+    const v = fade(yf);
+    const aa = p[p[xi] + yi];
+    const ab = p[p[xi] + (yi + 1) % py];
+    const ba = p[p[(xi + 1) % px] + yi];
+    const bb = p[p[(xi + 1) % px] + (yi + 1) % py];
+    const x1 = (1 - u) * grad(aa, xf, yf) + u * grad(ba, xf - 1, yf);
+    const x2 = (1 - u) * grad(ab, xf, yf - 1) + u * grad(bb, xf - 1, yf - 1);
+    return (1 - v) * x1 + v * x2;
+  }
+
+  // 1. Continuous organic cosmic nebula across entire canvas (seamless wrap px=16, py=9)
   for (let y = 0; y < height; y++) {
-    const t = y / height;
-    const r = Math.round(6 + t * 4);
-    const g = Math.round(8 + t * 5);
-    const b = Math.round(18 + t * 10);
-    canvas.fillRect(0, y, width, 1, [r, g, b, 255]);
-  }
+    for (let x = 0; x < width; x++) {
+      // Primary cosmic violet dust
+      const n1 = pnoise(x / 32, y / 32, 16, 9) * 0.7 + pnoise(x / 16, y / 16, 32, 18) * 0.3;
+      // Secondary subtle teal dust (offset coordinate space)
+      const n2 = pnoise((x + 160) / 32, (y + 96) / 32, 16, 9) * 0.7 + pnoise((x + 160) / 16, (y + 96) / 16, 32, 18) * 0.3;
 
-  // 2. Toroidal distance helper for seamless wrapping
-  function torusDistSq(x1, y1, x2, y2) {
-    let dx = Math.abs(x1 - x2);
-    if (dx > width / 2) dx = width - dx;
-    let dy = Math.abs(y1 - y2);
-    if (dy > height / 2) dy = height - dy;
-    return dx * dx + dy * dy;
-  }
+      const boostViolet = Math.max(0, n1 + 0.15);
+      const boostTeal = Math.max(0, n2 + 0.10);
 
-  // 3. Cosmic nebula dust clouds (subtle, soft-edge clusters)
-  const nebulaClusters = [
-    // Deep violet / purple core
-    { cx: 120, cy: 90, r: 85, color: [38, 20, 56], maxAlpha: 130 },
-    { cx: 380, cy: 190, r: 100, color: [43, 24, 66], maxAlpha: 140 },
-    { cx: 260, cy: 60, r: 70, color: [30, 18, 48], maxAlpha: 110 },
-    // Muted indigo shadow dust
-    { cx: 40, cy: 220, r: 75, color: [20, 24, 50], maxAlpha: 120 },
-    { cx: 480, cy: 80, r: 90, color: [22, 28, 55], maxAlpha: 130 },
-    // Soft ethereal teal wisp (very dark, non-clashing with platform cyan)
-    { cx: 220, cy: 180, r: 65, color: [12, 38, 45], maxAlpha: 100 },
-    { cx: 340, cy: 100, r: 55, color: [10, 32, 40], maxAlpha: 90 },
-  ];
+      const r = Math.round(8 + boostViolet * 28 + boostTeal * 4);
+      const g = Math.round(10 + boostViolet * 14 + boostTeal * 24);
+      const b = Math.round(22 + boostViolet * 40 + boostTeal * 26);
 
-  for (const cluster of nebulaClusters) {
-    const radiusSq = cluster.r * cluster.r;
-    const minX = Math.floor(cluster.cx - cluster.r);
-    const maxX = Math.ceil(cluster.cx + cluster.r);
-    const minY = Math.floor(cluster.cy - cluster.r);
-    const maxY = Math.ceil(cluster.cy + cluster.r);
-
-    for (let py = minY; py <= maxY; py++) {
-      for (let px = minX; px <= maxX; px++) {
-        const dSq = torusDistSq(px, py, cluster.cx, cluster.cy);
-        if (dSq < radiusSq) {
-          const falloff = 1 - Math.sqrt(dSq) / cluster.r;
-          const alpha = Math.round(falloff * falloff * cluster.maxAlpha);
-          const wrapX = ((px % width) + width) % width;
-          const wrapY = ((py % height) + height) % height;
-          canvas.setPixel(wrapX, wrapY, cluster.color, alpha);
-        }
-      }
+      canvas.setPixel(x, y, [r, g, b, 255]);
     }
   }
 
-  // 4. Three-Tier Starfield
-  // Tier 1: Faint distant stars (~130 stars, 1x1, dim cool grey/blue)
-  for (let i = 0; i < 130; i++) {
+  // 2. Uniform 3-Tier Starfield
+  // Tier 1: Faint distant stars (~140 stars, 1x1, dim cool grey/blue)
+  for (let i = 0; i < 140; i++) {
     const sx = Math.floor(rnd() * width);
     const sy = Math.floor(rnd() * height);
-    const bright = 60 + Math.floor(rnd() * 60);
+    const bright = 70 + Math.floor(rnd() * 60);
     canvas.setPixel(sx, sy, [bright, bright + 10, bright + 30, 255]);
   }
 
-  // Tier 2: Mid-field stars (~50 stars, 1x1, crisp soft white / pastel violet)
-  for (let i = 0; i < 50; i++) {
+  // Tier 2: Mid-field stars (~55 stars, 1x1, crisp soft white / pastel violet)
+  for (let i = 0; i < 55; i++) {
     const sx = Math.floor(rnd() * width);
     const sy = Math.floor(rnd() * height);
-    const isViolet = rnd() > 0.6;
+    const isViolet = rnd() > 0.55;
     const color = isViolet ? [215, 195, 255, 255] : [195, 215, 245, 255];
     canvas.setPixel(sx, sy, color);
   }
 
-  // Tier 3: Focal sparkling stars (12 stars, 3x3 micro cross)
-  for (let i = 0; i < 12; i++) {
+  // Tier 3: Focal sparkling stars (14 stars, 3x3 micro cross)
+  for (let i = 0; i < 14; i++) {
     const sx = Math.floor(rnd() * width);
     const sy = Math.floor(rnd() * height);
     const glow = rnd() > 0.5 ? [140, 220, 255, 200] : [240, 170, 255, 200];
