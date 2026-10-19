@@ -28,7 +28,7 @@
   - Texture: `'tex_explosion'` (4 frames of 20x20px, total 80x20px)
   - Animation: `'enemy_explosion'` (frames 0..3 of `'tex_explosion'`, 16 fps, repeat 0)
 
-- [ ] **Step 1: Write failing test in `tests/texture-factory.test.ts`**
+- [x] **Step 1: Write failing test in `tests/texture-factory.test.ts`**
 
 Add tests checking that `'tex_explosion'` texture and `'enemy_explosion'` animation are registered:
 ```ts
@@ -70,12 +70,12 @@ it('registers tex_explosion and enemy_explosion animation in TextureFactory', ()
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/texture-factory.test.ts`
 Expected: FAIL (`tex_explosion` not generated)
 
-- [ ] **Step 3: Implement procedural explosion in `TextureFactory.ts`**
+- [x] **Step 3: Implement procedural explosion in `TextureFactory.ts`**
 
 In `src/core/TextureFactory.ts`:
 1. Add `this.createExplosionTexture(scene);` inside `generateAllTextures()`.
@@ -144,12 +144,12 @@ In `src/core/TextureFactory.ts`:
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/texture-factory.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/TextureFactory.ts tests/texture-factory.test.ts
@@ -172,7 +172,7 @@ git commit -m "feat: add procedural explosion texture and animation"
   - `CombatFX.applyHitFlash(target: any, durationMs?: number): void`
   - `CombatFX.spawnDeathExplosion(scene: Phaser.Scene, x: number, y: number, scale?: number): any`
 
-- [ ] **Step 1: Write failing unit test in `tests/combat-fx.test.ts`**
+- [x] **Step 1: Write failing unit test in `tests/combat-fx.test.ts`**
 
 ```ts
 import { describe, it, expect, vi } from 'vitest';
@@ -247,12 +247,12 @@ describe('CombatFX', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/combat-fx.test.ts`
 Expected: FAIL (Cannot find module `CombatFX`)
 
-- [ ] **Step 3: Implement `src/core/CombatFX.ts`**
+- [x] **Step 3: Implement `src/core/CombatFX.ts`**
 
 ```ts
 import Phaser from 'phaser';
@@ -323,12 +323,12 @@ export class CombatFX {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/combat-fx.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/CombatFX.ts tests/combat-fx.test.ts
@@ -348,7 +348,7 @@ git commit -m "feat: add CombatFX service for hit flash and explosion spawning"
 - Consumes: `CombatFX.applyHitFlash`, `CombatFX.spawnDeathExplosion`
 - Modifies: `takeDamage(amount: number): boolean` in `EnemyBase`
 
-- [ ] **Step 1: Write failing tests in `tests/enemy.test.ts`**
+- [x] **Step 1: Write failing tests in `tests/enemy.test.ts`**
 
 Add tests checking that non-lethal damage triggers hit flash, and lethal damage spawns explosion before `die()`:
 ```ts
@@ -389,12 +389,12 @@ it('Boss uses explosionScale 2.0 upon lethal damage', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/enemy.test.ts`
 Expected: FAIL (`applyHitFlash` / `spawnDeathExplosion` not called in `takeDamage`)
 
-- [ ] **Step 3: Update `EnemyBase.ts` and `Boss.ts`**
+- [x] **Step 3: Update `EnemyBase.ts` and `Boss.ts`**
 
 In `src/entities/enemies/EnemyBase.ts`:
 ```ts
@@ -431,12 +431,12 @@ Set `this.explosionScale = 2.0;` inside the constructor:
     this.explosionScale = 2.0;
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/enemy.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/enemies/EnemyBase.ts src/entities/enemies/Boss.ts tests/enemy.test.ts
@@ -455,7 +455,7 @@ git commit -m "feat: integrate hit flash and death explosion in EnemyBase and Bo
 - Consumes: `CombatFX.applyHitFlash`, `CombatFX.spawnDeathExplosion`
 - Modifies: `hit(): PickupItem | null` in `PickupCapsule`
 
-- [ ] **Step 1: Write failing test in `tests/pickup-capsule.test.ts`**
+- [x] **Step 1: Write failing test in `tests/pickup-capsule.test.ts`**
 
 Verify that non-lethal capsule hit triggers `applyHitFlash`, and opening hit triggers `spawnDeathExplosion`:
 ```ts
@@ -486,12 +486,12 @@ it('triggers CombatFX.spawnDeathExplosion when capsule is destroyed', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/pickup-capsule.test.ts`
 Expected: FAIL (`applyHitFlash` / `spawnDeathExplosion` not called on capsule hit)
 
-- [ ] **Step 3: Update `PickupCapsule.ts`**
+- [x] **Step 3: Update `PickupCapsule.ts`**
 
 In `src/entities/PickupCapsule.ts`:
 ```ts
@@ -511,12 +511,12 @@ import { CombatFX } from '../core/CombatFX';
   }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/pickup-capsule.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entities/PickupCapsule.ts tests/pickup-capsule.test.ts
@@ -530,21 +530,21 @@ git commit -m "feat: integrate hit flash and explosion on PickupCapsule damage a
 **Files:**
 - All modified files
 
-- [ ] **Step 1: Run full Vitest suite**
+- [x] **Step 1: Run full Vitest suite**
 
 Run: `npm test`
 Expected: PASS (all test files, 180+ tests)
 
-- [ ] **Step 2: Run TypeScript typecheck**
+- [x] **Step 2: Run TypeScript typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: 0 errors
 
-- [ ] **Step 3: Run production build**
+- [x] **Step 3: Run production build**
 
 Run: `npm run build`
 Expected: Build succeeds without warnings or errors
 
-- [ ] **Step 4: Final commit & git status verification**
+- [x] **Step 4: Final commit & git status verification**
 
 Ensure clean git status on branch.
