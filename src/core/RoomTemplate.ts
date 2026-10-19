@@ -183,6 +183,13 @@ export function createArchetypeMatrix(
       break;
   }
 
+  // Ensure top exit reachability: when doors.north is true, place a one-way jumping platform
+  // at Row 3 (cols 12-19) under the portal. This guarantees the player can reach the ceiling gap
+  // and land on the room above's one-way platform within player max jump height.
+  if (doors.north) {
+    addPlatform(3, 12, 19, 2);
+  }
+
   return matrix;
 }
 

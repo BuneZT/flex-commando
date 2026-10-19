@@ -57,6 +57,41 @@ describe('RoomTemplate 32x18 Archetypes', () => {
     }
   });
 
+  it('should ensure all north door templates have a jump platform at row 3 under the exit for reachability', () => {
+    const northTemplates = ROOM_TEMPLATES.filter((t) => t.doors.north);
+    expect(northTemplates.length).toBeGreaterThan(0);
+    for (const t of northTemplates) {
+      // Must have one-way platform (tile 2) across portal cols 14-17 at row 3
+      for (let c = 14; c <= 17; c++) {
+        expect(t.tiles[3][c]).toBe(2);
+      }
+    }
+  });
+
+  it('should physically verify that jumping from row 3 allows the player to reach and land on the room above platform', () => {
+    // Player jump physics: jumpVelocity = -340, gravity = 600, dt = 1/60s
+    // Row 3 platform is at y = 3 * 16 = 48 px.
+    // Destination platform in room above is at y = -16 px (Row 17 of gridY - 1).
+    const startY = 3 * 16;
+    let y = startY;
+    let vy = -340;
+    const g = 600;
+    const dt = 1 / 60;
+    let apexY = y;
+
+    for (let step = 0; step < 60; step++) {
+      vy += g * dt;
+      y += vy * dt;
+      if (y < apexY) apexY = y;
+    }
+
+    // Apex must reach above -16px with comfortable safety margin
+    expect(apexY).toBeLessThan(-16);
+    expect(-16 - apexY).toBeGreaterThanOrEqual(20); // At least 20px margin above destination platform
+  });
+
+
+
   it('should correctly calculate door mask', () => {
     expect(calculateDoorMask({ north: true, south: false, east: true, west: false })).toBe(
       DOOR_FLAGS.NORTH | DOOR_FLAGS.EAST

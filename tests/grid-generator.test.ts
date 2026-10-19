@@ -261,5 +261,34 @@ describe('selectCapsuleRoomCoords', () => {
       }
     }
   });
+
+  it('should guarantee top exit reachability for every room with north doors across multiple seeds', () => {
+    const seeds = [42, 12345, 99999, 777, 2026, 31415, 8888];
+    for (const seed of seeds) {
+      const grid = generateRoomGrid(seed);
+      for (let y = 0; y < 4; y++) {
+        for (let x = 0; x < 4; x++) {
+          const cell = grid[y][x];
+          if (cell.type !== 'EMPTY' && cell.doors.north) {
+            const tiles = cell.decoratedTiles!;
+            // 1. Portal gap at ceiling row 0 cols 14-17 must be open air (tile 0)
+            for (let c = 14; c <= 17; c++) {
+              expect(tiles[0][c]).toBe(0);
+            }
+            // 2. Jumping platform at Row 3 must be present across portal cols 14-17 (tile 2)
+            for (let c = 14; c <= 17; c++) {
+              expect(tiles[3][c]).toBe(2);
+            }
+            // 3. Airspace between jump platform and ceiling portal (rows 1-2) must be clear
+            for (let r = 1; r <= 2; r++) {
+              for (let c = 14; c <= 17; c++) {
+                expect(tiles[r][c]).toBe(0);
+              }
+            }
+          }
+        }
+      }
+    }
+  });
 });
 

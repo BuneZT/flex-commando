@@ -34,11 +34,11 @@ export function decorateRoomTiles(
         matrix[row][startCol + 2] = 2;
       }
     } else if (featureType === 'STEP') {
-      // 2-tile solid step (Tile 1) at lower heights
+      // 2-tile one-way step platform (Tile 2) at lower heights
       const stepRow = Math.min(row, 13);
       if (matrix[stepRow][startCol] === 0 && matrix[stepRow][startCol + 1] === 0) {
-        matrix[stepRow][startCol] = 1;
-        matrix[stepRow][startCol + 1] = 1;
+        matrix[stepRow][startCol] = 2;
+        matrix[stepRow][startCol + 1] = 2;
       }
     } else if (featureType === 'PERCH') {
       // 1-tile ceiling mount (Tile 3) hanging from ceiling
