@@ -28,6 +28,7 @@ export class TextureFactory {
       this.createProjectilesFallbackTexture(scene);
       this.createPickupsFallbackTexture(scene);
       this.createExplosionTexture(scene);
+      this.createBulletImpactFallbackTexture(scene);
       this.createAnimations(scene);
     } finally {
       if (createdDummyRenderer) {
@@ -437,6 +438,15 @@ export class TextureFactory {
         repeat: 0,
       });
     }
+
+    if (!scene.anims.exists('bullet_impact_spark')) {
+      scene.anims.create({
+        key: 'bullet_impact_spark',
+        frames: scene.anims.generateFrameNumbers('tex_bullet_impact', { start: 0, end: 3 }),
+        frameRate: 24,
+        repeat: 0,
+      });
+    }
   }
 
   private static createExplosionTexture(scene: Phaser.Scene): void {
@@ -486,6 +496,72 @@ export class TextureFactory {
     if (tex && typeof tex.add === 'function') {
       for (let f = 0; f < 4; f++) {
         tex.add(f, 0, f * 20, 0, 20, 20);
+      }
+    }
+  }
+
+  private static createBulletImpactFallbackTexture(scene: Phaser.Scene): void {
+    if (!scene.textures || scene.textures.exists('tex_bullet_impact')) return;
+    const g = scene.add.graphics();
+    // 4 frames of 16x16 = 64x16
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 16;
+      if (f === 0) {
+        // Frame 0: White core pinpoint flash star
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 7, 7, 2, 2);
+        g.fillRect(ox + 5, 8, 6, 1);
+        g.fillRect(ox + 8, 5, 1, 6);
+      } else if (f === 1) {
+        // Frame 1: Expanding yellow & white diamond spark
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 7, 8, 3, 1);
+        g.fillRect(ox + 8, 7, 1, 3);
+        g.fillStyle(0xffff00, 1);
+        g.fillRect(ox + 6, 8, 5, 1);
+        g.fillRect(ox + 8, 6, 1, 5);
+        g.fillStyle(0xffaa00, 1);
+        g.fillRect(ox + 8, 3, 1, 3);
+        g.fillRect(ox + 8, 11, 1, 3);
+        g.fillRect(ox + 3, 8, 3, 1);
+        g.fillRect(ox + 11, 8, 3, 1);
+      } else if (f === 2) {
+        // Frame 2: 4-corner ricochet embers
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 4, 4, 1, 1);
+        g.fillRect(ox + 12, 4, 1, 1);
+        g.fillStyle(0xffaa00, 1);
+        g.fillRect(ox + 5, 5, 1, 1);
+        g.fillRect(ox + 11, 5, 1, 1);
+        g.fillRect(ox + 4, 12, 1, 1);
+        g.fillRect(ox + 12, 12, 1, 1);
+        g.fillStyle(0xff6600, 1);
+        g.fillRect(ox + 5, 11, 1, 1);
+        g.fillRect(ox + 11, 11, 1, 1);
+        g.fillStyle(0xff4400, 1);
+        g.fillRect(ox + 7, 8, 1, 1);
+        g.fillRect(ox + 9, 8, 1, 1);
+      } else {
+        // Frame 3: Dissipating ember dust
+        g.fillStyle(0xffaa00, 1);
+        g.fillRect(ox + 3, 3, 1, 1);
+        g.fillRect(ox + 13, 3, 1, 1);
+        g.fillStyle(0xff6600, 1);
+        g.fillRect(ox + 2, 13, 1, 1);
+        g.fillRect(ox + 14, 13, 1, 1);
+        g.fillStyle(0xff8800, 1);
+        g.fillRect(ox + 7, 6, 1, 1);
+        g.fillStyle(0xff4400, 1);
+        g.fillRect(ox + 9, 10, 1, 1);
+      }
+    }
+    g.generateTexture('tex_bullet_impact', 64, 16);
+    g.destroy();
+
+    const tex = scene.textures.get('tex_bullet_impact');
+    if (tex && typeof tex.add === 'function') {
+      for (let f = 0; f < 4; f++) {
+        tex.add(f, 0, f * 16, 0, 16, 16);
       }
     }
   }

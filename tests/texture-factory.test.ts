@@ -51,6 +51,7 @@ describe('TextureFactory', () => {
       'tex_projectiles',
       'tex_pickups',
       'tex_explosion',
+      'tex_bullet_impact',
     ];
 
     keys.forEach((key) => {
@@ -72,6 +73,7 @@ describe('TextureFactory', () => {
       'boss_drive',
       'capsule_spin',
       'enemy_explosion',
+      'bullet_impact_spark',
     ];
 
     animKeys.forEach((key) => {

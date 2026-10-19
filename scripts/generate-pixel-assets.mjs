@@ -1117,6 +1117,67 @@ function generateExplosion() {
   return canvas.toPNG();
 }
 
+/**
+ * 14. Bullet Impact Spark: public/assets/vfx/bullet_impact.png (64x16)
+ * 4 frames of 16x16:
+ * Frame 0: Pinpoint high-contrast white core flash star
+ * Frame 1: Expanding yellow-white diamond spark
+ * Frame 2: 4-point ricochet ember sparks
+ * Frame 3: Dissipating ember dust
+ */
+function generateBulletImpact() {
+  const canvas = new PixelCanvas(64, 16);
+
+  // Frame 0: White core pinpoint flash star (ox = 0, center = 8, 8)
+  canvas.fillRect(7, 7, 2, 2, '#FFFFFF');
+  canvas.fillRect(5, 8, 6, 1, '#FFFFFF');
+  canvas.fillRect(8, 5, 1, 6, '#FFFFFF');
+  canvas.setPixel(6, 6, '#FFFF88');
+  canvas.setPixel(9, 6, '#FFFF88');
+  canvas.setPixel(6, 9, '#FFFF88');
+  canvas.setPixel(9, 9, '#FFFF88');
+
+  // Frame 1: Expanding yellow & white diamond spark (ox = 16, center = 24, 8)
+  canvas.fillRect(23, 8, 3, 1, '#FFFFFF');
+  canvas.fillRect(24, 7, 1, 3, '#FFFFFF');
+  canvas.fillRect(22, 8, 5, 1, '#FFFF00');
+  canvas.fillRect(24, 6, 1, 5, '#FFFF00');
+  // Spark spikes
+  canvas.fillRect(24, 3, 1, 3, '#FFAA00');
+  canvas.fillRect(24, 11, 1, 3, '#FFAA00');
+  canvas.fillRect(19, 8, 3, 1, '#FFAA00');
+  canvas.fillRect(27, 8, 3, 1, '#FFAA00');
+  // Diagonals
+  canvas.setPixel(21, 5, '#FF8800');
+  canvas.setPixel(27, 5, '#FF8800');
+  canvas.setPixel(21, 11, '#FF8800');
+  canvas.setPixel(27, 11, '#FF8800');
+
+  // Frame 2: 4-corner ricochet embers (ox = 32, center = 40, 8)
+  canvas.setPixel(36, 4, '#FFFFFF');
+  canvas.setPixel(37, 5, '#FFAA00');
+  canvas.setPixel(44, 4, '#FFFFFF');
+  canvas.setPixel(43, 5, '#FFAA00');
+  canvas.setPixel(36, 12, '#FFAA00');
+  canvas.setPixel(37, 11, '#FF6600');
+  canvas.setPixel(44, 12, '#FFAA00');
+  canvas.setPixel(43, 11, '#FF6600');
+  canvas.setPixel(39, 8, '#FF4400');
+  canvas.setPixel(41, 8, '#FF4400');
+  canvas.setPixel(40, 7, '#FF4400');
+  canvas.setPixel(40, 9, '#FF4400');
+
+  // Frame 3: Dissipating ember dust (ox = 48, center = 56, 8)
+  canvas.setPixel(51, 3, '#FFAA00');
+  canvas.setPixel(61, 3, '#FFAA00');
+  canvas.setPixel(50, 13, '#FF6600');
+  canvas.setPixel(62, 13, '#FF6600');
+  canvas.setPixel(55, 6, '#FF8800');
+  canvas.setPixel(57, 10, '#FF4400');
+
+  return canvas.toPNG();
+}
+
 // ============================================================================
 // MAIN GENERATOR PIPELINE
 // ============================================================================
@@ -1135,6 +1196,7 @@ const ASSET_REGISTRY = [
   { path: 'public/assets/vfx/pickups.png', build: generatePickups },
   { path: 'public/assets/vfx/crosshair.png', build: generateCrosshair },
   { path: 'public/assets/vfx/explosion.png', build: generateExplosion },
+  { path: 'public/assets/vfx/bullet_impact.png', build: generateBulletImpact },
 ];
 
 function main() {
