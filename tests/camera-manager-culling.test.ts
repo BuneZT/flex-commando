@@ -33,13 +33,13 @@ describe('CameraManager enemy spatial culling', () => {
       removeBounds: () => {},
     };
     // Initialize CameraManager at room (0, 0)
-    cameraManager = new CameraManager(mockCamera, 0, 0, 320, 240);
+    cameraManager = new CameraManager(mockCamera, 0, 0);
   });
 
   it('should activate enemies in active room and deactivate enemies in inactive rooms', () => {
     const enemyInRoom00 = createMockEnemy(100, 100, true);
-    const enemyInRoom10 = createMockEnemy(400, 100, true);
-    const enemyInRoom01 = createMockEnemy(100, 300, true);
+    const enemyInRoom10 = createMockEnemy(600, 100, true);
+    const enemyInRoom01 = createMockEnemy(100, 350, true);
 
     const enemies = [enemyInRoom00, enemyInRoom10, enemyInRoom01];
 
@@ -60,12 +60,12 @@ describe('CameraManager enemy spatial culling', () => {
 
   it('should update enemy culling state when camera moves to a new room cell', () => {
     const enemyInRoom00 = createMockEnemy(100, 100, true);
-    const enemyInRoom10 = createMockEnemy(400, 100, true);
+    const enemyInRoom10 = createMockEnemy(600, 100, true);
 
     const enemies = [enemyInRoom00, enemyInRoom10];
 
-    // Camera moves to room (1, 0) (x = 350, y = 100)
-    cameraManager.update(350, 100);
+    // Camera moves to room (1, 0) (x = 550, y = 100)
+    cameraManager.update(550, 100);
     cameraManager.cullEnemies(enemies);
 
     expect(enemyInRoom00.active).toBe(false);
@@ -93,7 +93,7 @@ describe('CameraManager enemy spatial culling', () => {
 
   it('should handle enemies without a physics body gracefully', () => {
     const enemyWithoutBody = createMockEnemy(100, 100, true, false);
-    const enemyOffscreenNoBody = createMockEnemy(400, 100, true, false);
+    const enemyOffscreenNoBody = createMockEnemy(600, 100, true, false);
 
     const enemies = [enemyWithoutBody, enemyOffscreenNoBody];
 
@@ -108,8 +108,8 @@ describe('CameraManager enemy spatial culling', () => {
 
   it('should return array of active enemies from cullEnemies', () => {
     const enemyInRoom00 = createMockEnemy(100, 100, true);
-    const enemyInRoom10 = createMockEnemy(400, 100, true);
-    const enemyInRoom01 = createMockEnemy(100, 300, true);
+    const enemyInRoom10 = createMockEnemy(600, 100, true);
+    const enemyInRoom01 = createMockEnemy(100, 350, true);
 
     const enemies = [enemyInRoom00, enemyInRoom10, enemyInRoom01];
 
@@ -121,7 +121,7 @@ describe('CameraManager enemy spatial culling', () => {
 
   it('should populate provided outArray buffer in-place when provided', () => {
     const enemyInRoom00 = createMockEnemy(100, 100, true);
-    const enemyInRoom10 = createMockEnemy(400, 100, true);
+    const enemyInRoom10 = createMockEnemy(600, 100, true);
 
     const enemies = [enemyInRoom00, enemyInRoom10];
     const buffer: any[] = [];
@@ -150,15 +150,15 @@ describe('CameraManager enemy spatial culling', () => {
       },
     };
 
-    const cm = new CameraManager(customCameraMock, 0, 0, 320, 240);
+    const cm = new CameraManager(customCameraMock, 0, 0);
     setBoundsCalls.length = 0; // clear initial call from constructor
 
     cm.transitionToRoom(1, 0, 400);
 
-    // Initial bounds call should be union of room (0,0) [0,0,320,240] and room (1,0) [320,0,320,240] -> [0,0,640,240]
-    expect(setBoundsCalls[0]).toEqual({ x: 0, y: 0, w: 640, h: 240 });
-    // Final bounds call on completion should be target room (1,0) [320,0,320,240]
-    expect(setBoundsCalls[1]).toEqual({ x: 320, y: 0, w: 320, h: 240 });
+    // Initial bounds call should be union of room (0,0) [0,0,512,288] and room (1,0) [512,0,512,288] -> [0,0,1024,288]
+    expect(setBoundsCalls[0]).toEqual({ x: 0, y: 0, w: 1024, h: 288 });
+    // Final bounds call on completion should be target room (1,0) [512,0,512,288]
+    expect(setBoundsCalls[1]).toEqual({ x: 512, y: 0, w: 512, h: 288 });
     expect(removeBoundsCalled).toBe(false);
   });
 });

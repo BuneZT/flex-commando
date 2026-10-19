@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_CONSTANTS } from '../config/GameConstants';
 
 export interface RoomBounds {
   x: number;
@@ -10,8 +11,8 @@ export interface RoomBounds {
 export function getRoomBounds(
   gridX: number,
   gridY: number,
-  roomWidthPx: number = 320,
-  roomHeightPx: number = 240
+  roomWidthPx: number = GAME_CONSTANTS.VIEW_WIDTH_PX,
+  roomHeightPx: number = GAME_CONSTANTS.VIEW_HEIGHT_PX
 ): RoomBounds {
   return {
     x: gridX * roomWidthPx,
@@ -34,8 +35,8 @@ export class CameraManager {
     camera: Phaser.Cameras.Scene2D.Camera,
     startGridX: number = 0,
     startGridY: number = 0,
-    roomWidthPx: number = 320,
-    roomHeightPx: number = 240
+    roomWidthPx: number = GAME_CONSTANTS.VIEW_WIDTH_PX,
+    roomHeightPx: number = GAME_CONSTANTS.VIEW_HEIGHT_PX
   ) {
     this.camera = camera;
     if (this.camera && typeof this.camera.setRoundPixels === 'function') {

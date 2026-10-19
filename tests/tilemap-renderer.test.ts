@@ -5,28 +5,28 @@ import { generateRoomGrid } from '../src/core/GridGenerator';
 
 describe('getRoomBounds', () => {
   it('should calculate pixel bounds for room at grid (1, 2)', () => {
-    // 20 tiles * 16px = 320px width; 15 tiles * 16px = 240px height
-    const bounds = getRoomBounds(1, 2, 320, 240);
-    expect(bounds.x).toBe(320);
-    expect(bounds.y).toBe(480);
-    expect(bounds.width).toBe(320);
-    expect(bounds.height).toBe(240);
+    // 32 tiles * 16px = 512px width; 18 tiles * 16px = 288px height
+    const bounds = getRoomBounds(1, 2, 512, 288);
+    expect(bounds.x).toBe(512);
+    expect(bounds.y).toBe(576);
+    expect(bounds.width).toBe(512);
+    expect(bounds.height).toBe(288);
   });
 
   it('should calculate pixel bounds with default room dimensions for origin (0, 0)', () => {
     const bounds = getRoomBounds(0, 0);
     expect(bounds.x).toBe(0);
     expect(bounds.y).toBe(0);
-    expect(bounds.width).toBe(320);
-    expect(bounds.height).toBe(240);
+    expect(bounds.width).toBe(512);
+    expect(bounds.height).toBe(288);
   });
 
   it('should calculate pixel bounds for room at grid (3, 3)', () => {
-    const bounds = getRoomBounds(3, 3, 320, 240);
-    expect(bounds.x).toBe(960);
-    expect(bounds.y).toBe(720);
-    expect(bounds.width).toBe(320);
-    expect(bounds.height).toBe(240);
+    const bounds = getRoomBounds(3, 3, 512, 288);
+    expect(bounds.x).toBe(1536);
+    expect(bounds.y).toBe(864);
+    expect(bounds.width).toBe(512);
+    expect(bounds.height).toBe(288);
   });
 });
 
@@ -41,7 +41,7 @@ describe('CameraManager', () => {
 
     const manager = new CameraManager(mockCamera, 1, 2);
     expect(manager.getCurrentRoom()).toEqual({ gridX: 1, gridY: 2 });
-    expect(manager.getActiveBounds()).toEqual({ x: 320, y: 480, width: 320, height: 240 });
+    expect(manager.getActiveBounds()).toEqual({ x: 512, y: 576, width: 512, height: 288 });
   });
 
   it('should trigger room transition when player crosses room boundary', () => {
@@ -57,8 +57,8 @@ describe('CameraManager', () => {
     manager.update(100, 100);
     expect(manager.getCurrentRoom()).toEqual({ gridX: 0, gridY: 0 });
 
-    // Player moves to room (1, 0) (x = 350 >= 320)
-    manager.update(350, 100);
+    // Player moves to room (1, 0) (x = 550 >= 528)
+    manager.update(550, 100);
     expect(manager.getCurrentRoom()).toEqual({ gridX: 1, gridY: 0 });
   });
 });
