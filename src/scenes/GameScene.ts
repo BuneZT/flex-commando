@@ -17,6 +17,7 @@ import { getRandomPickupWeapon } from '../weapons/WeaponTypes';
 import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
 import { createRetroTextStyle } from '../ui/TextStyle';
+import { ImpactFXPool } from '../core/ImpactFXPool';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
@@ -32,6 +33,7 @@ export class GameScene extends Phaser.Scene {
   public player?: Player;
   public controls?: Controls;
   public projectilePool?: ProjectilePool;
+  public impactFXPool?: ImpactFXPool;
   public hud?: HUD;
   public parallaxBg?: Phaser.GameObjects.TileSprite;
 
@@ -170,8 +172,9 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // 8. Initialize Projectile Pool
-    this.projectilePool = new ProjectilePool(this);
+    // 8. Initialize Impact FX and Projectile Pool
+    this.impactFXPool = new ImpactFXPool(this);
+    this.projectilePool = new ProjectilePool(this, 100, this.impactFXPool);
 
     // 9. Populate initial enemies in PATH / BRANCH rooms
     this.spawnRoomEnemies();
@@ -288,12 +291,15 @@ export class GameScene extends Phaser.Scene {
     SoundManager.getInstance().startBGM('BOSS', this);
   }
 
-  public handlePlayerDamage(): void {
+  public handlePlayerDamage(hitX?: number, hitY?: number): void {
     if (!this.player || this.invulnerableTimer > 0 || this.isGameOver) return;
 
     // Check barrier shield first
     const absorbed = this.player.hitBarrier();
     if (absorbed) {
+      if (this.impactFXPool && typeof this.impactFXPool.spawn === 'function') {
+        this.impactFXPool.spawn(hitX ?? this.player.x, hitY ?? this.player.y);
+      }
       this.invulnerableTimer = 500; // Brief invincibility when barrier hit
       return;
     }
@@ -583,8 +589,10 @@ export class GameScene extends Phaser.Scene {
           // Enemy bullet vs Player
           if (this.player && this.invulnerableTimer <= 0) {
             if (this.checkOverlap(proj, this.player, 2)) {
+              const hitX = proj.x;
+              const hitY = proj.y;
               proj.deactivate();
-              this.handlePlayerDamage();
+              this.handlePlayerDamage(hitX, hitY);
             }
           }
         }

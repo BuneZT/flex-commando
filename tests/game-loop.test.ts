@@ -585,5 +585,38 @@ describe('Portal Lock State and Win Condition', () => {
       expect(jumper).toBeDefined();
     }
   });
+
+  describe('Bullet Impact Indicators in GameScene', () => {
+    it('should initialize ImpactFXPool and wire it to ProjectilePool', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+
+      expect(scene.impactFXPool).toBeDefined();
+      expect(scene.projectilePool?.impactFXPool).toBe(scene.impactFXPool);
+    });
+
+    it('should spawn impact spark when enemy bullet hits active player barrier shield', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+
+      // Enable player barrier
+      scene.player!.equipWeapon('BARRIER');
+      expect(scene.player!.isBarrierActive).toBe(true);
+      expect(scene.player!.barrierHits).toBe(3);
+
+      const sparkSpy = vi.spyOn(scene.impactFXPool!, 'spawn');
+
+      // Spawn enemy bullet overlapping player
+      const enemyBullet = scene.projectilePool!.spawn(scene.player!.x, scene.player!.y, 0, 'PEA_SHOOTER', false)!;
+      expect(enemyBullet.isPlayerBullet).toBe(false);
+
+      (scene as any).handleCollisions();
+
+      // Bullet was absorbed by barrier
+      expect(scene.player!.barrierHits).toBe(2);
+      expect(enemyBullet.active).toBe(false);
+      expect(sparkSpy).toHaveBeenCalledWith(enemyBullet.x, enemyBullet.y);
+    });
+  });
 });
 
