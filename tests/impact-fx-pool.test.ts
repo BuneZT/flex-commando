@@ -17,22 +17,22 @@ describe('ImpactFXPool', () => {
             active: true,
             visible: true,
             depth: 0,
-            setActive: vi.fn(function (a: boolean) {
-              this.active = a;
-              return this;
+            setActive: vi.fn((a: boolean) => {
+              sprite.active = a;
+              return sprite;
             }),
-            setVisible: vi.fn(function (v: boolean) {
-              this.visible = v;
-              return this;
+            setVisible: vi.fn((v: boolean) => {
+              sprite.visible = v;
+              return sprite;
             }),
-            setPosition: vi.fn(function (newX: number, newY: number) {
-              this.x = newX;
-              this.y = newY;
-              return this;
+            setPosition: vi.fn((newX: number, newY: number) => {
+              sprite.x = newX;
+              sprite.y = newY;
+              return sprite;
             }),
-            setDepth: vi.fn(function (d: number) {
-              this.depth = d;
-              return this;
+            setDepth: vi.fn((d: number) => {
+              sprite.depth = d;
+              return sprite;
             }),
             anims: {
               play: vi.fn().mockReturnThis(),
