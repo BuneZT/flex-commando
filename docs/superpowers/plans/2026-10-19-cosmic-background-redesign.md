@@ -26,19 +26,19 @@
 - Consumes: `assetSpecs` table in `tests/assets-integrity.test.ts`
 - Produces: Failing test assertion expecting `public/assets/bg/cyber_hangar_bg.png` width=512, height=288
 
-- [ ] **Step 1: Write the failing test expectation**
+- [x] **Step 1: Write the failing test expectation**
 
 Update line 8 of `tests/assets-integrity.test.ts` from 320x240 to 512x288:
 ```typescript
     { path: 'public/assets/bg/cyber_hangar_bg.png', width: 512, height: 288 },
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/assets-integrity.test.ts`  
 Expected output: FAIL with `expected 320 to be 512` (or height `expected 240 to be 288`).
 
-- [ ] **Step 3: Commit the failing test specification**
+- [x] **Step 3: Commit the failing test specification**
 
 ```powershell
 git add tests/assets-integrity.test.ts
@@ -58,7 +58,7 @@ git commit -m "test: update asset integrity test for 512x288 background dimensio
 - Consumes: `PixelCanvas` class in `scripts/generate-pixel-assets.mjs`
 - Produces: `public/assets/bg/cyber_hangar_bg.png` (512x288 PNG)
 
-- [ ] **Step 1: Replace `generateCyberHangarBg` with cosmic nebula generator**
+- [x] **Step 1: Replace `generateCyberHangarBg` with cosmic nebula generator**
 
 In `scripts/generate-pixel-assets.mjs`, update `generateCyberHangarBg` and the asset specification list:
 ```javascript
@@ -175,17 +175,17 @@ And in `scripts/generate-pixel-assets.mjs` asset list, update width and height:
   { path: 'public/assets/bg/cyber_hangar_bg.png', build: generateCyberHangarBg, width: 512, height: 288 },
 ```
 
-- [ ] **Step 2: Generate pixel asset**
+- [x] **Step 2: Generate pixel asset**
 
 Run: `node scripts/generate-pixel-assets.mjs`  
 Expected output: Generated `public/assets/bg/cyber_hangar_bg.png` (512x288).
 
-- [ ] **Step 3: Run test to verify it passes**
+- [x] **Step 3: Run test to verify it passes**
 
 Run: `npx vitest run tests/assets-integrity.test.ts`  
 Expected output: PASS (2 tests passed).
 
-- [ ] **Step 4: Commit generated asset and generator script**
+- [x] **Step 4: Commit generated asset and generator script**
 
 ```powershell
 git add scripts/generate-pixel-assets.mjs public/assets/bg/cyber_hangar_bg.png
@@ -204,7 +204,7 @@ git commit -m "feat: synthesize 512x288 seamless cosmic nebula background asset"
 - Consumes: `GAME_CONSTANTS.VIEW_WIDTH_PX`, `GAME_CONSTANTS.VIEW_HEIGHT_PX`
 - Produces: Phaser Texture `'cyber_hangar_bg'` (512x288 Graphics texture)
 
-- [ ] **Step 1: Update `createCyberHangarBgTexture` in `TextureFactory.ts`**
+- [x] **Step 1: Update `createCyberHangarBgTexture` in `TextureFactory.ts`**
 
 Update `createCyberHangarBgTexture` in `src/core/TextureFactory.ts`:
 ```typescript
@@ -244,12 +244,12 @@ Update `createCyberHangarBgTexture` in `src/core/TextureFactory.ts`:
   }
 ```
 
-- [ ] **Step 2: Run test to verify it passes**
+- [x] **Step 2: Run test to verify it passes**
 
 Run: `npx vitest run tests/texture-factory.test.ts`  
 Expected output: PASS (3 tests passed).
 
-- [ ] **Step 3: Commit TextureFactory update**
+- [x] **Step 3: Commit TextureFactory update**
 
 ```powershell
 git add src/core/TextureFactory.ts
@@ -268,7 +268,7 @@ git commit -m "feat: update procedural fallback texture for cosmic background in
 - Consumes: `this.parallaxBg`, `this.cameras.main.scrollX`, `this.cameras.main.scrollY`
 - Produces: Smooth parallax offset `tilePositionX` / `tilePositionY`
 
-- [ ] **Step 1: Update scroll factor multipliers in `GameScene.ts`**
+- [x] **Step 1: Update scroll factor multipliers in `GameScene.ts`**
 
 In `src/scenes/GameScene.ts` around line 370:
 ```typescript
@@ -279,12 +279,12 @@ In `src/scenes/GameScene.ts` around line 370:
     }
 ```
 
-- [ ] **Step 2: Run test to verify it passes**
+- [x] **Step 2: Run test to verify it passes**
 
 Run: `npx vitest run tests/game-loop.test.ts`  
 Expected output: PASS (25 tests passed).
 
-- [ ] **Step 3: Commit GameScene parallax tuning**
+- [x] **Step 3: Commit GameScene parallax tuning**
 
 ```powershell
 git add src/scenes/GameScene.ts
@@ -298,17 +298,17 @@ git commit -m "feat: tune parallax scroll factor for deep cosmic space backdrop"
 **Files:**
 - Test all test suites and production build
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 
 Run: `npm test`  
 Expected output: 20 passed (175 tests passed).
 
-- [ ] **Step 2: Run TypeScript typecheck**
+- [x] **Step 2: Run TypeScript typecheck**
 
 Run: `npx tsc --noEmit`  
 Expected output: Exits with code 0 (no type errors).
 
-- [ ] **Step 3: Run production build**
+- [x] **Step 3: Run production build**
 
 Run: `npm run build`  
 Expected output: Build completed successfully in `dist/`.
