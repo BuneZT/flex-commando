@@ -17,6 +17,7 @@ export class Boss extends EnemyBase {
     super(scene, x, y, texture, health);
     this.scoreValue = 5000;
     this.damageOnContact = 2;
+    this.explosionScale = 2.0;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {

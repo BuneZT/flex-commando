@@ -7,6 +7,7 @@ import { Turret } from '../src/entities/enemies/Turret';
 import { JumperMercenary } from '../src/entities/enemies/JumperMercenary';
 import { Boss } from '../src/entities/enemies/Boss';
 import { ProjectilePool } from '../src/weapons/ProjectilePool';
+import { CombatFX } from '../src/core/CombatFX';
 
 function createMockBody(): Phaser.Physics.Arcade.Body {
   let width = 0;
@@ -88,6 +89,45 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     const lethal = drone.takeDamage(initialHealth);
     expect(lethal).toBe(true);
     expect(drone.isAlive).toBe(false);
+  });
+
+  it('EnemyBase should trigger CombatFX.applyHitFlash on non-lethal damage', () => {
+    const scene = createMockScene();
+    const flashSpy = vi.spyOn(CombatFX, 'applyHitFlash');
+    const trooper = new Trooper(scene, 100, 100);
+    trooper.health = 5;
+    trooper.maxHealth = 5;
+
+    const killed = trooper.takeDamage(1);
+
+    expect(killed).toBe(false);
+    expect(flashSpy).toHaveBeenCalledWith(trooper, 90);
+    flashSpy.mockRestore();
+  });
+
+  it('EnemyBase should trigger CombatFX.spawnDeathExplosion with explosionScale on lethal damage', () => {
+    const scene = createMockScene();
+    const explosionSpy = vi.spyOn(CombatFX, 'spawnDeathExplosion');
+    const trooper = new Trooper(scene, 100, 100);
+    trooper.health = 1;
+
+    const killed = trooper.takeDamage(1);
+
+    expect(killed).toBe(true);
+    expect(trooper.isAlive).toBe(false);
+    expect(explosionSpy).toHaveBeenCalledWith(trooper.scene, trooper.x, trooper.y, 1.0);
+    explosionSpy.mockRestore();
+  });
+
+  it('Boss should use explosionScale 2.0 upon lethal damage', () => {
+    const scene = createMockScene();
+    const explosionSpy = vi.spyOn(CombatFX, 'spawnDeathExplosion');
+    const boss = new Boss(scene, 200, 200, 1);
+
+    boss.takeDamage(1);
+
+    expect(explosionSpy).toHaveBeenCalledWith(boss.scene, boss.x, boss.y, 2.0);
+    explosionSpy.mockRestore();
   });
 
   it('Trooper should move toward player and jump when blocked', () => {

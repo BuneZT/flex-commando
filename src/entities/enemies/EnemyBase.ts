@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ProjectilePool } from '../../weapons/ProjectilePool';
+import { CombatFX } from '../../core/CombatFX';
 
 export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   public health: number;
@@ -8,6 +9,7 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   public scoreValue: number = 100;
   public damageOnContact: number = 1;
   public facingLeft: boolean = false;
+  public explosionScale: number = 1.0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string = '', health: number = 1) {
     super(scene, x, y, texture);
@@ -33,9 +35,12 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
     this.health -= amount;
     if (this.health <= 0) {
       this.health = 0;
+      CombatFX.spawnDeathExplosion(this.scene, this.x, this.y, this.explosionScale);
       this.die();
       return true;
     }
+
+    CombatFX.applyHitFlash(this, 90);
     return false;
   }
 
