@@ -15,6 +15,59 @@ export function formatHUDWeaponName(weapon: string): string {
   return weapon.replace(/_/g, ' ');
 }
 
+/**
+ * Computes bit index (0..15) for a 4x4 room coordinate.
+ */
+export function getRoomBitIndex(gridX: number, gridY: number): number {
+  return gridY * 4 + gridX;
+}
+
+/**
+ * Returns a new bitmask with the specified room marked as visited.
+ */
+export function markRoomVisited(mask: number, gridX: number, gridY: number): number {
+  if (gridX < 0 || gridX > 3 || gridY < 0 || gridY > 3) return mask;
+  return mask | (1 << getRoomBitIndex(gridX, gridY));
+}
+
+/**
+ * Checks whether a given room coordinate has been visited.
+ */
+export function isRoomVisited(mask: number, gridX: number, gridY: number): boolean {
+  if (gridX < 0 || gridX > 3 || gridY < 0 || gridY > 3) return false;
+  return (mask & (1 << getRoomBitIndex(gridX, gridY))) !== 0;
+}
+
+/**
+ * Determines the minimap cell color.
+ * Returns null if the cell should remain hidden in darkness.
+ */
+export function getMinimapCellColor(
+  cell: GridCell | null | undefined,
+  isVisited: boolean,
+  isCurrent: boolean
+): number | null {
+  if (!isVisited || !cell || cell.type === 'EMPTY') {
+    return null;
+  }
+
+  if (isCurrent) {
+    return 0x00ff00;
+  }
+
+  switch (cell.type) {
+    case 'START':
+      return 0x0088ff;
+    case 'BOSS':
+      return 0xff0044;
+    case 'PATH':
+    case 'BRANCH':
+      return 0x666666;
+    default:
+      return null;
+  }
+}
+
 export class HUD {
   private scene: Phaser.Scene;
   private livesText: Phaser.GameObjects.Text;

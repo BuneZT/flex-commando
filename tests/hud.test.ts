@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { HUD, formatHUDLives, formatHUDWeaponName } from '../src/ui/HUD';
+import {
+  HUD,
+  formatHUDLives,
+  formatHUDWeaponName,
+  getRoomBitIndex,
+  markRoomVisited,
+  isRoomVisited,
+  getMinimapCellColor,
+} from '../src/ui/HUD';
 import { GAME_CONSTANTS } from '../src/config/GameConstants';
 import type Phaser from 'phaser';
 
@@ -23,6 +31,75 @@ describe('formatHUDWeaponName', () => {
     expect(formatHUDWeaponName('LASER')).toBe('LASER');
     expect(formatHUDWeaponName('FLAME')).toBe('FLAME');
     expect(formatHUDWeaponName('BARRIER')).toBe('BARRIER');
+  });
+});
+
+describe('Minimap Bitmask Room Tracking', () => {
+  it('getRoomBitIndex should map 4x4 room coordinates to bit positions 0-15', () => {
+    expect(getRoomBitIndex(0, 0)).toBe(0);
+    expect(getRoomBitIndex(3, 0)).toBe(3);
+    expect(getRoomBitIndex(0, 1)).toBe(4);
+    expect(getRoomBitIndex(3, 3)).toBe(15);
+  });
+
+  it('markRoomVisited should set the corresponding bit in the bitmask', () => {
+    let mask = 0;
+    mask = markRoomVisited(mask, 0, 0); // bit 0 (1)
+    expect(mask).toBe(1);
+
+    mask = markRoomVisited(mask, 3, 0); // bit 3 (8) -> 9
+    expect(mask).toBe(9);
+
+    // Out of bounds coordinate should return original mask unchanged
+    expect(markRoomVisited(mask, -1, 0)).toBe(9);
+    expect(markRoomVisited(mask, 4, 0)).toBe(9);
+    expect(markRoomVisited(mask, 0, 4)).toBe(9);
+  });
+
+  it('isRoomVisited should correctly report true only for marked rooms', () => {
+    const mask = markRoomVisited(0, 2, 1); // bit 6
+
+    expect(isRoomVisited(mask, 2, 1)).toBe(true);
+    expect(isRoomVisited(mask, 0, 0)).toBe(false);
+    expect(isRoomVisited(mask, 3, 3)).toBe(false);
+
+    // Out of bounds checks
+    expect(isRoomVisited(mask, -1, 0)).toBe(false);
+    expect(isRoomVisited(mask, 4, 1)).toBe(false);
+  });
+});
+
+describe('getMinimapCellColor (Fog of War color resolution)', () => {
+  it('should return null for any unvisited cell (blank darkness)', () => {
+    expect(getMinimapCellColor({ type: 'START' } as any, false, false)).toBeNull();
+    expect(getMinimapCellColor({ type: 'BOSS' } as any, false, false)).toBeNull();
+    expect(getMinimapCellColor({ type: 'PATH' } as any, false, false)).toBeNull();
+    expect(getMinimapCellColor({ type: 'BRANCH' } as any, false, false)).toBeNull();
+  });
+
+  it('should return null for null, undefined, or EMPTY cells even if visited flag is passed', () => {
+    expect(getMinimapCellColor(null, true, false)).toBeNull();
+    expect(getMinimapCellColor(undefined, true, false)).toBeNull();
+    expect(getMinimapCellColor({ type: 'EMPTY' } as any, true, false)).toBeNull();
+  });
+
+  it('should return 0x00ff00 (green) for current active player room when visited', () => {
+    expect(getMinimapCellColor({ type: 'START' } as any, true, true)).toBe(0x00ff00);
+    expect(getMinimapCellColor({ type: 'PATH' } as any, true, true)).toBe(0x00ff00);
+    expect(getMinimapCellColor({ type: 'BOSS' } as any, true, true)).toBe(0x00ff00);
+  });
+
+  it('should return 0x0088ff (blue) for visited START room when not current', () => {
+    expect(getMinimapCellColor({ type: 'START' } as any, true, false)).toBe(0x0088ff);
+  });
+
+  it('should return 0xff0044 (red) for visited BOSS room when not current', () => {
+    expect(getMinimapCellColor({ type: 'BOSS' } as any, true, false)).toBe(0xff0044);
+  });
+
+  it('should return 0x666666 (gray) for visited PATH or BRANCH room when not current', () => {
+    expect(getMinimapCellColor({ type: 'PATH' } as any, true, false)).toBe(0x666666);
+    expect(getMinimapCellColor({ type: 'BRANCH' } as any, true, false)).toBe(0x666666);
   });
 });
 
