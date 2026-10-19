@@ -511,9 +511,35 @@ export class TextureFactory {
   private static createCyberHangarBgTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('cyber_hangar_bg')) return;
     const g = scene.add.graphics();
-    g.fillStyle(0x0e111a, 1);
-    g.fillRect(0, 0, GAME_CONSTANTS.VIEW_WIDTH_PX, GAME_CONSTANTS.VIEW_HEIGHT_PX);
-    g.generateTexture('cyber_hangar_bg', GAME_CONSTANTS.VIEW_WIDTH_PX, GAME_CONSTANTS.VIEW_HEIGHT_PX);
+    const w = GAME_CONSTANTS.VIEW_WIDTH_PX;
+    const h = GAME_CONSTANTS.VIEW_HEIGHT_PX;
+
+    // Dark cosmic base void
+    g.fillStyle(0x070914, 1);
+    g.fillRect(0, 0, w, h);
+
+    // Subtle cosmic nebula clouds (deep violet and muted teal)
+    g.fillStyle(0x231436, 0.5);
+    g.fillCircle(120, 90, 80);
+    g.fillCircle(380, 190, 90);
+    g.fillStyle(0x0e242c, 0.4);
+    g.fillCircle(240, 150, 65);
+
+    // Subtle star clusters
+    g.fillStyle(0x7788aa, 0.8);
+    for (let i = 0; i < 40; i++) {
+      const x = (i * 73 + 17) % w;
+      const y = (i * 47 + 23) % h;
+      g.fillRect(x, y, 1, 1);
+    }
+    g.fillStyle(0xffffff, 1);
+    for (let i = 0; i < 15; i++) {
+      const x = (i * 137 + 41) % w;
+      const y = (i * 89 + 11) % h;
+      g.fillRect(x, y, 1, 1);
+    }
+
+    g.generateTexture('cyber_hangar_bg', w, h);
     g.destroy();
   }
 
