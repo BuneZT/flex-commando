@@ -322,92 +322,107 @@ function generateLogo() {
 
 /**
  * 2. public/assets/bg/cyber_hangar_bg.png (512x288)
- * Atmospheric cyber hangar interior with subtle wall-to-floor transition,
- * recessed pillars, muted conduits, and non-clashing perspective floor grid.
+ * Cosmic deep space nebula backdrop with subtle smoothstep clouds,
+ * toroidal wrapping, and crisp 3-tier starfield.
  */
 function generateCyberHangarBg() {
   const width = 512;
   const height = 288;
-  const horizonY = 175;
   const canvas = new PixelCanvas(width, height);
 
-  // 1. Subtle Wall gradient (y = 0 to horizonY)
-  // Gently shifts from deep navy [9, 11, 24] down to [15, 19, 40]
-  for (let y = 0; y < horizonY; y++) {
-    const t = y / horizonY;
-    const r = Math.round(9 + t * 6);
-    const g = Math.round(11 + t * 8);
-    const b = Math.round(24 + t * 16);
-    canvas.fillRect(0, y, width, 1, [r, g, b, 255]);
+  // Simple deterministic Mulberry32 PRNG
+  let seed = 42891;
+  function rnd() {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  // 2. Ceiling industrial trusses (y = 0 to 24)
-  // Repeating every 32px (512 / 32 = 16 seamless trusses)
-  for (let x = 0; x < width; x += 32) {
-    canvas.drawLine(x, 0, x + 16, 22, '#182035');
-    canvas.drawLine(x + 16, 22, x + 32, 0, '#182035');
-    canvas.fillRect(x, 0, 32, 4, '#202C48');
+  // 1. Base void (uniform deep cosmic indigo)
+  canvas.fillRect(0, 0, width, height, [7, 9, 20, 255]);
+
+  // 2. Toroidal distance helper for seamless wrapping
+  function torusDistSq(x1, y1, x2, y2) {
+    let dx = Math.abs(x1 - x2);
+    if (dx > width / 2) dx = width - dx;
+    let dy = Math.abs(y1 - y2);
+    if (dy > height / 2) dy = height - dy;
+    return dx * dx + dy * dy;
   }
 
-  // 3. Structural pillars repeating every 128px (x = 32, 160, 288, 416)
-  for (let px = 32; px < width; px += 128) {
-    canvas.fillRect(px, 16, 14, horizonY - 18, '#141C30');
-    canvas.fillRect(px + 1, 16, 2, horizonY - 18, '#202A44');
-    canvas.fillRect(px + 12, 16, 2, horizonY - 18, '#0E1422');
-    // Subtle indicator LEDs on pillars (muted teal and green)
-    for (let ly = 32; ly < horizonY - 20; ly += 24) {
-      canvas.fillRect(px + 6, ly, 2, 4, ly % 48 === 0 ? '#009955' : '#0088AA');
+  // 3. Subtle Cosmic Nebula Dust Clouds
+  // Soft, continuous opacity (maxAlpha: 50-75) and smoothstep falloff for a subtle transition
+  const nebulaClusters = [
+    // Gentle violet clouds
+    { cx: 120, cy: 90, r: 110, color: [32, 18, 48], maxAlpha: 70 },
+    { cx: 380, cy: 100, r: 120, color: [34, 20, 52], maxAlpha: 75 },
+    { cx: 200, cy: 240, r: 115, color: [30, 18, 46], maxAlpha: 65 },
+    { cx: 440, cy: 230, r: 110, color: [32, 19, 50], maxAlpha: 70 },
+    // Soft connecting indigo dust
+    { cx: 40, cy: 190, r: 100, color: [18, 22, 45], maxAlpha: 65 },
+    { cx: 270, cy: 130, r: 95, color: [18, 22, 44], maxAlpha: 60 },
+    // Soft ethereal teal wisps
+    { cx: 340, cy: 200, r: 85, color: [12, 30, 38], maxAlpha: 55 },
+    { cx: 150, cy: 180, r: 80, color: [10, 28, 35], maxAlpha: 50 },
+    { cx: 480, cy: 70, r: 85, color: [12, 28, 36], maxAlpha: 55 },
+  ];
+
+  for (const cluster of nebulaClusters) {
+    const minX = Math.floor(cluster.cx - cluster.r);
+    const maxX = Math.ceil(cluster.cx + cluster.r);
+    const minY = Math.floor(cluster.cy - cluster.r);
+    const maxY = Math.ceil(cluster.cy + cluster.r);
+    const rSq = cluster.r * cluster.r;
+
+    for (let py = minY; py <= maxY; py++) {
+      for (let px = minX; px <= maxX; px++) {
+        const dSq = torusDistSq(px, py, cluster.cx, cluster.cy);
+        if (dSq < rSq) {
+          const dist = Math.sqrt(dSq);
+          const t = 1 - dist / cluster.r;
+          // Smoothstep interpolation (3*t^2 - 2*t^3) for ultra-subtle edge blending
+          const smoothT = t * t * (3 - 2 * t);
+          const alpha = Math.round(smoothT * cluster.maxAlpha);
+          const wrapX = ((px % width) + width) % width;
+          const wrapY = ((py % height) + height) % height;
+          canvas.setPixel(wrapX, wrapY, cluster.color, alpha);
+        }
+      }
     }
   }
 
-  // 4. Muted neon conduit cables running horizontally across the hangar
-  // Upper cyan conduit (y = 48)
-  canvas.fillRect(0, 48, width, 2, '#003344');
-  canvas.fillRect(0, 49, width, 1, '#0088A3');
-  // Mid magenta conduit (y = 92)
-  canvas.fillRect(0, 92, width, 2, '#440026');
-  canvas.fillRect(0, 93, width, 1, '#8C0043');
-  // Lower amber conduit (y = 136)
-  canvas.fillRect(0, 136, width, 2, '#442E00');
-  canvas.fillRect(0, 137, width, 1, '#8C5E00');
-
-  // 5. Subtle horizon catwalk (y = 172 to 175)
-  // Subdued bronze & dark slate tones so it never mimics jumpable platforms
-  for (let x = 0; x < width; x++) {
-    const isStripe = Math.floor(x / 8) % 2 === 0;
-    canvas.setPixel(x, 172, isStripe ? '#735200' : '#141824');
-    canvas.setPixel(x, 173, isStripe ? '#614500' : '#101420');
-    canvas.setPixel(x, 174, '#005566');
+  // 4. Three-Tier Starfield
+  // Tier 1: Faint distant stars (~130 stars, 1x1, dim cool grey/blue)
+  for (let i = 0; i < 130; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const bright = 60 + Math.floor(rnd() * 60);
+    canvas.setPixel(sx, sy, [bright, bright + 10, bright + 30, 255]);
   }
 
-  // 6. Floor base gradient (y = horizonY to height)
-  // Perfectly smooth continuation: starts at [15, 19, 40] and softly descends to [19, 25, 52]
-  const floorHeight = height - horizonY;
-  for (let y = horizonY; y < height; y++) {
-    const t = (y - horizonY) / floorHeight;
-    const r = Math.round(15 + t * 4);
-    const g = Math.round(19 + t * 6);
-    const b = Math.round(40 + t * 12);
-    canvas.fillRect(0, y, width, 1, [r, g, b, 255]);
+  // Tier 2: Mid-field stars (~50 stars, 1x1, crisp soft white / pastel violet)
+  for (let i = 0; i < 50; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const isViolet = rnd() > 0.6;
+    const color = isViolet ? [215, 195, 255, 255] : [195, 215, 245, 255];
+    canvas.setPixel(sx, sy, color);
   }
 
-  // 7. Perspective floor grid lines (horizontal)
-  // Soft, low-contrast slate-blue lines
-  const gridRows = [179, 185, 193, 204, 218, 235, 257, 283];
-  gridRows.forEach((gy, idx) => {
-    const intensity = 0.2 + (idx / gridRows.length) * 0.35;
-    const r = 0;
-    const g = Math.round(75 * intensity);
-    const b = Math.round(135 * intensity);
-    canvas.fillRect(0, gy, width, idx >= 5 ? 2 : 1, [r, g, b, 180]);
-  });
-
-  // 8. Perspective floor rays radiating from vanishing point
-  // Seamless wrap across 512px
-  for (let vx = -256; vx < width + 256; vx += 32) {
-    const xTop = vx;
-    const xBottom = vx + (vx - width / 2) * 1.5;
-    canvas.drawLine(xTop, horizonY, xBottom, height, '#002E44');
+  // Tier 3: Focal sparkling stars (12 stars, 3x3 micro cross)
+  for (let i = 0; i < 12; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const glow = rnd() > 0.5 ? [140, 220, 255, 200] : [240, 170, 255, 200];
+    // Center bright core
+    canvas.setPixel(sx, sy, [255, 255, 255, 255]);
+    // 1px cross points with toroidal wrap
+    canvas.setPixel((sx + 1) % width, sy, glow);
+    canvas.setPixel((sx - 1 + width) % width, sy, glow);
+    canvas.setPixel(sx, (sy + 1) % height, glow);
+    canvas.setPixel(sx, (sy - 1 + height) % height, glow);
   }
 
   return canvas.toPNG();

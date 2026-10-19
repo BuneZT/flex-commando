@@ -99,7 +99,7 @@ export class GameScene extends Phaser.Scene {
 
     // 0. Set atmospheric background color & 4x4 grid physics world bounds
     if (this.cameras && this.cameras.main && typeof this.cameras.main.setBackgroundColor === 'function') {
-      this.cameras.main.setBackgroundColor('#0e1220');
+      this.cameras.main.setBackgroundColor('#070914');
       if (typeof this.cameras.main.setRoundPixels === 'function') {
         this.cameras.main.setRoundPixels(true);
       }
