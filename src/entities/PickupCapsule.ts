@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WeaponType } from '../weapons/WeaponTypes';
+import { CombatFX } from '../core/CombatFX';
 
 export type PickupLetter = 'S' | 'L' | 'M' | 'F' | 'B';
 
@@ -181,10 +182,13 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
   }
 
   public hit(): PickupItem | null {
+    if (this.hp <= 0) return null;
     this.hp -= 1;
     if (this.hp <= 0) {
+      CombatFX.spawnDeathExplosion(this.scene, this.x, this.y, 1.0);
       return this.destroyAndDrop();
     }
+    CombatFX.applyHitFlash(this, 90);
     return null;
   }
 

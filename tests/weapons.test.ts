@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Phaser from 'phaser';
 import { getSpreadShotAngles, WEAPON_CONFIGS, WeaponType, getRandomPickupWeapon, PICKUP_WEAPON_TYPES } from '../src/weapons/WeaponTypes';
 import { Projectile, ProjectilePool } from '../src/weapons/ProjectilePool';
 import { PickupCapsule, PickupItem, weaponTypeToLetter, letterToWeaponType } from '../src/entities/PickupCapsule';
 import { Player } from '../src/entities/Player';
 import { RawInputState } from '../src/config/Controls';
+import { CombatFX } from '../src/core/CombatFX';
 
 function createMockScene(): Phaser.Scene {
   return {
@@ -231,6 +232,36 @@ describe('PickupCapsule', () => {
       expect(droppedItem?.weaponType).toBe(weaponType);
       expect(droppedItem?.letter).toBe(weaponTypeToLetter(weaponType));
     }
+  });
+
+  it('should trigger CombatFX.applyHitFlash on non-lethal capsule hit', () => {
+    const mockScene = createMockScene();
+    const flashSpy = vi.spyOn(CombatFX, 'applyHitFlash');
+    const capsule = new PickupCapsule(mockScene, 100, 100, 'SPREAD_SHOT');
+    capsule.body = createMockBody();
+    capsule.hp = 3;
+
+    const droppedItem = capsule.hit();
+
+    expect(droppedItem).toBeNull();
+    expect(capsule.hp).toBe(2);
+    expect(flashSpy).toHaveBeenCalledWith(capsule, 90);
+    flashSpy.mockRestore();
+  });
+
+  it('should trigger CombatFX.spawnDeathExplosion when capsule is destroyed', () => {
+    const mockScene = createMockScene();
+    const explosionSpy = vi.spyOn(CombatFX, 'spawnDeathExplosion');
+    const capsule = new PickupCapsule(mockScene, 100, 100, 'SPREAD_SHOT');
+    capsule.body = createMockBody();
+    capsule.hp = 1;
+
+    const droppedItem = capsule.hit();
+
+    expect(droppedItem).not.toBeNull();
+    expect(capsule.hp).toBe(0);
+    expect(explosionSpy).toHaveBeenCalledWith(capsule.scene, capsule.x, capsule.y, 1.0);
+    explosionSpy.mockRestore();
   });
 });
 
