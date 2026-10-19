@@ -27,6 +27,7 @@ export class TextureFactory {
       this.createCyberHangarBgTexture(scene);
       this.createProjectilesFallbackTexture(scene);
       this.createPickupsFallbackTexture(scene);
+      this.createExplosionTexture(scene);
       this.createAnimations(scene);
     } finally {
       if (createdDummyRenderer) {
@@ -427,6 +428,66 @@ export class TextureFactory {
         repeat: -1,
       });
     }
+
+    if (!scene.anims.exists('enemy_explosion')) {
+      scene.anims.create({
+        key: 'enemy_explosion',
+        frames: scene.anims.generateFrameNumbers('tex_explosion', { start: 0, end: 3 }),
+        frameRate: 16,
+        repeat: 0,
+      });
+    }
+  }
+
+  private static createExplosionTexture(scene: Phaser.Scene): void {
+    if (!scene.textures || scene.textures.exists('tex_explosion')) return;
+    const g = scene.add.graphics();
+    // 4 frames of 20x20 = 80x20
+    for (let f = 0; f < 4; f++) {
+      const ox = f * 20;
+      if (f === 0) {
+        // Frame 0: White core flash star
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 8, 4, 4);
+        g.fillRect(ox + 6, 9, 8, 2);
+        g.fillRect(ox + 9, 6, 2, 8);
+      } else if (f === 1) {
+        // Frame 1: Expanding yellow & white burst
+        g.fillStyle(0xffff00, 1);
+        g.fillCircle(ox + 10, 10, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(ox + 10, 10, 4);
+      } else if (f === 2) {
+        // Frame 2: Orange/red fire ring & debris sparks
+        g.fillStyle(0xff4400, 1);
+        g.fillCircle(ox + 10, 10, 8);
+        g.fillStyle(0xffbb00, 1);
+        g.fillCircle(ox + 10, 10, 5);
+        // Sparks
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 2, 3, 2, 2);
+        g.fillRect(ox + 16, 4, 2, 2);
+        g.fillRect(ox + 3, 15, 2, 2);
+        g.fillRect(ox + 15, 14, 2, 2);
+      } else {
+        // Frame 3: Dissipating dark smoke & embers
+        g.fillStyle(0x555566, 0.7);
+        g.fillCircle(ox + 10, 10, 6);
+        g.fillStyle(0xff6600, 0.8);
+        g.fillRect(ox + 5, 6, 2, 2);
+        g.fillRect(ox + 13, 7, 2, 2);
+        g.fillRect(ox + 8, 13, 2, 2);
+      }
+    }
+    g.generateTexture('tex_explosion', 80, 20);
+    g.destroy();
+
+    const tex = scene.textures.get('tex_explosion');
+    if (tex && typeof tex.add === 'function') {
+      for (let f = 0; f < 4; f++) {
+        tex.add(f, 0, f * 20, 0, 20, 20);
+      }
+    }
   }
 
   private static createTilesetTexture(scene: Phaser.Scene): void {
@@ -518,12 +579,16 @@ export class TextureFactory {
     g.fillStyle(0x070914, 1);
     g.fillRect(0, 0, w, h);
 
-    // Subtle cosmic nebula clouds (deep violet and muted teal)
-    g.fillStyle(0x231436, 0.5);
-    g.fillCircle(120, 90, 80);
-    g.fillCircle(380, 190, 90);
-    g.fillStyle(0x0e242c, 0.4);
-    g.fillCircle(240, 150, 65);
+    // Subtle cosmic nebula clouds (deep violet and muted teal) evenly covering canvas
+    g.fillStyle(0x231436, 0.45);
+    g.fillCircle(120, 80, 80);
+    g.fillCircle(380, 100, 85);
+    g.fillCircle(160, 220, 80);
+    g.fillCircle(400, 230, 85);
+    g.fillStyle(0x0e242c, 0.35);
+    g.fillCircle(260, 140, 75);
+    g.fillCircle(480, 180, 65);
+    g.fillCircle(40, 160, 65);
 
     // Subtle star clusters
     g.fillStyle(0x7788aa, 0.8);
