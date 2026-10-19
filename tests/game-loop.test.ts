@@ -125,7 +125,7 @@ describe('Boss Class Mechanics', () => {
     expect(enemies.every((e) => !e.isAlive)).toBe(true);
   });
 
-  it('should support full 4x4 level physics bounds (1280x960)', () => {
+  it('should support full 4x4 level physics bounds (2048x1152)', () => {
     let bounds: { x: number; y: number; width: number; height: number } | null = null;
     const mockPhysics = {
       world: {
@@ -134,8 +134,19 @@ describe('Boss Class Mechanics', () => {
         },
       },
     };
-    mockPhysics.world.setBounds(0, 0, 1280, 960);
-    expect(bounds).toEqual({ x: 0, y: 0, width: 1280, height: 960 });
+    mockPhysics.world.setBounds(0, 0, 2048, 1152);
+    expect(bounds).toEqual({ x: 0, y: 0, width: 2048, height: 1152 });
+  });
+
+  it('should configure physics world bounds to 2048x1152 in create()', () => {
+    const scene = createInitializedGameScene();
+    let setBoundsArgs: any = null;
+    scene.physics.world.setBounds = (x: number, y: number, w: number, h: number) => {
+      setBoundsArgs = { x, y, w, h };
+      return scene.physics.world;
+    };
+    scene.create();
+    expect(setBoundsArgs).toEqual({ x: 0, y: 0, w: 2048, h: 1152 });
   });
 });
 
@@ -239,8 +250,8 @@ describe('GameScene Parallax Background', () => {
     expect(tileSpriteConfig).toEqual({
       x: 0,
       y: 0,
-      w: 320,
-      h: 240,
+      w: 512,
+      h: 288,
       key: 'cyber_hangar_bg',
     });
     expect(originSet).toEqual([0, 0]);
@@ -322,9 +333,9 @@ describe('Pickup Capsule Spatial Culling', () => {
 
   it('should cull capsules outside the current room and activate capsules inside', () => {
     const scene = new GameScene();
-    const capsuleRoom00 = createMockCapsule(100, 100);
-    const capsuleRoom10 = createMockCapsule(400, 100);
-    const capsuleRoom01 = createMockCapsule(100, 300);
+    const capsuleRoom00 = createMockCapsule(400, 100);
+    const capsuleRoom10 = createMockCapsule(600, 100);
+    const capsuleRoom01 = createMockCapsule(100, 350);
 
     const capsules = [capsuleRoom00, capsuleRoom10, capsuleRoom01];
     const active = scene.cullCapsules(capsules, 0, 0);
@@ -346,8 +357,8 @@ describe('Pickup Capsule Spatial Culling', () => {
 
   it('should update active capsules when room changes', () => {
     const scene = new GameScene();
-    const capsuleRoom00 = createMockCapsule(100, 100);
-    const capsuleRoom10 = createMockCapsule(400, 100);
+    const capsuleRoom00 = createMockCapsule(400, 100);
+    const capsuleRoom10 = createMockCapsule(600, 100);
 
     const capsules = [capsuleRoom00, capsuleRoom10];
     const active = scene.cullCapsules(capsules, 1, 0);
@@ -386,8 +397,8 @@ describe('Curated Weapon Capsules and Enemy Drops', () => {
     // Cull to a room containing regular enemies
     expect(scene.enemies.length).toBeGreaterThan(0);
     const firstEnemy = scene.enemies[0];
-    const enemyRoomX = Math.floor(firstEnemy.x / 320);
-    const enemyRoomY = Math.floor(firstEnemy.y / 240);
+    const enemyRoomX = Math.floor(firstEnemy.x / 512);
+    const enemyRoomY = Math.floor(firstEnemy.y / 288);
     scene.cameraManager?.setRoom(enemyRoomX, enemyRoomY);
     scene.cullEntities(enemyRoomX, enemyRoomY);
 
@@ -523,13 +534,56 @@ describe('Portal Lock State and Win Condition', () => {
     expect(scene.bossTriggered).toBe(false);
 
     // Position player in room (3, 0)
-    scene.player!.x = 3 * 320 + 160;
-    scene.player!.y = 0 * 240 + 120;
+    scene.player!.x = 3 * 512 + 256;
+    scene.player!.y = 0 * 288 + 144;
 
     scene.update(1000, 16);
 
     expect(scene.bossTriggered).toBe(false);
     expect(scene.boss).toBeNull();
+  });
+
+  it('should spawn player and exit door at correct 512x288 16:9 room coordinates', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    const startRoom = scene.grid!.flat().find((c) => c.type === 'START')!;
+    const expectedStartX = startRoom.x * 512 + 120;
+    const expectedStartY = startRoom.y * 288 + 220;
+
+    expect(scene.player!.x).toBe(expectedStartX);
+    expect(scene.player!.y).toBe(expectedStartY);
+
+    const exitCell = scene.grid!.flat().find((c) => c.type === 'BOSS')!;
+    const expectedExitX = exitCell.x * 512 + 420;
+    const expectedExitY = exitCell.y * 288 + 220;
+
+    expect(scene.exitDoor!.x).toBe(expectedExitX);
+    expect(scene.exitDoor!.y).toBe(expectedExitY);
+  });
+
+  it('should spawn enemies with 16:9 room offsets in PATH and BRANCH rooms', () => {
+    const scene = createInitializedGameScene();
+    scene.create();
+
+    const room = scene.grid!.flat().find((c) => c.type === 'PATH' || c.type === 'BRANCH');
+    expect(room).toBeDefined();
+    if (room) {
+      const roomX = room.x * 512;
+      const roomY = room.y * 288;
+
+      const trooper = scene.enemies.find((e) => e.x === roomX + 160 && e.y === roomY + 220);
+      expect(trooper).toBeDefined();
+
+      const turret = scene.enemies.find((e) => e.x === roomX + 380 && e.y === roomY + 48);
+      expect(turret).toBeDefined();
+
+      const drone = scene.enemies.find((e) => e.x === roomX + 256 && e.y === roomY + 120);
+      expect(drone).toBeDefined();
+
+      const jumper = scene.enemies.find((e) => e.x === roomX + 420 && e.y === roomY + 220);
+      expect(jumper).toBeDefined();
+    }
   });
 });
 

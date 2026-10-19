@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_CONSTANTS } from '../config/GameConstants';
 import { generateRoomGrid, GridCell, selectCapsuleRoomCoords } from '../core/GridGenerator';
 import { TilemapRenderer, TilemapRenderResult } from '../core/TilemapRenderer';
 import { CameraManager } from '../core/CameraManager';
@@ -104,7 +105,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
     if (this.physics && this.physics.world && typeof this.physics.world.setBounds === 'function') {
-      this.physics.world.setBounds(0, 0, 1280, 960);
+      this.physics.world.setBounds(0, 0, GAME_CONSTANTS.WORLD_WIDTH_PX, GAME_CONSTANTS.WORLD_HEIGHT_PX);
     }
     if (this.physics && typeof this.physics.add?.group === 'function') {
       this.enemyGroup = this.physics.add.group();
@@ -113,7 +114,7 @@ export class GameScene extends Phaser.Scene {
 
     // 0.5. Parallax cyber hangar background
     if (this.textures?.exists?.('cyber_hangar_bg') && typeof this.add?.tileSprite === 'function') {
-      const bg = this.add.tileSprite(0, 0, 320, 240, 'cyber_hangar_bg');
+      const bg = this.add.tileSprite(0, 0, GAME_CONSTANTS.VIEW_WIDTH_PX, GAME_CONSTANTS.VIEW_HEIGHT_PX, 'cyber_hangar_bg');
       if (bg && typeof bg.setOrigin === 'function') {
         bg.setOrigin(0, 0);
       }
@@ -136,8 +137,8 @@ export class GameScene extends Phaser.Scene {
     const startRoom = this.grid.flat().find((cell) => cell.type === 'START') || { x: 0, y: 0 };
 
     // 4. Position player in START room
-    const startX = startRoom.x * 320 + 160;
-    const startY = startRoom.y * 240 + 180;
+    const startX = startRoom.x * GAME_CONSTANTS.VIEW_WIDTH_PX + 120;
+    const startY = startRoom.y * GAME_CONSTANTS.VIEW_HEIGHT_PX + 220;
     this.player = new Player(this, startX, startY);
 
     // 5. Setup collision with tilemap ground layer
@@ -177,8 +178,8 @@ export class GameScene extends Phaser.Scene {
 
     // 10. Spawn Exit Door in final/BOSS room
     const exitCell = this.grid.flat().find((cell) => cell.type === 'BOSS') || { x: 3, y: 0 };
-    const exitX = exitCell.x * 320 + 260;
-    const exitY = exitCell.y * 240 + 180;
+    const exitX = exitCell.x * GAME_CONSTANTS.VIEW_WIDTH_PX + 420;
+    const exitY = exitCell.y * GAME_CONSTANTS.VIEW_HEIGHT_PX + 220;
 
     if (this.add && typeof this.add.sprite === 'function') {
       const portal = this.add.sprite(exitX, exitY, 'tileset', 4);
@@ -230,24 +231,24 @@ export class GameScene extends Phaser.Scene {
       for (let c = 0; c < 4; c++) {
         const cell = this.grid[r][c];
         if (cell.type === 'PATH' || cell.type === 'BRANCH') {
-          const roomX = c * 320;
-          const roomY = r * 240;
+          const roomX = c * GAME_CONSTANTS.VIEW_WIDTH_PX;
+          const roomY = r * GAME_CONSTANTS.VIEW_HEIGHT_PX;
 
           // Spawn Trooper
-          const trooper = new Trooper(this, roomX + 100, roomY + 180);
+          const trooper = new Trooper(this, roomX + 160, roomY + 220);
           this.enemies.push(trooper);
           if (this.enemyGroup) this.enemyGroup.add(trooper);
 
           // Spawn Turret on ceiling/wall
-          const turret = new Turret(this, roomX + 240, roomY + 60);
+          const turret = new Turret(this, roomX + 380, roomY + 48);
           this.enemies.push(turret);
 
           // Spawn Falcon Drone flying
-          const drone = new FalconDrone(this, roomX + 160, roomY + 100);
+          const drone = new FalconDrone(this, roomX + 256, roomY + 120);
           this.enemies.push(drone);
 
           // Spawn Jumper Mercenary
-          const jumper = new JumperMercenary(this, roomX + 280, roomY + 180);
+          const jumper = new JumperMercenary(this, roomX + 420, roomY + 220);
           this.enemies.push(jumper);
           if (this.enemyGroup) this.enemyGroup.add(jumper);
 
@@ -255,7 +256,7 @@ export class GameScene extends Phaser.Scene {
           const shouldSpawnCapsule = capsuleRooms.some((cr) => cr.x === c && cr.y === r);
           if (shouldSpawnCapsule) {
             const roomCapsuleWeapon = getRandomPickupWeapon();
-            const roomCapsule = new PickupCapsule(this, roomX + 40, roomY + 70, roomCapsuleWeapon);
+            const roomCapsule = new PickupCapsule(this, roomX + 60, roomY + 90, roomCapsuleWeapon);
             this.pickupCapsules.push(roomCapsule);
           }
         }
@@ -273,8 +274,8 @@ export class GameScene extends Phaser.Scene {
 
   private triggerBossEncounter(gridX: number, gridY: number): void {
     this.bossTriggered = true;
-    const bossX = gridX * 320 + 160;
-    const bossY = gridY * 240 + 120;
+    const bossX = gridX * GAME_CONSTANTS.VIEW_WIDTH_PX + 256;
+    const bossY = gridY * GAME_CONSTANTS.VIEW_HEIGHT_PX + 144;
 
     this.boss = new Boss(this, bossX, bossY);
     this.enemies.push(this.boss);
@@ -353,8 +354,8 @@ export class GameScene extends Phaser.Scene {
         currentGridX = room.gridX;
         currentGridY = room.gridY;
       } else {
-        currentGridX = Math.max(0, Math.min(3, Math.floor(this.player.x / 320)));
-        currentGridY = Math.max(0, Math.min(3, Math.floor(this.player.y / 240)));
+        currentGridX = Math.max(0, Math.min(3, Math.floor(this.player.x / GAME_CONSTANTS.VIEW_WIDTH_PX)));
+        currentGridY = Math.max(0, Math.min(3, Math.floor(this.player.y / GAME_CONSTANTS.VIEW_HEIGHT_PX)));
       }
     }
 
@@ -390,7 +391,7 @@ export class GameScene extends Phaser.Scene {
     }
     for (let i = this.pickupCapsules.length - 1; i >= 0; i--) {
       const capsule = this.pickupCapsules[i];
-      if (capsule.hp <= 0 || capsule.x < -50 || capsule.x > 1400) {
+      if (capsule.hp <= 0 || capsule.x < -50 || capsule.x > GAME_CONSTANTS.WORLD_WIDTH_PX + 100) {
         this.pickupCapsules.splice(i, 1);
       }
     }
@@ -436,8 +437,8 @@ export class GameScene extends Phaser.Scene {
       const capsule = capsules[i];
       if (!capsule.active && capsule.hp <= 0) continue;
 
-      const capsuleGridX = Math.floor(capsule.x / 320);
-      const capsuleGridY = Math.floor(capsule.y / 240);
+      const capsuleGridX = Math.floor(capsule.x / GAME_CONSTANTS.VIEW_WIDTH_PX);
+      const capsuleGridY = Math.floor(capsule.y / GAME_CONSTANTS.VIEW_HEIGHT_PX);
       const isActiveRoom = capsuleGridX === gridX && capsuleGridY === gridY;
 
       capsule.setActive(isActiveRoom);
