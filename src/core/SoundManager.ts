@@ -143,170 +143,16 @@ export class SoundManager {
     return this.isMuted;
   }
 
-  // --- Punchy Sound Effects Synthesis ---
-  public playShoot(weaponType: WeaponType | 'ENEMY' = 'PEA_SHOOTER', isPlayerBullet: boolean = true): void {
-    if (this.isMuted || !this.ctx || !this.sfxGain) return;
-    this.ensureContext();
-
-    const t = this.ctx.currentTime;
-    const key = !isPlayerBullet || weaponType === 'ENEMY' ? 'ENEMY' : weaponType;
-    const lastTime = this.lastSfxTimes.get(key) ?? -1;
-    if (t - lastTime < 0.025) {
-      return;
-    }
-    this.lastSfxTimes.set(key, t);
-
-    if (!isPlayerBullet || weaponType === 'ENEMY') {
-      this.playEnemyShootSound(t);
-      return;
-    }
-
-    switch (weaponType) {
-      case 'SPREAD_SHOT':
-        this.playSpreadShotSound(t);
-        break;
-      case 'LASER':
-        this.playLaserSound(t);
-        break;
-      case 'FLAME':
-        this.playFlameSound(t);
-        break;
-      case 'MACHINE_GUN':
-        this.playMachineGunSound(t);
-        break;
-      case 'PEA_SHOOTER':
-      default:
-        this.playPeaShooterSound(t);
-        break;
-    }
+  public setScene(scene: any): void {
+    this.activeScene = scene;
   }
 
-  public playSfx(sfx: 'pickup' | string = 'pickup'): void {
-    if (this.isMuted || !this.ctx || !this.sfxGain) return;
-    this.ensureContext();
-    const t = this.ctx.currentTime;
-    if (sfx === 'pickup') {
-      this.playPickupSound(t);
-    }
+  public getScene(): any {
+    return this.activeScene;
   }
 
-  private playPickupSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, t);
-    osc.frequency.setValueAtTime(880, t + 0.06);
-
-    gain.gain.setValueAtTime(0.3, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.15);
-  }
-
-  /** Transient sub-bass thump layer for punchiness */
-  private playPunchKick(t: number, startFreq: number = 180, endFreq: number = 40, duration: number = 0.04): void {
-    if (!this.ctx || !this.sfxGain) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(startFreq, t);
-    osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration);
-
-    gain.gain.setValueAtTime(0.5, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + duration);
-  }
-
-  /** Transient high-pass click for sharp attack */
-  private playAttackClick(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(3500, t);
-    osc.frequency.exponentialRampToValueAtTime(800, t + 0.008);
-
-    gain.gain.setValueAtTime(0.4, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.008);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.008);
-  }
-
-  private playPeaShooterSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(1200, t);
-    osc.frequency.exponentialRampToValueAtTime(150, t + 0.05);
-
-    gain.gain.setValueAtTime(0.4, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.05);
-  }
-
-  private playSpreadShotSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(950, t);
-    osc.frequency.exponentialRampToValueAtTime(120, t + 0.07);
-
-    gain.gain.setValueAtTime(0.45, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.07);
-  }
-
-  private playLaserSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(3200, t);
-    osc.frequency.exponentialRampToValueAtTime(300, t + 0.09);
-
-    gain.gain.setValueAtTime(0.35, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.09);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.09);
+  public resetThrottle(): void {
+    this.lastSfxTimes.clear();
   }
 
   private getNoiseBuffer(): AudioBuffer | null {
@@ -322,74 +168,77 @@ export class SoundManager {
     return this.noiseBuffer;
   }
 
-  private playFlameSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-    this.playPunchKick(t, 160, 30, 0.08);
-
-    const buffer = this.getNoiseBuffer();
-    if (!buffer) return;
-
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1600, t);
-    filter.frequency.linearRampToValueAtTime(300, t + 0.1);
-    filter.Q.value = 4;
-
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.45, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.sfxGain);
-
-    noise.start(t);
+  private getCurrentTime(): number {
+    return this.ctx?.currentTime ?? Date.now() / 1000;
   }
 
-  private playMachineGunSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-    this.playAttackClick(t);
-    this.playPunchKick(t, 220, 50, 0.035);
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(1300, t);
-    osc.frequency.exponentialRampToValueAtTime(280, t + 0.045);
-
-    gain.gain.setValueAtTime(0.3, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.045);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.045);
+  public playAudioKey(key: string, volume: number = 0.35): void {
+    if (this.isMuted) return;
+    if (this.activeScene?.sound && typeof this.activeScene.sound.play === 'function') {
+      try {
+        this.activeScene.sound.play(key, { volume });
+      } catch {
+        // Fallback for mock environments
+      }
+    }
   }
 
-  private playEnemyShootSound(t: number): void {
-    if (!this.ctx || !this.sfxGain) return;
-    this.playPunchKick(t, 140, 35, 0.05);
+  // --- Preloaded Sound Effects (Zero GC Allocation) ---
+  public playShoot(weaponType: WeaponType | 'ENEMY' = 'PEA_SHOOTER', isPlayerBullet: boolean = true): void {
+    if (this.isMuted) return;
+    this.ensureContext();
 
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const t = this.getCurrentTime();
+    const key = !isPlayerBullet || weaponType === 'ENEMY' ? 'ENEMY' : weaponType;
+    const lastTime = this.lastSfxTimes.get(key) ?? -1;
+    if (t - lastTime < 0.025) {
+      return;
+    }
+    this.lastSfxTimes.set(key, t);
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(450, t);
-    osc.frequency.exponentialRampToValueAtTime(90, t + 0.09);
+    if (!isPlayerBullet || weaponType === 'ENEMY') {
+      this.playAudioKey('sfx_shoot_enemy', 0.25);
+      return;
+    }
 
-    gain.gain.setValueAtTime(0.25, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.09);
+    switch (weaponType) {
+      case 'SPREAD_SHOT':
+        this.playAudioKey('sfx_shoot_spread', 0.35);
+        break;
+      case 'LASER':
+        this.playAudioKey('sfx_shoot_laser', 0.30);
+        break;
+      case 'FLAME':
+        this.playAudioKey('sfx_shoot_flame', 0.35);
+        break;
+      case 'MACHINE_GUN':
+        this.playAudioKey('sfx_shoot_machinegun', 0.30);
+        break;
+      case 'PEA_SHOOTER':
+      default:
+        this.playAudioKey('sfx_shoot_pea', 0.30);
+        break;
+    }
+  }
 
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
+  public playSfx(sfx: 'pickup' | 'explosion' | string = 'pickup'): void {
+    if (this.isMuted) return;
+    this.ensureContext();
 
-    osc.start(t);
-    osc.stop(t + 0.09);
+    const t = this.getCurrentTime();
+    const lastTime = this.lastSfxTimes.get(sfx) ?? -1;
+    if (t - lastTime < 0.025) {
+      return;
+    }
+    this.lastSfxTimes.set(sfx, t);
+
+    if (sfx === 'explosion') {
+      this.playAudioKey('sfx_explosion', 0.40);
+    } else if (sfx === 'pickup') {
+      this.playAudioKey('sfx_pickup', 0.35);
+    } else {
+      this.playAudioKey(`sfx_${sfx}`, 0.35);
+    }
   }
 
   // --- Background Music: Audio File Player with Procedural Synthesizer Fallback ---

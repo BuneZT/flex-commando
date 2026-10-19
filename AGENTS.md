@@ -27,9 +27,9 @@ flex-commando/
 │   │   ├── RoomTemplate.ts       # Bitmask door matcher (N=1, S=2, E=4, W=8) & 15 room templates (32x18 tiles)
 │   │   ├── RoomDecorator.ts      # Deterministic seed-based procedural micro-decorations and ledges
 │   │   ├── TilemapRenderer.ts    # Stitches 4x4 room grid into 128x72 global tilemap
-│   │   ├── TextureFactory.ts     # Procedural pixel-art sprite, tileset, and animation generator
+│   │   ├── TextureFactory.ts     # Procedural pixel-art sprite, tileset, and animation generator (headless/fallback)
 │   │   ├── CameraManager.ts      # Active room calculation & smooth room pan transitions
-│   │   └── SoundManager.ts       # Singleton audio manager (CC0 audio file BGM with procedural SFX & headless fallback)
+│   │   └── SoundManager.ts       # Singleton audio manager (preloaded CC0 BGM & SFX audio files with zero-GC playback)
 │   ├── entities/
 │   │   ├── Player.ts             # Player arcade sprite, crouching hitbox, jump & muzzle offset
 │   │   ├── PlayerAim.ts          # Pure 8-way directional aiming state machine & angle math
@@ -45,7 +45,7 @@ flex-commando/
 │   │   ├── WeaponTypes.ts        # WeaponType enum, stats & getSpreadShotAngles([-30,-15,0,15,30])
 │   │   └── ProjectilePool.ts     # Recyclable Projectile Arcade sprite pool
 │   ├── scenes/
-│   │   ├── BootScene.ts          # Calls TextureFactory.generateAllTextures() then launches MainMenuScene (no file assets)
+│   │   ├── BootScene.ts          # Preloads all PNG spritesheets, explosion VFX, BGM, and SFX; then launches MainMenuScene
 │   │   ├── MainMenuScene.ts      # Title screen; SPACE starts game, I (dev-only) starts with infinite lives
 │   │   ├── GameScene.ts          # Main game loop, colliders, HUD, camera, game state
 │   │   └── GameOverScene.ts      # Victory / Permadeath screen with Space restart
@@ -73,7 +73,13 @@ flex-commando/
    - Projectiles must use `ProjectilePool` recycling. Acquire with `pool.spawn()` (reuses `pool.find(p => !p.active)` before allocating); release with `projectile.deactivate()`. Never instantiate new sprites mid-firefight.
    - Inactive projectiles disable their physics body (`body.enable = false`) rather than being destroyed.
 
-4. **Testing Workflow**:
+4. **Static Assets Mandatory for Sprites and Sounds (Zero Runtime GC Overhead)**:
+   - **Always use preloaded static files** (`.png` in `public/assets/sprites|tiles|ui|vfx/` and `.ogg`/`.mp3` in `public/assets/audio/`) for all sprites, textures, animations, BGM, and sound effects.
+   - **Never dynamically generate textures or synthesize Web Audio nodes at runtime during gameplay**. Runtime procedural canvas drawing (`scene.add.graphics().generateTexture()`) and real-time Web Audio node allocation (`createOscillator()`, `createGain()`) trigger severe Garbage Collector churn and framerate stutter.
+   - Procedural generators (in `TextureFactory.ts`) must only exist as offline build scripts or headless test fallbacks and MUST be guarded with `if (scene.textures.exists(key)) return;`.
+   - All assets must be preloaded in `BootScene.ts` and asserted in `tests/assets-integrity.test.ts`.
+
+5. **Testing Workflow**:
    - Run unit tests: `npm test` or `npx vitest run`
    - Run typecheck: `npx tsc --noEmit`
    - Verify build: `npm run build`
@@ -85,4 +91,5 @@ flex-commando/
 * **Adding New Weapon Types**: Add entry to `WeaponType` union in `src/weapons/WeaponTypes.ts`, define stats in `WEAPON_CONFIGS`, update `Player.shoot()` or `ProjectilePool.spawn()`.
 * **Adding New Enemies**: Extend `EnemyBase` in `src/entities/enemies/`, implement `updateAI(time, delta, player)`, add unit test in `tests/enemy.test.ts`.
 * **Adding New Room Templates**: Add template schema (32x18 tiles) in `src/core/RoomTemplate.ts` with appropriate `doorMask` bitmask matching its openings.
-* **Adding Audio / SFX**: BGM tracks are preloaded audio files in `public/assets/audio/` (with procedural synth fallback in `SoundManager.ts`). SFX is procedurally synthesised by `SoundManager` using Web Audio API. Add new sound methods there and call them from `Player.ts`, `ProjectilePool.ts`, or `GameScene.ts`.
+* **Adding New Sprites / VFX**: Add sprite generation logic to `scripts/generate-pixel-assets.mjs` (or save PNG to `public/assets/`), preload the sheet in `BootScene.ts`, add the fallback guard to `TextureFactory.ts`, and add integrity assertion in `tests/assets-integrity.test.ts`.
+* **Adding Audio / SFX**: All BGM and SFX must be preloaded audio files in `public/assets/audio/` (CC0 format). Preload them in `BootScene.ts`, trigger them via `SoundManager` (which delegates to Phaser's audio cache with zero GC allocation), and add verification to `tests/assets-integrity.test.ts`. Never synthesize sounds with Web Audio API nodes in `SoundManager.ts` at runtime.

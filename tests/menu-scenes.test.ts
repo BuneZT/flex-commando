@@ -28,6 +28,9 @@ describe('Menu Scenes', () => {
 
     expect(loadedAudio['bgm_stage']).toEqual(['assets/audio/bgm_stage.ogg', 'assets/audio/bgm_stage.mp3']);
     expect(loadedAudio['bgm_boss']).toEqual(['assets/audio/bgm_boss.ogg', 'assets/audio/bgm_boss.mp3']);
+    expect(loadedAudio['sfx_shoot_pea']).toBe('assets/audio/sfx_shoot_pea.ogg');
+    expect(loadedAudio['sfx_explosion']).toBe('assets/audio/sfx_explosion.ogg');
+    expect(loadedAudio['sfx_pickup']).toBe('assets/audio/sfx_pickup.ogg');
 
     expect(loadedImages['logo']).toBe('assets/ui/logo.png');
     expect(loadedImages['cyber_hangar_bg']).toBe('assets/bg/cyber_hangar_bg.png');
@@ -51,6 +54,8 @@ describe('Menu Scenes', () => {
     expect(loadedSpritesheets['tex_projectiles'].config).toEqual({ frameWidth: 16, frameHeight: 16 });
     expect(loadedSpritesheets['tex_pickups']).toBeDefined();
     expect(loadedSpritesheets['tex_pickups'].config).toEqual({ frameWidth: 16, frameHeight: 16 });
+    expect(loadedSpritesheets['tex_explosion']).toBeDefined();
+    expect(loadedSpritesheets['tex_explosion'].config).toEqual({ frameWidth: 20, frameHeight: 20 });
 
     const startSpy = vi.fn();
     (boot as any).scene = { start: startSpy };

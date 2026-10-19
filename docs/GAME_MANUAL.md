@@ -24,8 +24,8 @@ Players step into the combat boots of an over-the-top 80s action hero—featurin
   * **Branch Rooms:** Optional side corridors offering extra weapon capsules and enemy challenges.
   * **Door Bitmask Matching:** Rooms connect dynamically using 4-bit doorway masks (`N=1, S=2, E=4, W=8`) matched to 15 modular 32×18 room templates.
   * **Hybrid Platforming (`RoomDecorator`):** Combines hand-crafted structural archetypes with deterministic seed-based micro-decorations (procedural ledges, cover, and platform accents) powered by the Mulberry32 PRNG while guaranteeing unobstructed door clearance and traversable paths.
-  * **Graphics:** Preloaded 16-bit arcade pixel-art PNG assets located in `public/assets/` (title logo, seamless parallax cyber hangar backdrop, multi-frame enemy sheets, player commando, and neon projectiles) with an automated procedural fallback in `TextureFactory.ts` guaranteeing 100% headless Vitest test execution without HTTP dependencies.
-  * **Audio:** Preloaded CC0 chiptune audio tracks (`bgm_stage`, `bgm_boss`) in `public/assets/audio/` with automated procedural Web Audio synthesis fallback in `SoundManager.ts` ensuring rich sound and 100% headless Vitest test execution without HTTP dependencies.
+  * **Graphics:** Preloaded 16-bit arcade pixel-art PNG assets located in `public/assets/` (title logo, seamless parallax cyber hangar backdrop, multi-frame enemy sheets, player commando, explosion VFX, and neon projectiles) with an automated procedural fallback in `TextureFactory.ts` guaranteeing 100% headless Vitest test execution without HTTP dependencies.
+  * **Audio:** Preloaded CC0 audio tracks (BGM & weapon/explosion SFX) in `public/assets/audio/` with zero runtime Garbage Collection allocation and headless Vitest fallback in `SoundManager.ts`.
 * **Seamless Room Camera & Culling:** Smooth pan transitions between rooms; off-screen rooms pause enemy AI and physics to maintain 60 FPS performance.
 
 ---

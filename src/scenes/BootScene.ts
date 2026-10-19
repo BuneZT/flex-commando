@@ -22,9 +22,18 @@ export class BootScene extends Phaser.Scene {
     this.load.image('tex_crosshair', 'assets/vfx/crosshair.png');
     this.load.spritesheet('tex_projectiles', 'assets/vfx/projectiles.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('tex_pickups', 'assets/vfx/pickups.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('tex_explosion', 'assets/vfx/explosion.png', { frameWidth: 20, frameHeight: 20 });
     if (typeof this.load.audio === 'function') {
       this.load.audio('bgm_stage', ['assets/audio/bgm_stage.ogg', 'assets/audio/bgm_stage.mp3']);
       this.load.audio('bgm_boss', ['assets/audio/bgm_boss.ogg', 'assets/audio/bgm_boss.mp3']);
+      this.load.audio('sfx_shoot_pea', 'assets/audio/sfx_shoot_pea.ogg');
+      this.load.audio('sfx_shoot_spread', 'assets/audio/sfx_shoot_spread.ogg');
+      this.load.audio('sfx_shoot_laser', 'assets/audio/sfx_shoot_laser.ogg');
+      this.load.audio('sfx_shoot_flame', 'assets/audio/sfx_shoot_flame.ogg');
+      this.load.audio('sfx_shoot_machinegun', 'assets/audio/sfx_shoot_machinegun.ogg');
+      this.load.audio('sfx_shoot_enemy', 'assets/audio/sfx_shoot_enemy.ogg');
+      this.load.audio('sfx_pickup', 'assets/audio/sfx_pickup.ogg');
+      this.load.audio('sfx_explosion', 'assets/audio/sfx_explosion.ogg');
     }
   }
 

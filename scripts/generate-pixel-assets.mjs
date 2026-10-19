@@ -1065,6 +1065,58 @@ function generateCrosshair() {
   return canvas.toPNG();
 }
 
+/**
+ * 13. Explosion: public/assets/vfx/explosion.png (80x20)
+ * Four 20x20 frames:
+ * 0: White core flash star
+ * 1: Expanding yellow & white plasma fireball
+ * 2: Orange/red fire ring & debris sparks
+ * 3: Dissipating dark smoke & embers
+ */
+function generateExplosion() {
+  const canvas = new PixelCanvas(80, 20);
+
+  // Frame 0: White core flash star (ox = 0)
+  canvas.fillRect(8, 8, 4, 4, '#FFFFFF');
+  canvas.fillRect(6, 9, 8, 2, '#FFFFFF');
+  canvas.fillRect(9, 6, 2, 8, '#FFFFFF');
+  canvas.setPixel(10, 10, '#FFFF88');
+  canvas.setPixel(7, 7, '#FFAA44');
+  canvas.setPixel(12, 7, '#FFAA44');
+  canvas.setPixel(7, 12, '#FFAA44');
+  canvas.setPixel(12, 12, '#FFAA44');
+
+  // Frame 1: Expanding yellow & white plasma fireball (ox = 20)
+  canvas.fillCircle(30, 10, 7, '#FF4400');
+  canvas.fillCircle(30, 10, 6, '#FF9900');
+  canvas.fillCircle(30, 10, 4, '#FFFF00');
+  canvas.fillCircle(30, 10, 2, '#FFFFFF');
+
+  // Frame 2: Orange/red fire ring & debris sparks (ox = 40)
+  canvas.fillCircle(50, 10, 8, '#CC2200');
+  canvas.fillCircle(50, 10, 6, '#FF6600');
+  canvas.fillCircle(50, 10, 3, '#FFAA00');
+  // Sparks
+  canvas.fillRect(42, 3, 2, 2, '#FFFFFF');
+  canvas.fillRect(56, 4, 2, 2, '#FFAA00');
+  canvas.fillRect(43, 15, 2, 2, '#FF4400');
+  canvas.fillRect(55, 14, 2, 2, '#FFFFFF');
+  canvas.setPixel(49, 1, '#FFCC00');
+  canvas.setPixel(51, 18, '#FF8800');
+
+  // Frame 3: Dissipating dark smoke cloud & ember sparks (ox = 60)
+  canvas.fillCircle(70, 10, 6, [85, 85, 102, 180]);
+  canvas.fillCircle(68, 8, 4, [60, 60, 75, 150]);
+  canvas.fillCircle(72, 11, 4, [60, 60, 75, 150]);
+  canvas.fillRect(65, 6, 2, 2, '#FF6600');
+  canvas.fillRect(73, 7, 2, 2, '#FFAA00');
+  canvas.fillRect(68, 13, 2, 2, '#FF4400');
+  canvas.setPixel(62, 4, '#FF8800');
+  canvas.setPixel(77, 12, '#FFCC00');
+
+  return canvas.toPNG();
+}
+
 // ============================================================================
 // MAIN GENERATOR PIPELINE
 // ============================================================================
@@ -1082,6 +1134,7 @@ const ASSET_REGISTRY = [
   { path: 'public/assets/vfx/projectiles.png', build: generateProjectiles },
   { path: 'public/assets/vfx/pickups.png', build: generatePickups },
   { path: 'public/assets/vfx/crosshair.png', build: generateCrosshair },
+  { path: 'public/assets/vfx/explosion.png', build: generateExplosion },
 ];
 
 function main() {

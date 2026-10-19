@@ -16,6 +16,7 @@ describe('Asset Integrity', () => {
     { path: 'public/assets/vfx/projectiles.png', width: 80, height: 16 },
     { path: 'public/assets/vfx/pickups.png', width: 112, height: 16 },
     { path: 'public/assets/vfx/crosshair.png', width: 16, height: 16 },
+    { path: 'public/assets/vfx/explosion.png', width: 80, height: 20 },
   ];
 
   it('verifies all expected pixel-art asset files exist and have non-zero size', () => {
@@ -36,18 +37,35 @@ describe('Asset Integrity', () => {
     });
   });
 
-  it('verifies all expected BGM audio asset files exist and have non-zero size', () => {
-    const audioFiles = [
+  it('verifies all expected BGM and SFX audio asset files exist and have non-zero size', () => {
+    const bgmFiles = [
       'public/assets/audio/bgm_stage.ogg',
       'public/assets/audio/bgm_stage.mp3',
       'public/assets/audio/bgm_boss.ogg',
       'public/assets/audio/bgm_boss.mp3',
     ];
-    audioFiles.forEach((relPath) => {
+    bgmFiles.forEach((relPath) => {
       const fullPath = path.resolve(process.cwd(), relPath);
       expect(fs.existsSync(fullPath), `Missing audio asset: ${relPath}`).toBe(true);
       const stat = fs.statSync(fullPath);
       expect(stat.size).toBeGreaterThan(100000); // Greater than 100KB
+    });
+
+    const sfxFiles = [
+      'public/assets/audio/sfx_shoot_pea.ogg',
+      'public/assets/audio/sfx_shoot_spread.ogg',
+      'public/assets/audio/sfx_shoot_laser.ogg',
+      'public/assets/audio/sfx_shoot_flame.ogg',
+      'public/assets/audio/sfx_shoot_machinegun.ogg',
+      'public/assets/audio/sfx_shoot_enemy.ogg',
+      'public/assets/audio/sfx_pickup.ogg',
+      'public/assets/audio/sfx_explosion.ogg',
+    ];
+    sfxFiles.forEach((relPath) => {
+      const fullPath = path.resolve(process.cwd(), relPath);
+      expect(fs.existsSync(fullPath), `Missing SFX asset: ${relPath}`).toBe(true);
+      const stat = fs.statSync(fullPath);
+      expect(stat.size).toBeGreaterThan(5000); // Greater than 5KB
     });
   });
 });

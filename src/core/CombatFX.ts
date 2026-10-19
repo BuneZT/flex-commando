@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SoundManager } from './SoundManager';
 
 export class CombatFX {
   /**
@@ -36,6 +37,8 @@ export class CombatFX {
     if (!scene || !scene.add || typeof scene.add.sprite !== 'function') {
       return null;
     }
+
+    SoundManager.getInstance().playSfx('explosion');
 
     const explosion = scene.add.sprite(x, y, 'tex_explosion');
     if (!explosion) return null;

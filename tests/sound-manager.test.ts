@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { SoundManager } from '../src/core/SoundManager';
 
 describe('SoundManager', () => {
+  beforeEach(() => {
+    SoundManager.getInstance().setMuted(false);
+    SoundManager.getInstance().resetThrottle();
+  });
+
   it('should return singleton instance', () => {
     const s1 = SoundManager.getInstance();
     const s2 = SoundManager.getInstance();
@@ -78,54 +83,64 @@ describe('SoundManager', () => {
     sm.stopBGM();
   });
 
+  it('should play preloaded SFX audio keys on activeScene.sound', () => {
+    const sm = SoundManager.getInstance();
+    const playedSounds: { key: string; config: any }[] = [];
+    const mockScene = {
+      sound: {
+        play: (key: string, config: any) => {
+          playedSounds.push({ key, config });
+        },
+      },
+    };
+    sm.setScene(mockScene);
+
+    sm.playShoot('PEA_SHOOTER', true);
+    expect(playedSounds.some((s) => s.key === 'sfx_shoot_pea')).toBe(true);
+
+    sm.playShoot('ENEMY', false);
+    expect(playedSounds.some((s) => s.key === 'sfx_shoot_enemy')).toBe(true);
+
+    sm.playSfx('pickup');
+    expect(playedSounds.some((s) => s.key === 'sfx_pickup')).toBe(true);
+
+    sm.playSfx('explosion');
+    expect(playedSounds.some((s) => s.key === 'sfx_explosion')).toBe(true);
+  });
+
   it('should throttle rapid duplicate playShoot triggers within 25ms window', () => {
     const sm = SoundManager.getInstance();
     let playCount = 0;
-    const mockGain = {
-      gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
-      connect: () => {},
+    const mockScene = {
+      sound: {
+        play: () => {
+          playCount++;
+        },
+      },
     };
+    sm.setScene(mockScene);
+
     const mockCtx = {
       currentTime: 1.0,
-      createOscillator: () => ({
-        type: 'square',
-        frequency: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
-        connect: () => {},
-        start: () => { playCount++; },
-        stop: () => {},
-      }),
-      createGain: () => mockGain,
-      createBuffer: () => ({
-        getChannelData: () => new Float32Array(100),
-      }),
-      createBufferSource: () => ({
-        buffer: null,
-        connect: () => {},
-        start: () => {},
-      }),
-      destination: {},
-      sampleRate: 44100,
       state: 'running',
       resume: async () => {},
     };
-
-    (sm as unknown as { ctx: unknown; sfxGain: unknown }).ctx = mockCtx;
-    (sm as unknown as { ctx: unknown; sfxGain: unknown }).sfxGain = mockGain;
+    (sm as unknown as { ctx: unknown }).ctx = mockCtx;
 
     mockCtx.currentTime = 1.0;
-    sm.playShoot('PEA_SHOOTER', true);
+    sm.playShoot('SPREAD_SHOT', true);
     const initialPlayCount = playCount;
-    expect(initialPlayCount).toBeGreaterThan(0);
+    expect(initialPlayCount).toBe(1);
 
     // Call again within 25ms (1.010 - 1.0 = 10ms < 25ms) -> should be throttled
     mockCtx.currentTime = 1.010;
-    sm.playShoot('PEA_SHOOTER', true);
+    sm.playShoot('SPREAD_SHOT', true);
     expect(playCount).toBe(initialPlayCount);
 
     // Call again after 25ms (1.030 - 1.0 = 30ms > 25ms) -> should trigger sound
     mockCtx.currentTime = 1.030;
-    sm.playShoot('PEA_SHOOTER', true);
-    expect(playCount).toBeGreaterThan(initialPlayCount);
+    sm.playShoot('SPREAD_SHOT', true);
+    expect(playCount).toBe(initialPlayCount + 1);
   });
 });
 
