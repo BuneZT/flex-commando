@@ -367,8 +367,8 @@ export class GameScene extends Phaser.Scene {
 
     // 3.5. Update parallax background scroll position
     if (this.parallaxBg && this.cameras?.main) {
-      this.parallaxBg.tilePositionX = (this.cameras.main.scrollX || 0) * 0.25;
-      this.parallaxBg.tilePositionY = (this.cameras.main.scrollY || 0) * 0.15;
+      this.parallaxBg.tilePositionX = (this.cameras.main.scrollX || 0) * 0.15;
+      this.parallaxBg.tilePositionY = (this.cameras.main.scrollY || 0) * 0.10;
     }
 
     // 4. Boss Room Trigger only in designated BOSS room cell

@@ -272,7 +272,7 @@ describe('GameScene Parallax Background', () => {
     expect(scene.parallaxBg).toBeUndefined();
   });
 
-  it('should update tilePositionX and tilePositionY at 0.25x and 0.15x scroll ratios', () => {
+  it('should update tilePositionX and tilePositionY at 0.15x and 0.10x scroll ratios', () => {
     const scene = new GameScene();
     const mockTileSprite: any = {
       tilePositionX: 0,
@@ -288,8 +288,8 @@ describe('GameScene Parallax Background', () => {
 
     scene.update(1000, 16);
 
-    expect(mockTileSprite.tilePositionX).toBe(400 * 0.25); // 100
-    expect(mockTileSprite.tilePositionY).toBe(200 * 0.15); // 30
+    expect(mockTileSprite.tilePositionX).toBe(400 * 0.15); // 60
+    expect(mockTileSprite.tilePositionY).toBe(200 * 0.10); // 20
   });
 
   it('should default parallax offsets to 0 when camera scroll is zero or undefined', () => {
