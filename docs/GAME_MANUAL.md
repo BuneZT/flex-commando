@@ -101,9 +101,12 @@ All enemies extend `EnemyBase` and inherit contact damage, health tracking, and 
 * **Appearance:** Massive 64×48 pixel heavy war mech tank chassis (hitbox 32×48). Reinforced dark steel battle plating (`#444455`), glowing crimson central reactor core (`#ff1133`), and dual industrial cannons mounted on left and right base flanks (`#222222`).
 * **HP:** 50 (tracked on HUD with a 10-segment health bar) | **Score:** 5000 pts | **Contact Damage:** 2 Lives
 * **Location:** Guarding the exit portal in the final room on Column 3 (`type === 'BOSS'`).
-* **Combat Phases:**
-  * **Phase 1 (HP > 25):** Patrols horizontally at 40 px/s (reversing every 2s) while firing targeted energy shots at the player every **1.5 seconds**.
-  * **Phase 2 — Enraged (HP ≤ 25):** Health drops below 50%. Movement speed doubles to **80 px/s**, fire rate accelerates to **900 ms**, and attacks upgrade to a deadly **3-way spread volley** (`-20°`, `0°`, `+20°`) aimed at the player.
+* **Combat & Mobility Behavior:**
+  * **Dynamic Pursuit & Leaping:** Actively tracks the player horizontally across the 512px arena (80 px/s base, accelerating to 110 px/s when closing long distances). Bounded leaps (`jumpVelocity = -340` upward to pursue upper platforms, or `-250` forward dash hops) keep the boss agile across multi-tier arena platforms.
+  * **Platform Drop-Through:** When the player drops to lower platforms or the ground floor, the boss drops through one-way platforms to pursue, preventing the player from cheesing him from below.
+  * **Full-Screen Projectile Reach:** Enemy and boss projectiles feature a minimum 2000ms lifespan, ensuring attacks traverse the entire 512px room width.
+  * **Phase 1 (HP > 25):** Pursues at 80 px/s while firing targeted high-velocity energy shots at the player every **1.5 seconds**.
+  * **Phase 2 — Enraged (HP ≤ 25):** Health drops to 50% or below. Movement speed accelerates to **140 px/s**, leap frequency increases, fire rate accelerates to **900 ms**, and attacks upgrade to a deadly **3-way spread volley** (`-20°`, `0°`, `+20°`) aimed directly at the player.
 
 ---
 
