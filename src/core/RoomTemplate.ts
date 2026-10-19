@@ -26,7 +26,7 @@ export function calculateDoorMask(doors: { north: boolean; south: boolean; east:
   return mask;
 }
 
-export type ArchetypeType = 'START' | 'BOSS' | 'HORIZ' | 'VERT' | 'CORNER' | 'JUNCTION';
+export type ArchetypeType = 'START' | 'BOSS' | 'HORIZ' | 'VERT' | 'CORNER' | 'JUNCTION' | 'GENERIC';
 
 export function createArchetypeMatrix(
   doors: { north: boolean; south: boolean; east: boolean; west: boolean } = {
@@ -98,7 +98,10 @@ export function createArchetypeMatrix(
   // Determine archetype layout
   let arch = archetypeType;
   if (!arch) {
-    if (doors.east && !doors.west && !doors.north && !doors.south) {
+    const doorCount = (doors.north ? 1 : 0) + (doors.south ? 1 : 0) + (doors.east ? 1 : 0) + (doors.west ? 1 : 0);
+    if (doorCount === 0) {
+      arch = 'GENERIC';
+    } else if (doors.east && !doors.west && !doors.north && !doors.south) {
       arch = 'START';
     } else if (doors.west && !doors.east && !doors.north && !doors.south) {
       arch = 'BOSS';
@@ -106,17 +109,15 @@ export function createArchetypeMatrix(
       arch = 'HORIZ';
     } else if ((doors.north || doors.south) && !doors.east && !doors.west) {
       arch = 'VERT';
+    } else if (doorCount >= 3) {
+      arch = 'JUNCTION';
     } else {
-      const doorCount = (doors.north ? 1 : 0) + (doors.south ? 1 : 0) + (doors.east ? 1 : 0) + (doors.west ? 1 : 0);
-      if (doorCount >= 3) {
-        arch = 'JUNCTION';
-      } else {
-        arch = 'CORNER';
-      }
+      arch = 'CORNER';
     }
   }
 
   switch (arch) {
+    case 'GENERIC':
     case 'START':
       // Row 14 platform at cols 8–16, Row 11 platform at cols 17–25
       addPlatform(14, 8, 16, 2);

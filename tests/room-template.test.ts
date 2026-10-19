@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ROOM_TEMPLATES, getMatchingRoomTemplates, getRoomTemplateById, DOOR_FLAGS, calculateDoorMask } from '../src/core/RoomTemplate';
+import { ROOM_TEMPLATES, getMatchingRoomTemplates, getRoomTemplateById, DOOR_FLAGS, calculateDoorMask, createArchetypeMatrix } from '../src/core/RoomTemplate';
 import { GAME_CONSTANTS } from '../src/config/GameConstants';
 
 describe('RoomTemplate 32x18 Archetypes', () => {
@@ -78,5 +78,22 @@ describe('RoomTemplate 32x18 Archetypes', () => {
     const matchesAll = getMatchingRoomTemplates(DOOR_FLAGS.NORTH | DOOR_FLAGS.SOUTH | DOOR_FLAGS.EAST | DOOR_FLAGS.WEST);
     expect(matchesAll.length).toBe(1);
     expect(matchesAll[0].id).toBe('room_NSEW_01');
+  });
+
+  it('should fall back to GENERIC archetype without door corridors when doorCount is 0', () => {
+    const zeroDoors = { north: false, south: false, east: false, west: false };
+    const matrix = createArchetypeMatrix(zeroDoors);
+    // Boundary walls must be solid with no open corridors
+    for (let r = 11; r <= 16; r++) {
+      expect(matrix[r][0]).toBe(3); // West wall solid
+      expect(matrix[r][31]).toBe(3); // East wall solid
+    }
+    for (let c = 14; c <= 17; c++) {
+      expect(matrix[0][c]).toBe(3); // Ceiling solid
+      expect(matrix[17][c]).toBe(1); // Floor solid ground
+    }
+    // Verify default GENERIC platforms exist
+    expect(matrix[14][10]).toBe(2);
+    expect(matrix[11][20]).toBe(2);
   });
 });

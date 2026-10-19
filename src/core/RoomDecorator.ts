@@ -1,10 +1,11 @@
-import { SeededRNG } from './GridGenerator';
+import { GridCell, SeededRNG } from './GridGenerator';
+import { RoomTemplate } from './RoomTemplate';
 
 export function decorateRoomTiles(
   baseTiles: number[][],
   doors: { north: boolean; south: boolean; east: boolean; west: boolean },
-  type: string | undefined,
-  rng: SeededRNG
+  type?: GridCell['type'] | RoomTemplate['type'],
+  rng: SeededRNG = new SeededRNG(0)
 ): number[][] {
   // Deep clone to prevent mutating template originals
   const matrix: number[][] = baseTiles.map((row) => [...row]);

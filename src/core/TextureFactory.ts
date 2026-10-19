@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_CONSTANTS } from '../config/GameConstants';
 
 export class TextureFactory {
   public static generateAllTextures(scene: Phaser.Scene): void {
@@ -511,8 +512,8 @@ export class TextureFactory {
     if (scene.textures.exists('cyber_hangar_bg')) return;
     const g = scene.add.graphics();
     g.fillStyle(0x0e111a, 1);
-    g.fillRect(0, 0, 320, 240);
-    g.generateTexture('cyber_hangar_bg', 320, 240);
+    g.fillRect(0, 0, GAME_CONSTANTS.VIEW_WIDTH_PX, GAME_CONSTANTS.VIEW_HEIGHT_PX);
+    g.generateTexture('cyber_hangar_bg', GAME_CONSTANTS.VIEW_WIDTH_PX, GAME_CONSTANTS.VIEW_HEIGHT_PX);
     g.destroy();
   }
 

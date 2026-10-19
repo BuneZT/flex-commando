@@ -63,7 +63,7 @@ flex-commando/
 ## 3. Core Architectural Rules & Best Practices
 
 1. **Decoupled Business Logic**:
-   - Keep core math and state calculations (like `PlayerAim.ts`, `GridGenerator.ts`, `RoomDecorator.decorateRoom`, `WeaponTypes.ts`, `CameraManager.getRoomBounds`, `formatHUDLives`) as **pure functions** or standalone classes decoupled from Phaser DOM/Canvas calls so they can be unit-tested headlessly via Vitest.
+   - Keep core math and state calculations (like `PlayerAim.ts`, `GridGenerator.ts`, `RoomDecorator.decorateRoomTiles`, `WeaponTypes.ts`, `CameraManager.getRoomBounds`, `formatHUDLives`) as **pure functions** or standalone classes decoupled from Phaser DOM/Canvas calls so they can be unit-tested headlessly via Vitest.
 
 2. **Phaser Import Rules**:
    - In configuration/type files (like `GameConfig.ts`), use `import type Phaser from 'phaser'` to prevent Node/Vitest from initializing Phaser's WebGL/canvas device features during imports.

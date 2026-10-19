@@ -11,6 +11,18 @@ describe('RoomDecorator', () => {
     expect(decorated).toEqual(startTpl.tiles);
   });
 
+  it('should not mutate source baseTiles array in-place when decorating a PATH room', () => {
+    const ewTpl = getRoomTemplateById('room_EW_01')!;
+    const originalTilesSnapshot = JSON.parse(JSON.stringify(ewTpl.tiles));
+    const rng = new SeededRNG(42);
+    const decorated = decorateRoomTiles(ewTpl.tiles, ewTpl.doors, 'PATH', rng);
+
+    // Ensure the decorated matrix was actually decorated (contains new elements)
+    expect(decorated).not.toEqual(originalTilesSnapshot);
+    // Ensure the input template tiles were NOT mutated in-place
+    expect(ewTpl.tiles).toEqual(originalTilesSnapshot);
+  });
+
   it('should never place tiles inside doorway forbidden zones', () => {
     const ewTpl = getRoomTemplateById('room_EW_01')!;
     const rng = new SeededRNG(999);
