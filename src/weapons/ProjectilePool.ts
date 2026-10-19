@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { WeaponType, WEAPON_CONFIGS } from './WeaponTypes';
 import { SoundManager } from '../core/SoundManager';
+import type { ImpactFXPool } from '../core/ImpactFXPool';
 
 export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public weaponType: WeaponType = 'PEA_SHOOTER';
@@ -8,6 +9,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public piercing: boolean = false;
   public lifespan: number = 1000;
   public isPlayerBullet: boolean = true;
+  public impactFXPool?: ImpactFXPool;
   private baseAngleRad: number = 0;
   private travelDistance: number = 0;
 
@@ -151,6 +153,9 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
       const tileY = Math.floor(this.y / 16);
       const tile = groundLayer.getTileAt(tileX, tileY, false);
       if (tile && (tile.index === 1 || tile.index === 3 || tile.collides)) {
+        if (this.impactFXPool && typeof this.impactFXPool.spawn === 'function') {
+          this.impactFXPool.spawn(this.x, this.y);
+        }
         this.deactivate();
         return;
       }
@@ -191,10 +196,12 @@ export class ProjectilePool {
   public scene: Phaser.Scene;
   public pool: Projectile[] = [];
   public maxSize: number;
+  public impactFXPool?: ImpactFXPool;
 
-  constructor(scene: Phaser.Scene, maxSize: number = 100) {
+  constructor(scene: Phaser.Scene, maxSize: number = 100, impactFXPool?: ImpactFXPool) {
     this.scene = scene;
     this.maxSize = maxSize;
+    this.impactFXPool = impactFXPool;
   }
 
   public spawn(x: number, y: number, angleDeg: number, weaponType: WeaponType, isPlayerBullet: boolean = true): Projectile | null {
@@ -212,6 +219,7 @@ export class ProjectilePool {
     }
 
     if (proj) {
+      proj.impactFXPool = this.impactFXPool;
       proj.fire(x, y, angleDeg, weaponType, isPlayerBullet);
       if (!isPlayerBullet) {
         SoundManager.getInstance().playShoot('ENEMY', false);
@@ -231,6 +239,9 @@ export class ProjectilePool {
     for (let i = 0; i < this.pool.length; i++) {
       const proj = this.pool[i];
       if (proj.active) {
+        if (this.impactFXPool) {
+          proj.impactFXPool = this.impactFXPool;
+        }
         proj.updateProjectile(time, delta, bounds, groundLayer);
       }
     }

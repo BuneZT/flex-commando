@@ -441,5 +441,80 @@ describe('Procedural Textures for Projectiles and Pickups', () => {
     testBadge('MACHINE_GUN', 5);
     testBadge('BARRIER', 6);
   });
+
+  describe('Projectile Obstacle Impacts', () => {
+    it('spawns an impact spark and deactivates when colliding with a solid wall tile', () => {
+      const mockScene = createMockScene();
+      const proj = new Projectile(mockScene, 0, 0);
+      proj.body = createMockBody();
+      proj.fire(16, 32, 0, 'PEA_SHOOTER', true);
+
+      const mockImpactPool: any = {
+        spawn: vi.fn(),
+      };
+      proj.impactFXPool = mockImpactPool;
+
+      const mockGroundLayer: any = {
+        getTileAt: vi.fn((tileX: number, tileY: number) => {
+          if (tileX === 1 && tileY === 2) {
+            return { index: 1, collides: true };
+          }
+          return null;
+        }),
+      };
+
+      proj.updateProjectile(100, 16, undefined, mockGroundLayer);
+
+      expect(mockImpactPool.spawn).toHaveBeenCalledWith(16, 32);
+      expect(proj.active).toBe(false);
+      expect(proj.visible).toBe(false);
+    });
+
+    it('spawns an impact spark and deactivates when colliding with a one-way platform tile', () => {
+      const mockScene = createMockScene();
+      const proj = new Projectile(mockScene, 0, 0);
+      proj.body = createMockBody();
+      proj.fire(48, 64, 90, 'SPREAD_SHOT', true);
+
+      const mockImpactPool: any = {
+        spawn: vi.fn(),
+      };
+      proj.impactFXPool = mockImpactPool;
+
+      const mockGroundLayer: any = {
+        getTileAt: vi.fn(() => ({ index: 2, collides: true })),
+      };
+
+      proj.updateProjectile(100, 16, undefined, mockGroundLayer);
+
+      expect(mockImpactPool.spawn).toHaveBeenCalledWith(48, 64);
+      expect(proj.active).toBe(false);
+    });
+
+    it('propagates impactFXPool from ProjectilePool to active projectiles during update', () => {
+      const mockScene = createMockScene();
+      const pool = new ProjectilePool(mockScene, 10);
+      const mockImpactPool: any = {
+        spawn: vi.fn(),
+      };
+      pool.impactFXPool = mockImpactPool;
+
+      const proj = pool.spawn(32, 32, 0, 'PEA_SHOOTER', true);
+      expect(proj).not.toBeNull();
+      if (proj) {
+        proj.body = createMockBody();
+      }
+
+      const mockGroundLayer: any = {
+        getTileAt: vi.fn(() => ({ index: 3, collides: true })),
+      };
+
+      pool.update(100, 16, undefined, mockGroundLayer);
+
+      expect(mockImpactPool.spawn).toHaveBeenCalledWith(32, 32);
+      expect(proj?.active).toBe(false);
+    });
+  });
 });
+
 
