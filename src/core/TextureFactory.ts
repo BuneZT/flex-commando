@@ -574,35 +574,52 @@ export class TextureFactory {
     const g = scene.add.graphics();
     const w = GAME_CONSTANTS.VIEW_WIDTH_PX;
     const h = GAME_CONSTANTS.VIEW_HEIGHT_PX;
+    const horizonY = 175;
 
-    // Dark cosmic base void
-    g.fillStyle(0x070914, 1);
-    g.fillRect(0, 0, w, h);
+    // 1. Subtle wall gradient (y = 0 to horizonY)
+    g.fillStyle(0x0a0c18, 1);
+    g.fillRect(0, 0, w, horizonY);
+    g.fillStyle(0x0f1328, 0.6);
+    g.fillRect(0, Math.round(horizonY / 2), w, Math.round(horizonY / 2));
 
-    // Subtle cosmic nebula clouds (deep violet and muted teal) evenly covering canvas
-    g.fillStyle(0x231436, 0.45);
-    g.fillCircle(120, 80, 80);
-    g.fillCircle(380, 100, 85);
-    g.fillCircle(160, 220, 80);
-    g.fillCircle(400, 230, 85);
-    g.fillStyle(0x0e242c, 0.35);
-    g.fillCircle(260, 140, 75);
-    g.fillCircle(480, 180, 65);
-    g.fillCircle(40, 160, 65);
-
-    // Subtle star clusters
-    g.fillStyle(0x7788aa, 0.8);
-    for (let i = 0; i < 40; i++) {
-      const x = (i * 73 + 17) % w;
-      const y = (i * 47 + 23) % h;
-      g.fillRect(x, y, 1, 1);
+    // 2. Ceiling trusses
+    g.fillStyle(0x182035, 1);
+    for (let x = 0; x < w; x += 32) {
+      g.fillRect(x, 0, 32, 3);
     }
-    g.fillStyle(0xffffff, 1);
-    for (let i = 0; i < 15; i++) {
-      const x = (i * 137 + 41) % w;
-      const y = (i * 89 + 11) % h;
-      g.fillRect(x, y, 1, 1);
+
+    // 3. Structural pillars
+    g.fillStyle(0x141c30, 1);
+    for (let px = 32; px < w; px += 128) {
+      g.fillRect(px, 16, 14, horizonY - 18);
     }
+
+    // 4. Muted neon conduits
+    g.fillStyle(0x0088a3, 0.7);
+    g.fillRect(0, 48, w, 2);
+    g.fillStyle(0x8c0043, 0.7);
+    g.fillRect(0, 92, w, 2);
+    g.fillStyle(0x8c5e00, 0.7);
+    g.fillRect(0, 136, w, 2);
+
+    // 5. Subtle horizon catwalk
+    g.fillStyle(0x554010, 0.8);
+    g.fillRect(0, horizonY - 3, w, 3);
+    g.fillStyle(0x005566, 0.9);
+    g.fillRect(0, horizonY - 1, w, 1);
+
+    // 6. Smooth floor base gradient
+    g.fillStyle(0x101428, 1);
+    g.fillRect(0, horizonY, w, h - horizonY);
+    g.fillStyle(0x141a34, 0.6);
+    g.fillRect(0, horizonY + 40, w, h - horizonY - 40);
+
+    // 7. Floor grid lines
+    g.fillStyle(0x005588, 0.35);
+    const gridRows = [179, 185, 193, 204, 218, 235, 257, 283];
+    gridRows.forEach((gy) => {
+      g.fillRect(0, gy, w, 1);
+    });
 
     g.generateTexture('cyber_hangar_bg', w, h);
     g.destroy();
