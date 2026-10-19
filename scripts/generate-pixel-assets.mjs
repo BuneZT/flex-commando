@@ -321,84 +321,107 @@ function generateLogo() {
 }
 
 /**
- * 2. public/assets/bg/cyber_hangar_bg.png (320x240)
- * Dark indigo hangar interior with perspective grid floor and neon conduit cables
+ * 2. public/assets/bg/cyber_hangar_bg.png (512x288)
+ * Cosmic deep space nebula backdrop with toroidal wrapping and 3-tier starfield
  */
 function generateCyberHangarBg() {
-  const canvas = new PixelCanvas(320, 240);
+  const width = 512;
+  const height = 288;
+  const canvas = new PixelCanvas(width, height);
 
-  // Wall gradient (y = 0 to 150)
-  for (let y = 0; y < 150; y++) {
-    const t = y / 150;
-    const r = Math.round(8 + t * 14);
-    const g = Math.round(10 + t * 18);
-    const b = Math.round(24 + t * 45);
-    canvas.fillRect(0, y, 320, 1, [r, g, b, 255]);
+  // Simple deterministic Mulberry32 PRNG
+  let seed = 42891;
+  function rnd() {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  // Ceiling industrial trusses (y = 0 to 28)
-  for (let x = 0; x < 320; x += 32) {
-    canvas.drawLine(x, 0, x + 16, 24, '#1C2642');
-    canvas.drawLine(x + 16, 24, x + 32, 0, '#1C2642');
-    canvas.fillRect(x, 0, 32, 4, '#2A3860');
+  // 1. Base void gradient (deep indigo to dark violet void)
+  for (let y = 0; y < height; y++) {
+    const t = y / height;
+    const r = Math.round(6 + t * 4);
+    const g = Math.round(8 + t * 5);
+    const b = Math.round(18 + t * 10);
+    canvas.fillRect(0, y, width, 1, [r, g, b, 255]);
   }
 
-  // Structural pillars repeating every 80px (x=20, 100, 180, 260)
-  for (let px = 20; px < 320; px += 80) {
-    canvas.fillRect(px, 16, 12, 134, '#162038');
-    canvas.fillRect(px + 1, 16, 2, 134, '#243254');
-    canvas.fillRect(px + 10, 16, 2, 134, '#0D1424');
-    // Vertical LED indicator strip on pillar
-    for (let ly = 30; ly < 140; ly += 16) {
-      canvas.fillRect(px + 5, ly, 2, 4, ly % 32 === 0 ? '#00FF88' : '#00E5FF');
+  // 2. Toroidal distance helper for seamless wrapping
+  function torusDistSq(x1, y1, x2, y2) {
+    let dx = Math.abs(x1 - x2);
+    if (dx > width / 2) dx = width - dx;
+    let dy = Math.abs(y1 - y2);
+    if (dy > height / 2) dy = height - dy;
+    return dx * dx + dy * dy;
+  }
+
+  // 3. Cosmic nebula dust clouds (subtle, soft-edge clusters)
+  const nebulaClusters = [
+    // Deep violet / purple core
+    { cx: 120, cy: 90, r: 85, color: [38, 20, 56], maxAlpha: 130 },
+    { cx: 380, cy: 190, r: 100, color: [43, 24, 66], maxAlpha: 140 },
+    { cx: 260, cy: 60, r: 70, color: [30, 18, 48], maxAlpha: 110 },
+    // Muted indigo shadow dust
+    { cx: 40, cy: 220, r: 75, color: [20, 24, 50], maxAlpha: 120 },
+    { cx: 480, cy: 80, r: 90, color: [22, 28, 55], maxAlpha: 130 },
+    // Soft ethereal teal wisp (very dark, non-clashing with platform cyan)
+    { cx: 220, cy: 180, r: 65, color: [12, 38, 45], maxAlpha: 100 },
+    { cx: 340, cy: 100, r: 55, color: [10, 32, 40], maxAlpha: 90 },
+  ];
+
+  for (const cluster of nebulaClusters) {
+    const radiusSq = cluster.r * cluster.r;
+    const minX = Math.floor(cluster.cx - cluster.r);
+    const maxX = Math.ceil(cluster.cx + cluster.r);
+    const minY = Math.floor(cluster.cy - cluster.r);
+    const maxY = Math.ceil(cluster.cy + cluster.r);
+
+    for (let py = minY; py <= maxY; py++) {
+      for (let px = minX; px <= maxX; px++) {
+        const dSq = torusDistSq(px, py, cluster.cx, cluster.cy);
+        if (dSq < radiusSq) {
+          const falloff = 1 - Math.sqrt(dSq) / cluster.r;
+          const alpha = Math.round(falloff * falloff * cluster.maxAlpha);
+          const wrapX = ((px % width) + width) % width;
+          const wrapY = ((py % height) + height) % height;
+          canvas.setPixel(wrapX, wrapY, cluster.color, alpha);
+        }
+      }
     }
   }
 
-  // Neon conduit cables running horizontally across the hangar
-  // Cyan upper conduit
-  canvas.fillRect(0, 42, 320, 2, '#004866');
-  canvas.fillRect(0, 43, 320, 1, '#00E5FF');
-  // Magenta mid conduit
-  canvas.fillRect(0, 78, 320, 2, '#66003A');
-  canvas.fillRect(0, 79, 320, 1, '#FF0077');
-  // Amber lower conduit
-  canvas.fillRect(0, 114, 320, 2, '#664400');
-  canvas.fillRect(0, 115, 320, 1, '#FFAA00');
-
-  // Hazard stripe catwalk at horizon (y = 146 to 150)
-  for (let x = 0; x < 320; x++) {
-    const isStripe = (Math.floor(x / 8) + 0) % 2 === 0;
-    canvas.setPixel(x, 147, isStripe ? '#FFB800' : '#1A1E2E');
-    canvas.setPixel(x, 148, isStripe ? '#FF9900' : '#111420');
-    canvas.setPixel(x, 149, '#00E5FF');
+  // 4. Three-Tier Starfield
+  // Tier 1: Faint distant stars (~130 stars, 1x1, dim cool grey/blue)
+  for (let i = 0; i < 130; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const bright = 60 + Math.floor(rnd() * 60);
+    canvas.setPixel(sx, sy, [bright, bright + 10, bright + 30, 255]);
   }
 
-  // Floor base gradient (y = 150 to 240)
-  for (let y = 150; y < 240; y++) {
-    const t = (y - 150) / 90;
-    const r = Math.round(10 + t * 15);
-    const g = Math.round(14 + t * 20);
-    const b = Math.round(32 + t * 40);
-    canvas.fillRect(0, y, 320, 1, [r, g, b, 255]);
+  // Tier 2: Mid-field stars (~50 stars, 1x1, crisp soft white / pastel violet)
+  for (let i = 0; i < 50; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const isViolet = rnd() > 0.6;
+    const color = isViolet ? [215, 195, 255, 255] : [195, 215, 245, 255];
+    canvas.setPixel(sx, sy, color);
   }
 
-  // Perspective floor grid lines (horizontal)
-  const gridRows = [153, 157, 163, 171, 181, 194, 210, 228];
-  gridRows.forEach((gy, idx) => {
-    const intensity = 0.3 + (idx / gridRows.length) * 0.7;
-    const r = Math.round(0 * intensity);
-    const g = Math.round(180 * intensity);
-    const b = Math.round(255 * intensity);
-    canvas.fillRect(0, gy, 320, idx >= 5 ? 2 : 1, [r, g, b, 220]);
-  });
-
-  // Perspective floor rays radiating from vanishing points
-  // Seamless: span across 320px
-  for (let vx = -160; vx < 480; vx += 32) {
-    const xTop = vx;
-    const xBottom = vx + (vx - 160) * 1.5;
-    canvas.drawLine(xTop, 150, xBottom, 240, '#005588');
-    // Wrap to canvas bounds cleanly
+  // Tier 3: Focal sparkling stars (12 stars, 3x3 micro cross)
+  for (let i = 0; i < 12; i++) {
+    const sx = Math.floor(rnd() * width);
+    const sy = Math.floor(rnd() * height);
+    const glow = rnd() > 0.5 ? [140, 220, 255, 200] : [240, 170, 255, 200];
+    // Center bright core
+    canvas.setPixel(sx, sy, [255, 255, 255, 255]);
+    // 1px cross points with toroidal wrap
+    canvas.setPixel((sx + 1) % width, sy, glow);
+    canvas.setPixel((sx - 1 + width) % width, sy, glow);
+    canvas.setPixel(sx, (sy + 1) % height, glow);
+    canvas.setPixel(sx, (sy - 1 + height) % height, glow);
   }
 
   return canvas.toPNG();
