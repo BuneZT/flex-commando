@@ -6,6 +6,10 @@ export class Boss extends EnemyBase {
   public shootTimer: number = 0;
   public fireRateMs: number = 1500;
   public phase: number = 1;
+  public jumpTimer: number = 0;
+  public jumpCooldownMs: number = 2400;
+  public dropThroughTimer: number = 0;
+  public isDroppingThrough: boolean = false;
   private moveTimer: number = 0;
   private moveDirection: number = 1;
 
@@ -37,6 +41,18 @@ export class Boss extends EnemyBase {
     if (!this.isAlive) return;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
+    if (!body) return;
+
+    // Handle Drop-Through Platform Timer
+    if (this.isDroppingThrough) {
+      this.dropThroughTimer -= delta;
+      if (this.dropThroughTimer <= 0) {
+        this.isDroppingThrough = false;
+        if (body.checkCollision) {
+          body.checkCollision.down = true;
+        }
+      }
+    }
 
     // Phase transition check
     if (this.health <= this.maxHealth / 2) {
@@ -44,15 +60,54 @@ export class Boss extends EnemyBase {
       this.fireRateMs = 900;
     }
 
-    // Horizontal patrolling movement
-    const speed = this.phase === 2 ? 80 : 40;
-    this.moveTimer += delta;
-    if (this.moveTimer > 2000) {
-      this.moveTimer = 0;
-      this.moveDirection *= -1;
-    }
+    const isGrounded = body.blocked?.down || body.touching?.down || false;
 
-    if (body) {
+    // Horizontal pursuit & vertical mobility
+    if (player) {
+      const dx = player.x - this.x;
+      const dy = player.y - this.y;
+      const dist = Math.abs(dx);
+      this.facingLeft = dx < 0;
+
+      const baseSpeed = this.phase === 2 ? 140 : 80;
+      const speed = dist > 200 ? baseSpeed * 1.3 : baseSpeed;
+      const moveDir = dx < -10 ? -1 : (dx > 10 ? 1 : 0);
+
+      body.setVelocityX(moveDir * speed);
+
+      // Vertical mobility: drop-through or leap
+      if (isGrounded) {
+        if (this.jumpTimer > 0) {
+          this.jumpTimer -= delta;
+        }
+
+        // Drop down through platform if player is lower
+        if (dy > 35 && !this.isDroppingThrough) {
+          this.isDroppingThrough = true;
+          this.dropThroughTimer = 300;
+          if (body.checkCollision) {
+            body.checkCollision.down = false;
+          }
+        } else if (this.jumpTimer <= 0) {
+          if (dy < -30) {
+            // Player is higher up: leap upward to pursue
+            body.setVelocityY(-340);
+            this.jumpTimer = this.jumpCooldownMs;
+          } else if (dist > 160) {
+            // Player is far: leap forward across arena
+            body.setVelocityY(this.phase === 2 ? -300 : -250);
+            this.jumpTimer = this.phase === 2 ? 1800 : 2500;
+          }
+        }
+      }
+    } else {
+      // Fallback patrolling movement if no player
+      const speed = this.phase === 2 ? 80 : 40;
+      this.moveTimer += delta;
+      if (this.moveTimer > 2000) {
+        this.moveTimer = 0;
+        this.moveDirection *= -1;
+      }
       body.setVelocityX(speed * this.moveDirection);
     }
 

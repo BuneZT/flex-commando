@@ -96,4 +96,24 @@ describe('RoomTemplate 32x18 Archetypes', () => {
     expect(matrix[14][10]).toBe(2);
     expect(matrix[11][20]).toBe(2);
   });
+
+  it('should generate multi-tier combat arena layout for BOSS room template', () => {
+    const bossTemplate = getRoomTemplateById('room_W_01');
+    expect(bossTemplate).toBeDefined();
+    const tiles = bossTemplate!.tiles;
+
+    // Tactical terraces at Row 13 (cols 4-10 and cols 21-27)
+    expect(tiles[13][6]).toBe(2);
+    expect(tiles[13][24]).toBe(2);
+
+    // Elevated center battle platform at Row 9 (cols 11-20)
+    expect(tiles[9][15]).toBe(2);
+
+    // Floor at row 17 should be solid ground (except west door opening on rows 11-16)
+    expect(tiles[17][15]).toBe(1);
+    expect(tiles[17][25]).toBe(1);
+
+    // Row 15 center (underneath elevated platform) should be open air allowing free traversal
+    expect(tiles[15][15]).toBe(0);
+  });
 });

@@ -125,10 +125,15 @@ export function createArchetypeMatrix(
       break;
 
     case 'BOSS':
-      // Row 12 grand bridge across cols 6–26, side platforms at Row 8 cols 2–8 and cols 24–30
-      addPlatform(12, 6, 26, 2);
-      addPlatform(8, 2, 8, 2);
-      addPlatform(8, 24, 30, 2);
+      // Multi-tier dynamic combat arena:
+      // Tactical lower terraces at Row 13 for maneuverability
+      addPlatform(13, 4, 10, 2);
+      addPlatform(13, 21, 27, 2);
+      // Central elevated battle platform at Row 9
+      addPlatform(9, 11, 20, 2);
+      // High vantage perches at Row 6
+      addPlatform(6, 4, 9, 2);
+      addPlatform(6, 22, 27, 2);
       break;
 
     case 'HORIZ':

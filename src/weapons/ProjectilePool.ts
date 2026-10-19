@@ -74,7 +74,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     this.weaponType = weaponType;
     this.damage = config.damage;
     this.piercing = config.piercing;
-    this.lifespan = config.lifespanMs;
+    this.lifespan = !isPlayerBullet ? Math.max(config.lifespanMs, 2000) : config.lifespanMs;
     this.isPlayerBullet = isPlayerBullet;
     this.travelDistance = 0;
 

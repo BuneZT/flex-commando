@@ -34,6 +34,7 @@ function createMockBody(): Phaser.Physics.Arcade.Body {
     setVelocity: (vx: number, vy: number) => { velocity.x = vx; velocity.y = vy; },
     blocked: { down: true, left: false, right: false, up: false },
     touching: { down: true, left: false, right: false, up: false },
+    checkCollision: { none: false, up: true, down: true, left: true, right: true },
   } as unknown as Phaser.Physics.Arcade.Body;
 }
 
@@ -293,6 +294,63 @@ describe('Enemy Classes AI and Damage Behavior', () => {
 
     turret.updateAI(0, 200, { x: 150, y: 100 }, pool);
     expect(turretFrames[turretFrames.length - 1]).toBe(0);
+  });
+
+  it('Boss should pursue player horizontally and increase speed in phase 2', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 200, 100);
+    boss.body = createMockBody();
+
+    // Player to the right -> positive velocity X
+    boss.updateAI(0, 16, { x: 300, y: 100 });
+    expect((boss.body as any).velocity.x).toBeGreaterThan(0);
+    expect(boss.facingLeft).toBe(false);
+
+    // Player to the left -> negative velocity X
+    boss.updateAI(16, 16, { x: 100, y: 100 });
+    expect((boss.body as any).velocity.x).toBeLessThan(0);
+    expect(boss.facingLeft).toBe(true);
+
+    // Transition to Phase 2 (< 50% health) -> increased speed
+    boss.health = 20; // maxHealth is 50
+    boss.updateAI(32, 16, { x: 300, y: 100 });
+    expect(boss.phase).toBe(2);
+    expect((boss.body as any).velocity.x).toBeGreaterThan(100);
+  });
+
+  it('Boss should drop through one-way platforms when player is below', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 200, 100);
+    const body = createMockBody();
+    body.blocked.down = true;
+    boss.body = body;
+
+    // Player is lower down (y=200 vs boss y=100) -> trigger drop-through
+    boss.updateAI(0, 16, { x: 200, y: 200 });
+    expect(boss.isDroppingThrough).toBe(true);
+    expect(body.checkCollision.down).toBe(false);
+  });
+
+  it('Boss should leap upward when player is on a higher tier', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 200, 200);
+    const body = createMockBody();
+    body.blocked.down = true;
+    boss.body = body;
+
+    // Player is higher up (y=100 vs boss y=200) -> leap up
+    boss.jumpTimer = 0;
+    boss.updateAI(0, 16, { x: 200, y: 100 });
+    expect(body.velocity.y).toBeLessThan(0);
+    expect(boss.jumpTimer).toBeGreaterThan(0);
+  });
+
+  it('Enemy and boss projectiles should have minimum 2000ms lifespan to cover 512px room', () => {
+    const scene = createMockScene();
+    const pool = new ProjectilePool(scene);
+    const bullet = pool.spawn(100, 100, 0, 'PEA_SHOOTER', false);
+    expect(bullet).not.toBeNull();
+    expect(bullet!.lifespan).toBeGreaterThanOrEqual(2000);
   });
 });
 
