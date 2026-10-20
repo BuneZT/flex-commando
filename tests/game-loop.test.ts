@@ -618,5 +618,97 @@ describe('Portal Lock State and Win Condition', () => {
       expect(sparkSpy).toHaveBeenCalledWith(enemyBullet.x, enemyBullet.y);
     });
   });
+
+  describe('Score Tracking, Power-up Points and Victory Persistence', () => {
+    it('should initialize score to 0 on GameScene create', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+      expect(scene.score).toBe(0);
+    });
+
+    it('should add enemy scoreValue to score when enemy is killed', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+
+      const firstEnemy = scene.enemies[0];
+      const enemyScore = firstEnemy.scoreValue;
+      const enemyRoomX = Math.floor(firstEnemy.x / 512);
+      const enemyRoomY = Math.floor(firstEnemy.y / 288);
+      scene.cameraManager?.setRoom(enemyRoomX, enemyRoomY);
+      scene.cullEntities(enemyRoomX, enemyRoomY);
+
+      const enemy = scene.activeEnemies[0];
+      const bullet = scene.projectilePool?.spawn(enemy.x, enemy.y, 0, 'PEA_SHOOTER', true);
+      if (bullet) {
+        bullet.damage = 9999;
+      }
+
+      (scene as any).handleCollisions();
+
+      expect(enemy.isAlive).toBe(false);
+      expect(scene.score).toBe(enemyScore);
+    });
+
+    it('should add 500 points when collecting a weapon pickup item', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+
+      // Mock a pickup item overlapping player
+      const mockItem = {
+        active: true,
+        x: scene.player!.x,
+        y: scene.player!.y,
+        body: { width: 16, height: 16, x: scene.player!.x - 8, y: scene.player!.y - 8 },
+        collect: vi.fn().mockReturnValue('SPREAD_SHOT'),
+        destroy: vi.fn(),
+      } as any;
+      scene.pickupItems.push(mockItem);
+
+      (scene as any).handleCollisions();
+
+      expect(mockItem.collect).toHaveBeenCalled();
+      expect(scene.score).toBe(500);
+      expect(scene.player!.currentWeapon).toBe('SPREAD_SHOT');
+    });
+
+    it('should persist high score upon victory and launch GameOverScene with victory data', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+      scene.score = 6500;
+
+      // Mock localStorage or ScoreManager
+      (scene as any).triggerVictory();
+
+      expect(scene.scene.start).toHaveBeenCalledWith(
+        'GameOverScene',
+        expect.objectContaining({
+          victory: true,
+          score: 6500,
+          isNewHighScore: expect.any(Boolean),
+          highScore: expect.any(Number),
+        })
+      );
+    });
+
+    it('should not persist high score on player permadeath, but pass current high score to GameOverScene', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+      scene.score = 1200;
+      scene.player!.lives = 1;
+
+      (scene as any).handlePlayerDamage();
+
+      expect(scene.player!.lives).toBe(0);
+      expect(scene.scene.start).toHaveBeenCalledWith(
+        'GameOverScene',
+        expect.objectContaining({
+          victory: false,
+          score: 1200,
+          isNewHighScore: false,
+          highScore: expect.any(Number),
+        })
+      );
+    });
+  });
 });
 

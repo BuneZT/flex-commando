@@ -18,6 +18,7 @@ import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
 import { createRetroTextStyle } from '../ui/TextStyle';
 import { ImpactFXPool } from '../core/ImpactFXPool';
+import { ScoreManager, POWERUP_SCORE_VALUE } from '../core/ScoreManager';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
@@ -56,6 +57,7 @@ export class GameScene extends Phaser.Scene {
   public invulnerableTimer: number = 0;
   public isGameOver: boolean = false;
   public isVictory: boolean = false;
+  public score: number = 0;
 
   public lastCullGridX: number = -1;
   public lastCullGridY: number = -1;
@@ -91,6 +93,7 @@ export class GameScene extends Phaser.Scene {
     this.invulnerableTimer = 0;
     this.isGameOver = false;
     this.isVictory = false;
+    this.score = 0;
     this.lastCullGridX = -1;
     this.lastCullGridY = -1;
 
@@ -315,7 +318,13 @@ export class GameScene extends Phaser.Scene {
       if (this.input && typeof this.input.setDefaultCursor === 'function') {
         this.input.setDefaultCursor('default');
       }
-      this.scene.start('GameOverScene', { victory: false });
+      const currentHigh = ScoreManager.getHighScore();
+      this.scene.start('GameOverScene', {
+        victory: false,
+        score: this.score,
+        highScore: currentHigh,
+        isNewHighScore: false,
+      });
     }
   }
 
@@ -415,7 +424,7 @@ export class GameScene extends Phaser.Scene {
 
     // 9. Update HUD
     if (this.hud && this.player && this.grid) {
-      this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss, this.infiniteLives);
+      this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss, this.infiniteLives, this.score);
     }
   }
 
@@ -490,12 +499,19 @@ export class GameScene extends Phaser.Scene {
     if (this.input && typeof this.input.setDefaultCursor === 'function') {
       this.input.setDefaultCursor('default');
     }
+    const result = ScoreManager.saveHighScore(this.score);
+    const payload = {
+      victory: true,
+      score: this.score,
+      highScore: result.highScore,
+      isNewHighScore: result.isNewRecord,
+    };
     if (this.time && typeof this.time.delayedCall === 'function') {
       this.time.delayedCall(500, () => {
-        this.scene.start('GameOverScene', { victory: true });
+        this.scene.start('GameOverScene', payload);
       });
     } else {
-      this.scene.start('GameOverScene', { victory: true });
+      this.scene.start('GameOverScene', payload);
     }
   }
 
@@ -557,6 +573,7 @@ export class GameScene extends Phaser.Scene {
                 }
 
                 if (killed) {
+                  this.score += enemy.scoreValue;
                   if (enemy === this.boss) {
                     this.unlockExitPortal();
                   }
@@ -622,6 +639,7 @@ export class GameScene extends Phaser.Scene {
       if (this.checkOverlap(this.player, item, 4)) {
         const weapon = item.collect();
         this.player.equipWeapon(weapon);
+        this.score += POWERUP_SCORE_VALUE;
         this.pickupItems.splice(i, 1);
         if (typeof item.destroy === 'function') {
           item.destroy();
