@@ -4,6 +4,7 @@ import { Boss } from '../entities/enemies/Boss';
 import { GridCell } from '../core/GridGenerator';
 import { createRetroTextStyle } from './TextStyle';
 import { GAME_CONSTANTS } from '../config/GameConstants';
+import { ScoreManager } from '../core/ScoreManager';
 
 export function formatHUDLives(lives: number, infiniteLives?: boolean): string {
   if (infiniteLives) return '∞';
@@ -73,11 +74,13 @@ export class HUD {
   private livesText: Phaser.GameObjects.Text;
   private weaponText: Phaser.GameObjects.Text;
   private bossHpText: Phaser.GameObjects.Text;
+  private scoreText: Phaser.GameObjects.Text;
   private minimapGraphics: Phaser.GameObjects.Graphics;
 
   private lastLivesStr: string = '';
   private lastWeaponStr: string = '';
   private lastBossHpStr: string = '';
+  private lastScore: number = -1;
   private lastMinimapGridX: number = -1;
   private lastMinimapGridY: number = -1;
   private visitedMask: number = 0;
@@ -122,6 +125,18 @@ export class HUD {
       })
     ).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100);
 
+    // Top-left: Score display (below weapon)
+    this.scoreText = this.scene.add.text(
+      8,
+      32,
+      `SCORE: ${ScoreManager.formatScore(0)}`,
+      createRetroTextStyle({
+        fontSize: '9px',
+        color: '#ffcc00',
+        strokeThickness: 2,
+      })
+    ).setScrollFactor(0).setDepth(100);
+
     // Top-right: Minimap graphics
     this.minimapGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(100);
   }
@@ -137,7 +152,8 @@ export class HUD {
     currentGridX: number,
     currentGridY: number,
     boss?: Boss | null,
-    infiniteLives?: boolean
+    infiniteLives?: boolean,
+    score: number = 0
   ): void {
     // 1. Update Lives
     if (player.lives !== this.lastLives) {
@@ -194,6 +210,12 @@ export class HUD {
       this.lastMinimapGridX = currentGridX;
       this.lastMinimapGridY = currentGridY;
       this.lastVisitedMask = this.visitedMask;
+    }
+
+    // 5. Update Score
+    if (score !== this.lastScore) {
+      this.scoreText.setText(`SCORE: ${ScoreManager.formatScore(score)}`);
+      this.lastScore = score;
     }
   }
 

@@ -126,6 +126,13 @@ function createMockScene() {
     setVisible: vi.fn().mockReturnThis(),
     destroy: vi.fn(),
   };
+  const mockScoreText = {
+    setScrollFactor: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    setText: vi.fn().mockReturnThis(),
+    setVisible: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+  };
   const mockMinimapGraphics = {
     setScrollFactor: vi.fn().mockReturnThis(),
     setDepth: vi.fn().mockReturnThis(),
@@ -144,13 +151,14 @@ function createMockScene() {
         textCallCount++;
         if (textCallCount === 1) return mockLivesText;
         if (textCallCount === 2) return mockWeaponText;
-        return mockBossHpText;
+        if (textCallCount === 3) return mockBossHpText;
+        return mockScoreText;
       }),
       graphics: vi.fn().mockReturnValue(mockMinimapGraphics),
     },
   } as unknown as Phaser.Scene;
 
-  return { mockScene, mockLivesText, mockWeaponText, mockBossHpText, mockMinimapGraphics };
+  return { mockScene, mockLivesText, mockWeaponText, mockBossHpText, mockScoreText, mockMinimapGraphics };
 }
 
 const mockGrid = [
@@ -387,4 +395,45 @@ describe('Minimap Fog of War Room Discovery & Rendering', () => {
     );
   });
 });
+
+describe('HUD Score Rendering and Dirty-State Caching', () => {
+  it('should initialize scoreText at (8, 32) with SCORE: 000000', () => {
+    const { mockScene } = createMockScene();
+    new HUD(mockScene);
+
+    expect(mockScene.add.text).toHaveBeenNthCalledWith(
+      4,
+      8,
+      32,
+      'SCORE: 000000',
+      expect.anything()
+    );
+  });
+
+  it('should update scoreText and only invoke setText when score value changes', () => {
+    const { mockScene, mockScoreText } = createMockScene();
+    const hud = new HUD(mockScene);
+    const mockPlayer = { lives: 3, currentWeapon: 'PEA_SHOOTER', isBarrierActive: false, barrierHits: 0 } as any;
+
+    // Frame 1: score = 0 -> initial setText
+    hud.update(mockPlayer, mockGrid, 0, 0, null, false, 0);
+    expect(mockScoreText.setText).toHaveBeenCalledTimes(1);
+    expect(mockScoreText.setText).toHaveBeenCalledWith('SCORE: 000000');
+
+    // Frame 2: same score -> NO setText call
+    hud.update(mockPlayer, mockGrid, 0, 0, null, false, 0);
+    expect(mockScoreText.setText).toHaveBeenCalledTimes(1);
+
+    // Frame 3: score changed to 500 -> setText called
+    hud.update(mockPlayer, mockGrid, 0, 0, null, false, 500);
+    expect(mockScoreText.setText).toHaveBeenCalledTimes(2);
+    expect(mockScoreText.setText).toHaveBeenLastCalledWith('SCORE: 000500');
+
+    // Frame 4: score changed to 15500 -> setText called
+    hud.update(mockPlayer, mockGrid, 0, 0, null, false, 15500);
+    expect(mockScoreText.setText).toHaveBeenCalledTimes(3);
+    expect(mockScoreText.setText).toHaveBeenLastCalledWith('SCORE: 015500');
+  });
+});
+
 
