@@ -281,5 +281,83 @@ describe('Menu Scenes', () => {
     const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
     expect(renderedTexts).toContain('GAME OVER');
   });
+
+  it('renders high score in MainMenuScene', () => {
+    const mainMenu = new MainMenuScene();
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+
+    (mainMenu as any).cameras = { main: { width: 512, height: 288 } };
+    (mainMenu as any).textures = {
+      exists: vi.fn(() => false),
+    };
+    (mainMenu as any).add = {
+      image: vi.fn(),
+      text: textSpy,
+    };
+    (mainMenu as any).input = {
+      keyboard: { once: vi.fn(), on: vi.fn() },
+    };
+
+    mainMenu.create();
+
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    const highScoreText = renderedTexts.find((t: string) => t.startsWith('HIGH SCORE:'));
+    expect(highScoreText).toBeDefined();
+    expect(highScoreText).toMatch(/^HIGH SCORE: \d{6}$/);
+  });
+
+  it('renders score and high score on GameOverScene', () => {
+    const gameOver = new GameOverScene();
+    gameOver.init({ victory: false, score: 2500, highScore: 5000, isNewHighScore: false });
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+
+    (gameOver as any).cameras = { main: { width: 512, height: 288 } };
+    (gameOver as any).textures = { exists: vi.fn(() => false) };
+    (gameOver as any).add = {
+      image: vi.fn(),
+      text: textSpy,
+    };
+    (gameOver as any).input = {
+      keyboard: { once: vi.fn(), on: vi.fn() },
+    };
+
+    gameOver.create();
+
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).toContain('GAME OVER');
+    expect(renderedTexts).toContain('YOU DIED');
+    const scoreText = renderedTexts.find((t: string) => t.includes('SCORE:') && t.includes('HIGH:'));
+    expect(scoreText).toBeDefined();
+    expect(scoreText).toContain('SCORE: 002500');
+    expect(scoreText).toContain('HIGH: 005000');
+    expect(renderedTexts).not.toContain('★ NEW HIGH SCORE! ★');
+  });
+
+  it('renders NEW HIGH SCORE celebration banner on GameOverScene when isNewHighScore is true and victory is true', () => {
+    const gameOver = new GameOverScene();
+    gameOver.init({ victory: true, score: 8000, highScore: 8000, isNewHighScore: true });
+    const textSpy = vi.fn().mockReturnValue({ setOrigin: vi.fn() });
+
+    (gameOver as any).cameras = { main: { width: 512, height: 288 } };
+    (gameOver as any).textures = { exists: vi.fn(() => false) };
+    (gameOver as any).add = {
+      image: vi.fn(),
+      text: textSpy,
+    };
+    (gameOver as any).input = {
+      keyboard: { once: vi.fn(), on: vi.fn() },
+    };
+
+    gameOver.create();
+
+    const renderedTexts = textSpy.mock.calls.map((call) => call[2]);
+    expect(renderedTexts).toContain('VICTORY!');
+    expect(renderedTexts).toContain('MISSION ACCOMPLISHED');
+    expect(renderedTexts).toContain('★ NEW HIGH SCORE! ★');
+    const scoreText = renderedTexts.find((t: string) => t.includes('SCORE:') && t.includes('HIGH:'));
+    expect(scoreText).toBeDefined();
+    expect(scoreText).toContain('SCORE: 008000');
+    expect(scoreText).toContain('HIGH: 008000');
+  });
 });
 

@@ -2,14 +2,20 @@ import Phaser from 'phaser';
 import { isDevEnvironment } from '../config/Environment';
 import { SoundManager } from '../core/SoundManager';
 import { createRetroTextStyle } from '../ui/TextStyle';
+import { ScoreManager } from '../core/ScoreManager';
 
 export interface GameOverData {
   victory?: boolean;
   score?: number;
+  highScore?: number;
+  isNewHighScore?: boolean;
 }
 
 export class GameOverScene extends Phaser.Scene {
   private victory: boolean = false;
+  private score: number = 0;
+  private highScore: number = 0;
+  private isNewHighScore: boolean = false;
 
   constructor() {
     super({ key: 'GameOverScene' });
@@ -17,6 +23,9 @@ export class GameOverScene extends Phaser.Scene {
 
   init(data?: GameOverData): void {
     this.victory = data?.victory || false;
+    this.score = data?.score || 0;
+    this.highScore = data?.highScore ?? ScoreManager.getHighScore();
+    this.isNewHighScore = data?.isNewHighScore || false;
   }
 
   create(): void {
@@ -62,7 +71,7 @@ export class GameOverScene extends Phaser.Scene {
 
     this.add.text(
       Math.round(width / 2),
-      Math.round(height / 2 - 12),
+      Math.round(height / 2 - 18),
       subText,
       createRetroTextStyle({
         fontSize: '13px',
@@ -71,9 +80,37 @@ export class GameOverScene extends Phaser.Scene {
       })
     ).setOrigin(0.5);
 
+    if (this.isNewHighScore && this.victory) {
+      this.add.text(
+        Math.round(width / 2),
+        Math.round(height / 2),
+        '★ NEW HIGH SCORE! ★',
+        createRetroTextStyle({
+          fontSize: '11px',
+          color: '#00ffff',
+          strokeThickness: 2,
+        })
+      ).setOrigin(0.5);
+    }
+
+    const scoreY = (this.isNewHighScore && this.victory)
+      ? Math.round(height / 2 + 16)
+      : Math.round(height / 2 + 2);
+
     this.add.text(
       Math.round(width / 2),
-      Math.round(height / 2 + 18),
+      scoreY,
+      `SCORE: ${ScoreManager.formatScore(this.score)}   HIGH: ${ScoreManager.formatScore(this.highScore)}`,
+      createRetroTextStyle({
+        fontSize: '10px',
+        color: '#ffcc00',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
+
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 + 32),
       'PRESS SPACE TO RESTART',
       createRetroTextStyle({
         fontSize: '11px',
@@ -102,7 +139,7 @@ export class GameOverScene extends Phaser.Scene {
     if (isDevEnvironment()) {
       this.add.text(
         Math.round(width / 2),
-        Math.round(height / 2 + 38),
+        Math.round(height / 2 + 50),
         'PRESS I FOR INFINITE LIVES',
         createRetroTextStyle({
           fontSize: '10px',

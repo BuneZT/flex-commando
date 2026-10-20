@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { isDevEnvironment } from '../config/Environment';
 import { SoundManager } from '../core/SoundManager';
 import { createRetroTextStyle } from '../ui/TextStyle';
+import { ScoreManager } from '../core/ScoreManager';
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -46,6 +47,18 @@ export class MainMenuScene extends Phaser.Scene {
         })
       ).setOrigin(0.5);
     }
+
+    const highScore = ScoreManager.getHighScore();
+    this.add.text(
+      Math.round(width / 2),
+      Math.round(height / 2 - 12),
+      `HIGH SCORE: ${ScoreManager.formatScore(highScore)}`,
+      createRetroTextStyle({
+        fontSize: '10px',
+        color: '#ffcc00',
+        strokeThickness: 2,
+      })
+    ).setOrigin(0.5);
 
     this.add.text(
       Math.round(width / 2),
