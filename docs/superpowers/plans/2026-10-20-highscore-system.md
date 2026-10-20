@@ -1,6 +1,6 @@
 # High Score System Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement an arcade high score system in `flex-commando` that awards points for enemy kills and weapon power-up collections, updates high scores in browser `localStorage` upon victory, displays real-time score on the HUD, and displays high score records on Main Menu and Game Over screens.
 
@@ -33,7 +33,7 @@
   - `ScoreManager.saveHighScore(score: number, storage?: Storage): SaveScoreResult`
   - `ScoreManager.formatScore(score: number, digits?: number): string`
 
-- [ ] **Step 1: Write the failing tests for `ScoreManager`**
+- [x] **Step 1: Write the failing tests for `ScoreManager`**
 
 ```typescript
 // tests/score-manager.test.ts
@@ -150,12 +150,12 @@ describe('ScoreManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/score-manager.test.ts`
 Expected: FAIL ("Cannot find module '../src/core/ScoreManager'")
 
-- [ ] **Step 3: Implement `src/core/ScoreManager.ts`**
+- [x] **Step 3: Implement `src/core/ScoreManager.ts`**
 
 ```typescript
 export const HIGH_SCORE_STORAGE_KEY = 'flex_commando_high_score';
@@ -206,12 +206,12 @@ export class ScoreManager {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/score-manager.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ScoreManager.ts tests/score-manager.test.ts
@@ -233,19 +233,19 @@ git commit -m "feat(score): add ScoreManager with localStorage persistence and f
   - `HUD.scoreText: Phaser.GameObjects.Text`
   - `HUD.update(player, grid, currentGridX, currentGridY, boss?, infiniteLives?, score?: number): void`
 
-- [ ] **Step 1: Write test for HUD score rendering and caching in `tests/hud.test.ts`**
+- [x] **Step 1: Write test for HUD score rendering and caching in `tests/hud.test.ts`**
 
 Add unit tests in `tests/hud.test.ts` verifying:
 1. `scoreText` is initialized at `x: 8, y: 32` with text `'SCORE: 000000'`.
 2. `hud.update(..., score)` updates `scoreText` to `'SCORE: 000500'`.
 3. Calling `hud.update` repeatedly with the same score does NOT invoke `scoreText.setText` again (caching test).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/hud.test.ts`
 Expected: FAIL (HUD.update does not receive/render score)
 
-- [ ] **Step 3: Update `src/ui/HUD.ts`**
+- [x] **Step 3: Update `src/ui/HUD.ts`**
 
 1. Import `ScoreManager` from `'../core/ScoreManager'`.
 2. Add `private scoreText: Phaser.GameObjects.Text;` and `private lastScore: number = -1;`.
@@ -283,12 +283,12 @@ Expected: FAIL (HUD.update does not receive/render score)
    }
    ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/hud.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ui/HUD.ts tests/hud.test.ts
@@ -312,7 +312,7 @@ git commit -m "feat(hud): add cached score text display to in-game HUD"
   - `GameScene.score: number`
   - `GameOverData: { victory?: boolean; score?: number; highScore?: number; isNewHighScore?: boolean }`
 
-- [ ] **Step 1: Write integration tests in `tests/game-loop.test.ts`**
+- [x] **Step 1: Write integration tests in `tests/game-loop.test.ts`**
 
 Add tests to `tests/game-loop.test.ts`:
 1. Enemy kill adds `enemy.scoreValue` to `gameScene.score`.
@@ -320,12 +320,12 @@ Add tests to `tests/game-loop.test.ts`:
 3. `triggerVictory()` calls `ScoreManager.saveHighScore` and launches `'GameOverScene'` with `{ victory: true, score, highScore, isNewHighScore }`.
 4. Permadeath (`player.lives <= 0`) launches `'GameOverScene'` with `{ victory: false, score, highScore, isNewHighScore: false }` and does NOT call `ScoreManager.saveHighScore`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/game-loop.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Update `src/scenes/GameScene.ts`**
+- [x] **Step 3: Update `src/scenes/GameScene.ts`**
 
 1. Import `ScoreManager` and `POWERUP_SCORE_VALUE` from `'../core/ScoreManager'`.
 2. Add `public score: number = 0;` on `GameScene`.
@@ -377,12 +377,12 @@ Expected: FAIL
    });
    ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/game-loop.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/scenes/GameScene.ts tests/game-loop.test.ts
@@ -404,18 +404,18 @@ git commit -m "feat(gameplay): accumulate combat and pickup score and evaluate v
   - `ScoreManager.formatScore`
   - `GameOverData`
 
-- [ ] **Step 1: Write menu tests in `tests/menu-scenes.test.ts`**
+- [x] **Step 1: Write menu tests in `tests/menu-scenes.test.ts`**
 
 1. `MainMenuScene` renders `HIGH SCORE: 000000` text.
 2. `GameOverScene` renders `FINAL SCORE: <formattedScore>` and `HIGH SCORE: <formattedHighScore>`.
 3. When `isNewHighScore` is true on victory, `GameOverScene` renders `★ NEW HIGH SCORE! ★`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/menu-scenes.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Update `src/scenes/MainMenuScene.ts`**
+- [x] **Step 3: Update `src/scenes/MainMenuScene.ts`**
 
 1. Import `ScoreManager` from `'../core/ScoreManager'`.
 2. In `create()`:
@@ -433,7 +433,7 @@ Expected: FAIL
    ).setOrigin(0.5);
    ```
 
-- [ ] **Step 4: Update `src/scenes/GameOverScene.ts`**
+- [x] **Step 4: Update `src/scenes/GameOverScene.ts`**
 
 1. Extend `GameOverData`:
    ```typescript
@@ -486,12 +486,12 @@ Expected: FAIL
    ```
    Adjust position of `PRESS SPACE TO RESTART` to `Math.round(height / 2 + 38)`.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run tests/menu-scenes.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/scenes/GameOverScene.ts src/scenes/MainMenuScene.ts tests/menu-scenes.test.ts
@@ -505,14 +505,14 @@ git commit -m "feat(ui): display high score on main menu and score statistics on
 **Files:**
 - Modify: `docs/GAME_MANUAL.md`
 
-- [ ] **Step 1: Update `docs/GAME_MANUAL.md`**
+- [x] **Step 1: Update `docs/GAME_MANUAL.md`**
 Add a dedicated scoring subsection detailing:
 - Enemy kill score table (Trooper: 100, Turret: 200, Drone: 150, Jumper: 150, Boss: 5000)
 - Curated Weapon Badge pickup score (500 pts)
 - LocalStorage persistence key (`flex_commando_high_score`)
 - Victory requirement for high score recording
 
-- [ ] **Step 2: Run full test suite and TypeScript type check**
+- [x] **Step 2: Run full test suite and TypeScript type check**
 
 Run: `npx vitest run`
 Expected: 23 passed files, 0 failures.
@@ -523,7 +523,7 @@ Expected: 0 errors.
 Run: `npm run build`
 Expected: Build succeeds.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/GAME_MANUAL.md
