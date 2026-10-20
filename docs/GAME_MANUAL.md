@@ -165,3 +165,30 @@ When victory occurs, the screen transitions to the Victory Screen displaying `MI
   * If the **Barrier Shield** is active, it absorbs the blow and grants 500ms of invulnerability.
   * Without a shield, sustaining enemy fire or contact damage deducts **1 Life** and grants **1.5 seconds (1500ms) of invulnerability frames** (sprite flashes at 40% alpha).
 * **Permadeath:** If lives reach 0, the player dies immediately, transitioning to the Game Over screen (`YOU DIED`). Pressing `SPACE` starts a fresh procedural run with a new random seed.
+
+---
+
+## 7. Scoring & High Score System
+
+`flex-commando` implements an authentic arcade scoring and persistent record system.
+
+### Scoring Table
+
+| Event / Target | Points Awarded | Notes |
+|:---|:---:|:---|
+| **Trooper** (`tex_enemy_trooper`) | **100 pts** | Ground patrol infantry |
+| **Falcon Drone** (`tex_enemy_drone`) | **150 pts** | Sine-wave aerial drone |
+| **Jumper Mercenary** (`tex_enemy_jumper`) | **150 pts** | Multi-tier platform leaping mercenary |
+| **Wall Turret** (`tex_enemy_turret`) | **200 pts** | Stationary 360° red orb turret |
+| **Weapon Power-up Badge** (`PickupItem`) | **500 pts** | Collected from shot flying capsules |
+| **Boss Mech** (`tex_enemy_boss`) | **5,000 pts** | Final 50 HP 2-phase Level Exit Guardian |
+
+### High Score Persistence & Rules
+* **Storage Key:** Browser `window.localStorage` under key `'flex_commando_high_score'`.
+* **Strict Victory-Only Recording:** A run's score qualifies for high score persistence **only upon mission victory** (destroying the Boss Mech and extracting through the powered-up Exit Portal). If the player suffers permadeath, the Game Over screen displays their run score alongside the all-time high score, but the record is not updated in storage.
+* **Resilient Storage Fallback:** If `localStorage` is unavailable, restricted (private browsing), or corrupted, `ScoreManager` safely catches exceptions and recovers with default zero values without crashing gameplay.
+* **In-Game HUD Display:** The current run score is displayed at `(x: 8, y: 32)` below the weapon and lives readouts (`SCORE: 000000`). Text updates are memoized to eliminate runtime garbage collection churn during 60 FPS gameplay.
+* **Menu & Game Over Displays:**
+  * **Main Menu:** Renders `HIGH SCORE: 000000` directly beneath the logo.
+  * **Victory & Game Over Screens:** Displays `SCORE: <finalScore>` and `HIGH: <highScore>`. Achieving a new record on victory triggers an accented `★ NEW HIGH SCORE! ★` celebration banner.
+
