@@ -40,78 +40,240 @@ export class TextureFactory {
   private static createPlayerTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_player')) return;
     const g = scene.add.graphics();
-    // 6 frames of 24x24 = 144x24 total width
-    for (let f = 0; f < 6; f++) {
+    // 13 frames of 24x24 = 312x24 total width
+    for (let f = 0; f < 13; f++) {
       const ox = f * 24;
-      // Headband & Head
-      g.fillStyle(0xff2222, 1);
-      g.fillRect(ox + 8, 2, 8, 2);
-      g.fillStyle(0xffcc99, 1);
-      g.fillRect(ox + 8, 4, 8, 5);
 
-      // Uniform Body (Cobalt vest & chrome harness)
-      g.fillStyle(0x1e58e8, 1);
-      g.fillRect(ox + 7, 9, 10, 7);
-      g.fillStyle(0xffffff, 1);
-      g.fillRect(ox + 8, 9, 2, 7);
+      if (f === 4 || f === 5) {
+        // Prone / Crouch low crawl (Classic Contra flat ground pose)
+        g.fillStyle(0xd01010, 1);
+        g.fillRect(ox + 1, 12, 4, 2);
+        g.fillStyle(0xff5555, 1);
+        g.fillRect(ox + 4, 12, 3, 2);
 
-      // Belt
-      g.fillStyle(0x2a2016, 1);
-      g.fillRect(ox + 8, 15, 8, 2);
+        // Low head
+        g.fillStyle(0x1e120a, 1);
+        g.fillRect(ox + 7, 11, 6, 2);
+        g.fillStyle(0xff1e1e, 1);
+        g.fillRect(ox + 7, 12, 7, 2);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 8, 14, 6, 3);
+        g.fillStyle(0x1a1a1a, 1);
+        g.fillRect(ox + 11, 14, 2, 2);
 
-      // Legs / Animation offset (Desert Khaki pants & boots)
-      g.fillStyle(0xe5c28a, 1);
-      if (f === 4) {
-        // Crouch
-        g.fillRect(ox + 6, 16, 12, 5);
+        // Prone torso
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 3, 16, 6, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 5, 16, 2, 3);
+
+        // Legs flat
+        g.fillStyle(0xe5c28a, 1);
+        g.fillRect(ox + 0, 18, 5, 3);
         g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 5, 20, 14, 3);
-      } else if (f === 1) {
-        // Walk 1
-        g.fillRect(ox + 6, 17, 5, 4);
-        g.fillRect(ox + 13, 17, 5, 3);
+        g.fillRect(ox + 0, 20, 4, 3);
+
+        // Grounded arm & low forward rifle
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 9, 17, 5, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 13, 17, 2, 3);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 14, 17, 7, 3);
+        g.fillStyle(0x00ffff, 1);
+        g.fillRect(ox + 18, 16, 2, 2);
+
+        if (f === 5) {
+          // Prone flare
+          g.fillStyle(0xffcc00, 1);
+          g.fillRect(ox + 21, 16, 2, 5);
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 21, 17, 3, 3);
+        }
+      } else if (f === 6 || f === 7) {
+        // Aim Straight Up (90°)
+        g.fillStyle(0xff1e1e, 1);
+        g.fillRect(ox + 8, 4, 7, 2);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 8, 6, 7, 3);
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 7, 9, 8, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 9, 2, 7);
+        g.fillStyle(0xe5c28a, 1);
+        g.fillRect(ox + 6, 16, 4, 5);
+        g.fillRect(ox + 12, 16, 4, 5);
         g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 5, 21, 5, 3);
-        g.fillRect(ox + 14, 20, 5, 3);
-      } else if (f === 2) {
-        // Walk 2
-        g.fillRect(ox + 6, 17, 5, 3);
-        g.fillRect(ox + 13, 17, 5, 4);
+        g.fillRect(ox + 5, 20, 5, 4);
+        g.fillRect(ox + 12, 20, 5, 4);
+
+        // Arms & Vertical Rifle
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 10, 8, 3, 4);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 10, 7, 3, 2);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 11, 2, 3, 8);
+        g.fillStyle(0x00ffff, 1);
+        g.fillRect(ox + 14, 5, 2, 2);
+
+        if (f === 7) {
+          g.fillStyle(0xffcc00, 1);
+          g.fillRect(ox + 10, 0, 5, 2);
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 11, 0, 3, 3);
+        }
+      } else if (f === 8 || f === 9) {
+        // Aim Diagonal Up (45°)
+        g.fillStyle(0xff1e1e, 1);
+        g.fillRect(ox + 8, 2, 8, 3);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 9, 5, 7, 4);
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 8, 9, 8, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 9, 2, 7);
+        g.fillStyle(0xe5c28a, 1);
+        g.fillRect(ox + 7, 16, 4, 5);
+        g.fillRect(ox + 13, 16, 4, 5);
         g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 5, 20, 5, 3);
-        g.fillRect(ox + 14, 21, 5, 3);
+        g.fillRect(ox + 6, 20, 5, 4);
+        g.fillRect(ox + 13, 20, 5, 4);
+
+        // Diagonal Up Rifle
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 11, 10, 4, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 13, 9, 3, 3);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 14, 8, 3, 3);
+        g.fillRect(ox + 16, 6, 3, 3);
+        g.fillRect(ox + 18, 4, 3, 3);
+        g.fillStyle(0x00ffff, 1);
+        g.fillRect(ox + 16, 4, 2, 2);
+
+        if (f === 9) {
+          g.fillStyle(0xffcc00, 1);
+          g.fillRect(ox + 20, 2, 3, 3);
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 21, 3, 2, 2);
+        }
+      } else if (f === 10 || f === 11) {
+        // Aim Diagonal Down (45°)
+        g.fillStyle(0xff1e1e, 1);
+        g.fillRect(ox + 8, 2, 8, 3);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 9, 5, 7, 4);
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 8, 9, 8, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 9, 2, 7);
+        g.fillStyle(0xe5c28a, 1);
+        g.fillRect(ox + 7, 16, 5, 5);
+        g.fillRect(ox + 13, 15, 5, 5);
+        g.fillStyle(0x302016, 1);
+        g.fillRect(ox + 6, 18, 5, 4);
+        g.fillRect(ox + 13, 18, 5, 4);
+
+        // Diagonal Down Rifle
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 11, 11, 4, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 13, 12, 3, 3);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 14, 13, 3, 3);
+        g.fillRect(ox + 16, 15, 3, 3);
+        g.fillRect(ox + 18, 17, 3, 3);
+        g.fillStyle(0x00ffff, 1);
+        g.fillRect(ox + 15, 12, 2, 2);
+
+        if (f === 11) {
+          g.fillStyle(0xffcc00, 1);
+          g.fillRect(ox + 20, 18, 3, 3);
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 21, 18, 2, 2);
+        }
       } else if (f === 3) {
         // Jump
-        g.fillRect(ox + 7, 16, 4, 4);
-        g.fillRect(ox + 13, 15, 4, 4);
+        g.fillStyle(0xff1e1e, 1);
+        g.fillRect(ox + 8, 2, 8, 3);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 9, 5, 7, 4);
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 8, 9, 8, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 9, 2, 7);
+        g.fillStyle(0xe5c28a, 1);
+        g.fillRect(ox + 7, 16, 5, 5);
+        g.fillRect(ox + 13, 15, 5, 5);
         g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 6, 19, 5, 3);
-        g.fillRect(ox + 13, 19, 5, 3);
-      } else {
-        // Idle (0) / Shoot (5)
-        g.fillRect(ox + 7, 17, 4, 4);
-        g.fillRect(ox + 13, 17, 4, 4);
-        g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 6, 21, 5, 3);
-        g.fillRect(ox + 13, 21, 5, 3);
-      }
+        g.fillRect(ox + 6, 18, 5, 4);
+        g.fillRect(ox + 13, 18, 5, 4);
 
-      // Gun & white wrist wrap
-      g.fillStyle(0xffffff, 1);
-      g.fillRect(ox + 12, 11, 2, 3);
-      g.fillStyle(0x707a8c, 1);
-      g.fillRect(ox + 14, 11, 6, 3);
-      if (f === 5) {
-        g.fillStyle(0xffcc00, 1);
-        g.fillRect(ox + 20, 11, 3, 3);
+        g.fillStyle(0xffcca0, 1);
+        g.fillRect(ox + 11, 10, 4, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 13, 10, 2, 3);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 14, 10, 8, 3);
+        g.fillStyle(0x00ffff, 1);
+        g.fillRect(ox + 19, 9, 2, 2);
+      } else {
+        // Frames 0, 1, 2, 12 (Idle, Run1, Run2, Standing Shoot)
+        g.fillStyle(0xff2222, 1);
+        g.fillRect(ox + 8, 2, 8, 2);
+        g.fillStyle(0xffcc99, 1);
+        g.fillRect(ox + 8, 4, 8, 5);
+
+        g.fillStyle(0x1e58e8, 1);
+        g.fillRect(ox + 7, 9, 10, 7);
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 8, 9, 2, 7);
+
+        g.fillStyle(0x2a2016, 1);
+        g.fillRect(ox + 8, 15, 8, 2);
+
+        g.fillStyle(0xe5c28a, 1);
+        if (f === 1) {
+          // Walk 1
+          g.fillRect(ox + 6, 17, 5, 4);
+          g.fillRect(ox + 13, 17, 5, 3);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 21, 5, 3);
+          g.fillRect(ox + 14, 20, 5, 3);
+        } else if (f === 2) {
+          // Walk 2
+          g.fillRect(ox + 6, 17, 5, 3);
+          g.fillRect(ox + 13, 17, 5, 4);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 20, 5, 3);
+          g.fillRect(ox + 14, 21, 5, 3);
+        } else {
+          // Idle (0) / Shoot (12)
+          g.fillRect(ox + 7, 17, 4, 4);
+          g.fillRect(ox + 13, 17, 4, 4);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 6, 21, 5, 3);
+          g.fillRect(ox + 13, 21, 5, 3);
+        }
+
+        // Gun & white wrist wrap
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(ox + 12, 11, 2, 3);
+        g.fillStyle(0x707a8c, 1);
+        g.fillRect(ox + 14, 11, 6, 3);
+        if (f === 12) {
+          g.fillStyle(0xffcc00, 1);
+          g.fillRect(ox + 20, 11, 3, 3);
+        }
       }
     }
 
-    g.generateTexture('tex_player', 144, 24);
+    g.generateTexture('tex_player', 312, 24);
     g.destroy();
 
     const tex = scene.textures.get('tex_player');
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 13; i++) {
       tex.add(i, 0, i * 24, 0, 24, 24);
     }
   }
@@ -379,6 +541,70 @@ export class TextureFactory {
       scene.anims.create({
         key: 'player_crouch',
         frames: [{ key: 'tex_player', frame: 4 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_crouch_shoot')) {
+      scene.anims.create({
+        key: 'player_crouch_shoot',
+        frames: [{ key: 'tex_player', frame: 5 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_aim_up')) {
+      scene.anims.create({
+        key: 'player_aim_up',
+        frames: [{ key: 'tex_player', frame: 6 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_shoot_up')) {
+      scene.anims.create({
+        key: 'player_shoot_up',
+        frames: [{ key: 'tex_player', frame: 7 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_aim_up_forward')) {
+      scene.anims.create({
+        key: 'player_aim_up_forward',
+        frames: [{ key: 'tex_player', frame: 8 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_shoot_up_forward')) {
+      scene.anims.create({
+        key: 'player_shoot_up_forward',
+        frames: [{ key: 'tex_player', frame: 9 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_aim_down_forward')) {
+      scene.anims.create({
+        key: 'player_aim_down_forward',
+        frames: [{ key: 'tex_player', frame: 10 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_shoot_down_forward')) {
+      scene.anims.create({
+        key: 'player_shoot_down_forward',
+        frames: [{ key: 'tex_player', frame: 11 }],
+        frameRate: 1,
+      });
+    }
+
+    if (!scene.anims.exists('player_shoot_forward')) {
+      scene.anims.create({
+        key: 'player_shoot_forward',
+        frames: [{ key: 'tex_player', frame: 12 }],
         frameRate: 1,
       });
     }
