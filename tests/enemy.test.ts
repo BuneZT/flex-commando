@@ -392,6 +392,70 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     expect(bullet).not.toBeNull();
     expect(bullet!.lifespan).toBeGreaterThanOrEqual(2000);
   });
-});
+
+  it('Boss should cycle through telegraphed SWEEP, LEAP, and CHARGE states with OVERHEAT recovery', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 200, 200);
+    const body = createMockBody();
+    boss.body = body;
+    const pool = new ProjectilePool(scene);
+    const player = { x: 350, y: 200 };
+
+    // 1. PATROL transitions to SWEEP_TELEGRAPH after patrol duration (1200ms in phase 1)
+    expect(boss.state).toBe('PATROL');
+    boss.updateAI(0, 1250, player, pool);
+    expect(boss.state).toBe('SWEEP_TELEGRAPH');
+
+    // 2. SWEEP_TELEGRAPH holds boss stationary and transitions to SWEEP_ATTACK after 600ms
+    boss.updateAI(1250, 100, player, pool);
+    expect(body.velocity.x).toBe(0);
+    boss.updateAI(1350, 550, player, pool);
+    expect(boss.state).toBe('SWEEP_ATTACK');
+
+    // 3. SWEEP_ATTACK fires sweeping bullets while stationary, then returns to PATROL
+    boss.updateAI(1900, 200, player, pool);
+    expect(body.velocity.x).toBe(0);
+    expect(pool.getActiveProjectiles().length).toBeGreaterThan(0);
+    boss.updateAI(2100, 1100, player, pool);
+    expect(boss.state).toBe('PATROL');
+
+    // 4. Next PATROL transitions to LEAP_TELEGRAPH -> LEAP_AIR -> landing shockwave
+    boss.updateAI(3200, 1250, player, pool);
+    expect(boss.state).toBe('LEAP_TELEGRAPH');
+    expect(boss.targetX).toBe(player.x);
+
+    boss.updateAI(4450, 600, player, pool);
+    expect(boss.state).toBe('LEAP_AIR');
+    expect(body.velocity.y).toBeLessThan(0);
+    expect(body.velocity.x).toBeGreaterThan(0);
+
+    // Simulate landing back on ground after > 120ms
+    for (const p of pool.getActiveProjectiles()) p.deactivate();
+    body.blocked.down = true;
+    boss.updateAI(5050, 200, player, pool);
+    expect(boss.state).toBe('PATROL');
+    // Should have fired left + right shockwave projectiles on landing
+    expect(pool.getActiveProjectiles().length).toBe(2);
+
+    // 5. Third PATROL transitions to CHARGE_TELEGRAPH -> CHARGE_DASH -> OVERHEAT punish window
+    boss.updateAI(5250, 1250, player, pool);
+    expect(boss.state).toBe('CHARGE_TELEGRAPH');
+
+    boss.updateAI(6500, 600, player, pool);
+    expect(boss.state).toBe('CHARGE_DASH');
+
+    // Dash moves rapidly toward locked direction; hitting wall triggers OVERHEAT
+    boss.updateAI(7100, 100, player, pool);
+    expect(body.velocity.x).toBeGreaterThan(200);
+    body.blocked.right = true;
+    boss.updateAI(7200, 100, player, pool);
+    expect(boss.state).toBe('OVERHEAT');
+    expect(body.velocity.x).toBe(0);
+
+    // After overheat recovery (1500ms), boss returns to PATROL
+    boss.updateAI(7300, 1550, player, pool);
+    expect(boss.state).toBe('PATROL');
+  });
+});
 
 

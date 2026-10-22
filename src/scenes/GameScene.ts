@@ -566,7 +566,13 @@ export class GameScene extends Phaser.Scene {
           for (let e = 0; e < this.activeEnemies.length; e++) {
             const enemy = this.activeEnemies[e];
             if (enemy.isAlive && enemy.active) {
+              if (typeof proj.hasHitTarget === 'function' && proj.hasHitTarget(enemy)) {
+                continue;
+              }
               if (this.checkOverlap(proj, enemy, 4)) {
+                if (typeof proj.recordTargetHit === 'function') {
+                  proj.recordTargetHit(enemy);
+                }
                 const killed = enemy.takeDamage(proj.damage);
                 if (!proj.piercing) {
                   proj.deactivate();
@@ -579,16 +585,26 @@ export class GameScene extends Phaser.Scene {
                   }
                   // Regular enemies drop nothing
                 }
-                break;
+                if (!proj.piercing) {
+                  break;
+                }
               }
             }
           }
+
+          if (!proj.active) continue;
 
           // Player bullet vs Pickup Capsules (only active capsules in current room)
           for (let c = this.activePickupCapsules.length - 1; c >= 0; c--) {
             const capsule = this.activePickupCapsules[c];
             if (!capsule.active) continue;
+            if (typeof proj.hasHitTarget === 'function' && proj.hasHitTarget(capsule)) {
+              continue;
+            }
             if (this.checkOverlap(proj, capsule, 4)) {
+              if (typeof proj.recordTargetHit === 'function') {
+                proj.recordTargetHit(capsule);
+              }
               const droppedItem = capsule.hit();
               if (!proj.piercing) {
                 proj.deactivate();
@@ -599,7 +615,9 @@ export class GameScene extends Phaser.Scene {
                   this.pickupItemGroup.add(droppedItem);
                 }
               }
-              break;
+              if (!proj.piercing) {
+                break;
+              }
             }
           }
         } else {

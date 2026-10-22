@@ -10,6 +10,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   public lifespan: number = 1000;
   public isPlayerBullet: boolean = true;
   public impactFXPool?: ImpactFXPool;
+  public hitTargets: Set<unknown> = new Set();
   private baseAngleRad: number = 0;
   private travelDistance: number = 0;
 
@@ -79,6 +80,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     this.lifespan = !isPlayerBullet ? Math.max(config.lifespanMs, 2000) : config.lifespanMs;
     this.isPlayerBullet = isPlayerBullet;
     this.travelDistance = 0;
+    this.hitTargets.clear();
 
     this.setActive(true);
     this.setVisible(true);
@@ -178,7 +180,16 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  public hasHitTarget(target: unknown): boolean {
+    return this.hitTargets.has(target);
+  }
+
+  public recordTargetHit(target: unknown): void {
+    this.hitTargets.add(target);
+  }
+
   public deactivate(): void {
+    this.hitTargets.clear();
     this.setActive(false);
     this.setVisible(false);
 

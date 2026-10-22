@@ -709,6 +709,28 @@ describe('Portal Lock State and Win Condition', () => {
         })
       );
     });
+
+    it('should only apply piercing projectile (LASER/FLAME) damage once per shot against the Boss across multiple frames', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+
+      const boss = new Boss(scene, 200, 200);
+      boss.body = createMockBody(boss.x - 32, boss.y - 29);
+      scene.boss = boss;
+      scene.activeEnemies = [boss];
+
+      const initialHp = boss.health;
+      const laser = scene.projectilePool!.spawn(boss.x, boss.y, 0, 'LASER', true)!;
+      expect(laser.piercing).toBe(true);
+
+      // Simulate 10 consecutive collision checks while the laser travels through the 64px boss body
+      for (let frame = 0; frame < 10; frame++) {
+        (scene as any).handleCollisions();
+      }
+
+      expect(boss.health).toBe(initialHp - laser.damage);
+      expect(laser.active).toBe(true);
+    });
   });
 });
 
