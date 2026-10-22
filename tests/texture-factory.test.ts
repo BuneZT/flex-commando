@@ -28,6 +28,7 @@ describe('TextureFactory', () => {
 
     const keys = [
       'logo',
+      'retro_font',
       'cyber_hangar_bg',
       'tex_player',
       'tex_enemy_trooper',

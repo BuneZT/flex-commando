@@ -2,10 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   createRetroTextStyle,
   RETRO_FONT_FAMILY,
-  PIXEL_FONT_5X7,
+  RETRO_FONT_CHARS,
+  RETRO_FONT_CELL_WIDTH,
+  RETRO_FONT_CELL_HEIGHT,
+  RETRO_FONT_ATLAS_WIDTH,
+  RETRO_FONT_ATLAS_HEIGHT,
+  getRetroFontCharIndex,
+  parseHexColor,
   getPixelFontScale,
   measurePixelText,
-  renderPixelTextToCanvas,
   installPixelTextRenderer,
 } from '../src/ui/TextStyle';
 
@@ -42,17 +47,32 @@ describe('TextStyle', () => {
     expect(RETRO_FONT_FAMILY).toContain('Consolas');
   });
 
-  it('should provide 5x7 pixel-art glyphs for all letters, digits, and HUD/menu symbols', () => {
+  it('should map all letters, digits, and HUD/menu symbols to valid cell indices in retro_font.png', () => {
+    expect(RETRO_FONT_CELL_WIDTH).toBe(7);
+    expect(RETRO_FONT_CELL_HEIGHT).toBe(9);
+    expect(RETRO_FONT_ATLAS_WIDTH).toBe(406);
+    expect(RETRO_FONT_ATLAS_HEIGHT).toBe(9);
+
     const requiredChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 :![]/()%-❤∞★█░';
-    for (const ch of requiredChars) {
-      const glyph = PIXEL_FONT_5X7[ch];
-      expect(glyph, `Missing glyph for "${ch}"`).toBeDefined();
-      expect(glyph.length).toBe(7);
-      for (const row of glyph) {
-        expect(row.length).toBe(5);
-        expect(row).toMatch(/^[01]{5}$/);
-      }
+    for (let i = 0; i < requiredChars.length; i++) {
+      const code = requiredChars.charCodeAt(i);
+      const idx = getRetroFontCharIndex(code);
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(RETRO_FONT_CHARS.length);
+      expect(RETRO_FONT_CHARS.charCodeAt(idx)).toBe(code);
     }
+
+    // Lowercase a-z maps to uppercase A-Z cell indices
+    expect(getRetroFontCharIndex('a'.charCodeAt(0))).toBe(getRetroFontCharIndex('A'.charCodeAt(0)));
+    expect(getRetroFontCharIndex('z'.charCodeAt(0))).toBe(getRetroFontCharIndex('Z'.charCodeAt(0)));
+  });
+
+  it('should parse hex colors to 24-bit RGB integers without allocations', () => {
+    expect(parseHexColor('#ffcc00')).toBe(0xffcc00);
+    expect(parseHexColor('#00ffff')).toBe(0x00ffff);
+    expect(parseHexColor('#ff4444')).toBe(0xff4444);
+    expect(parseHexColor('#fff')).toBe(0xffffff);
+    expect(parseHexColor(0x00ff88)).toBe(0x00ff88);
   });
 
   it('should compute integer pixel font scale from fontSize string', () => {
@@ -78,74 +98,74 @@ describe('TextStyle', () => {
     expect((m2.height * 0.5) % 1).toBe(0);
   });
 
-  it('should render pixel text using integer fillRect calls without anti-aliased fillText or strokeText', () => {
-    const canvas = { width: 0, height: 0 } as HTMLCanvasElement;
-    const fillRectCalls: Array<[number, number, number, number]> = [];
-    const context = {
-      clearRect: vi.fn(),
-      fillRect: vi.fn((x: number, y: number, w: number, h: number) => {
-        fillRectCalls.push([x, y, w, h]);
-      }),
-      fillText: vi.fn(),
-      strokeText: vi.fn(),
-      fillStyle: '',
-    } as unknown as CanvasRenderingContext2D;
-
-    const dims = renderPixelTextToCanvas(canvas, context, 'HI!', {
-      fontSize: '10px',
-      color: '#ffcc00',
-      stroke: '#000000',
-      strokeThickness: 2,
-      align: 'center',
-    });
-
-    expect(dims.width % 2).toBe(0);
-    expect(dims.height % 2).toBe(0);
-    expect(canvas.width).toBe(dims.width);
-    expect(canvas.height).toBe(dims.height);
-    expect(context.fillText).not.toHaveBeenCalled();
-    expect(context.strokeText).not.toHaveBeenCalled();
-    expect(fillRectCalls.length).toBeGreaterThan(0);
-
-    for (const [x, y, w, h] of fillRectCalls) {
-      expect(Number.isInteger(x)).toBe(true);
-      expect(Number.isInteger(y)).toBe(true);
-      expect(Number.isInteger(w)).toBe(true);
-      expect(Number.isInteger(h)).toBe(true);
-    }
-  });
-
-  it('should patch Phaser Text prototype to use pixel-art rendering and integer displayOrigin', () => {
-    const mockCanvas = { width: 0, height: 0 } as HTMLCanvasElement;
-    const mockContext = {
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
-      fillStyle: '',
-    } as unknown as CanvasRenderingContext2D;
+  it('should patch Phaser Text prototype to batch glyphs directly from preloaded retro_font texture with zero canvas drawing', () => {
+    const mockGlTexture = { id: 'gl_retro_font' };
+    const batchTextureSpy = vi.fn();
+    const setTexture2DSpy = vi.fn().mockReturnValue(0);
+    const mockPipeline = {
+      setTexture2D: setTexture2DSpy,
+      batchTexture: batchTextureSpy,
+    };
+    const mockRenderer = {
+      pipelines: {
+        set: vi.fn().mockReturnValue(mockPipeline),
+      },
+      canvasToTexture: vi.fn(),
+    };
+    const mockCamera = {
+      addToRenderList: vi.fn(),
+      alpha: 1,
+    };
 
     class MockText {
-      public canvas = mockCanvas;
-      public context = mockContext;
-      public _text = 'LIVES: ❤❤❤';
+      public _text = 'HI!';
       public style = {
         fontFamily: RETRO_FONT_FAMILY,
         fontSize: '10px',
-        color: '#ff4444',
+        color: '#ffcc00',
         stroke: '#000000',
         strokeThickness: 2,
-        align: 'left',
+        align: 'center',
         resolution: 1,
+      };
+      public scene = {
+        sys: {
+          textures: {
+            get: vi.fn((key: string) =>
+              key === 'retro_font' ? { source: [{ glTexture: mockGlTexture }] } : null
+            ),
+          },
+        },
       };
       public padding = { left: 0, right: 0, top: 0, bottom: 0 };
       public lineSpacing = 0;
       public width = 0;
       public height = 0;
+      public x = 256;
+      public y = 144;
+      public scaleX = 1;
+      public scaleY = 1;
+      public rotation = 0;
+      public flipX = false;
+      public flipY = false;
+      public scrollFactorX = 0;
+      public scrollFactorY = 0;
       public originX = 0.5;
       public originY = 0.5;
       public _displayOriginX = 0;
       public _displayOriginY = 0;
+      public _alphaTL = 1;
+      public pipeline = {};
       public frame = { setSize: vi.fn(), source: { glTexture: {} } };
-      public renderer = { gl: {}, canvasToTexture: vi.fn() };
+      public renderer = mockRenderer;
+
+      get displayOriginX() {
+        return this._displayOriginX;
+      }
+
+      get displayOriginY() {
+        return this._displayOriginY;
+      }
 
       updateDisplayOrigin() {
         this._displayOriginX = this.originX * this.width;
@@ -156,6 +176,8 @@ describe('TextStyle', () => {
       updateText() {
         return this;
       }
+
+      renderWebGL(_renderer: any, _src: any, _camera: any, _parentMatrix: any) {}
     }
 
     const fakePhaser = {
@@ -169,12 +191,17 @@ describe('TextStyle', () => {
     const textInstance = new MockText();
     textInstance.updateText();
 
+    // Verify zero canvas upload during updateText()
+    expect(mockRenderer.canvasToTexture).not.toHaveBeenCalled();
     expect(textInstance.width % 2).toBe(0);
     expect(textInstance.height % 2).toBe(0);
     expect(Number.isInteger(textInstance._displayOriginX)).toBe(true);
     expect(Number.isInteger(textInstance._displayOriginY)).toBe(true);
-    expect(mockContext.fillRect).toHaveBeenCalled();
-    expect(textInstance.frame.setSize).toHaveBeenCalledWith(textInstance.width, textInstance.height);
-    expect(textInstance.renderer.canvasToTexture).toHaveBeenCalled();
+
+    // Verify WebGL rendering batches character quads from preloaded retro_font texture
+    textInstance.renderWebGL(mockRenderer, textInstance, mockCamera, null);
+    expect(mockCamera.addToRenderList).toHaveBeenCalledWith(textInstance);
+    expect(setTexture2DSpy).toHaveBeenCalledWith(mockGlTexture, textInstance);
+    expect(batchTextureSpy).toHaveBeenCalledTimes(3); // 'H', 'I', '!'
   });
 });
