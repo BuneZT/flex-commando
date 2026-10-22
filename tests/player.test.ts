@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Phaser from 'phaser';
-import { Player } from '../src/entities/Player';
+import { Player, canPlayerDropThrough, shouldCollideWithTile } from '../src/entities/Player';
 import { RawInputState } from '../src/config/Controls';
 
 function createMockScene(): Phaser.Scene {
@@ -283,5 +283,133 @@ describe('Player entity', () => {
     (body as any).touching.down = false;
     player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
     expect(playedAnim).toBe('player_jump');
+  });
+
+  describe('Drop-Through Platform logic', () => {
+    function createMockGroundLayer(tileMatrix: number[][]) {
+      return {
+        getTileAt: (tileX: number, tileY: number) => {
+          if (tileY < 0 || tileY >= tileMatrix.length) return null;
+          if (tileX < 0 || tileX >= (tileMatrix[tileY]?.length || 0)) return null;
+          const index = tileMatrix[tileY][tileX];
+          return { index };
+        },
+      };
+    }
+
+    it('should determine whether collision should occur using shouldCollideWithTile', () => {
+      // When not dropping through, all solid/platform tiles collide
+      expect(shouldCollideWithTile(false, 1)).toBe(true);
+      expect(shouldCollideWithTile(false, 2)).toBe(true);
+      expect(shouldCollideWithTile(false, 3)).toBe(true);
+
+      // When dropping through, ONLY Tile 2 (one-way platform) is ignored; solid ground (1) and walls (3) STILL COLLIDE
+      expect(shouldCollideWithTile(true, 1)).toBe(true);
+      expect(shouldCollideWithTile(true, 2)).toBe(false);
+      expect(shouldCollideWithTile(true, 3)).toBe(true);
+    });
+
+    it('should allow dropping through only when standing on Tile 2 platforms, not solid ground (Tile 1)', () => {
+      // 18 rows x 32 cols matrix
+      // Row 17: cols 0-13 are 1 (solid ground), cols 14-17 are 2 (south door platform), cols 18-31 are 1 (solid ground)
+      const matrix: number[][] = Array.from({ length: 18 }, () => new Array(32).fill(0));
+      for (let c = 0; c < 32; c++) {
+        matrix[17][c] = (c >= 14 && c <= 17) ? 2 : 1;
+      }
+      const layer = createMockGroundLayer(matrix);
+
+      // Player feet resting at row 17 (y = 17 * 16 = 272). Height = 14 (crouch), so body.y = 258, body.height = 14
+      // 1. Column 5: solid ground (Tile 1)
+      const onSolidGround = { x: 5 * 16, y: 258, width: 16, height: 14 };
+      expect(canPlayerDropThrough(onSolidGround, layer)).toBe(false);
+
+      // 2. Column 15: designated south exit shaft (Tile 2)
+      const onSouthDoorHatch = { x: 15 * 16, y: 258, width: 16, height: 14 };
+      expect(canPlayerDropThrough(onSouthDoorHatch, layer)).toBe(true);
+
+      // 3. Straddling edge between solid ground (col 13) and platform (col 14) -> must disallow drop
+      const onBoundary = { x: 13 * 16 + 8, y: 258, width: 16, height: 14 };
+      expect(canPlayerDropThrough(onBoundary, layer)).toBe(false);
+
+      // 4. In mid-air (empty air at row 10)
+      const inAir = { x: 15 * 16, y: 10 * 16, width: 16, height: 14 };
+      expect(canPlayerDropThrough(inAir, layer)).toBe(false);
+
+      // 5. Missing or invalid layer
+      expect(canPlayerDropThrough(onSouthDoorHatch, null)).toBe(false);
+    });
+
+    it('should NOT activate isDroppingThrough and NOT disable body collision down when on solid ground (Tile 1)', () => {
+      const mockScene = createMockScene();
+      const player = new Player(mockScene, 80, 272 - 11);
+      const body = createMockBody();
+      (body as any).x = 80 - 8;
+      (body as any).y = 272 - 22;
+      player.body = body;
+
+      // Solid ground layer (all Tile 1)
+      const matrix: number[][] = Array.from({ length: 18 }, () => new Array(32).fill(1));
+      const layer = createMockGroundLayer(matrix);
+      player.groundLayer = layer as any;
+
+      const input: RawInputState = {
+        up: false,
+        down: true,
+        left: false,
+        right: false,
+        jump: true,
+        jumpJustPressed: true,
+        shoot: false,
+        shootJustPressed: false,
+      };
+
+      player.updatePlayer(input, 16);
+
+      // Player must NOT drop through solid ground!
+      expect(player.isDroppingThrough).toBe(false);
+      // checkCollision.down must remain true (solid ground collision preserved!)
+      expect(body.checkCollision.down).toBe(true);
+    });
+
+    it('should activate isDroppingThrough when on designated one-way platform (Tile 2), while preserving checkCollision.down = true', () => {
+      const mockScene = createMockScene();
+      // Position player at row 17 col 15 (south door one-way platform)
+      const player = new Player(mockScene, 15 * 16 + 8, 272 - 11);
+      const body = createMockBody();
+      (body as any).x = 15 * 16;
+      (body as any).y = 272 - 22;
+      player.body = body;
+
+      // South door matrix (Tile 2 at cols 14-17)
+      const matrix: number[][] = Array.from({ length: 18 }, () => new Array(32).fill(0));
+      for (let c = 0; c < 32; c++) {
+        matrix[17][c] = (c >= 14 && c <= 17) ? 2 : 1;
+      }
+      const layer = createMockGroundLayer(matrix);
+      player.groundLayer = layer as any;
+
+      const input: RawInputState = {
+        up: false,
+        down: true,
+        left: false,
+        right: false,
+        jump: true,
+        jumpJustPressed: true,
+        shoot: false,
+        shootJustPressed: false,
+      };
+
+      player.updatePlayer(input, 16);
+
+      // Player CAN drop through designated one-way platform
+      expect(player.isDroppingThrough).toBe(true);
+      // Crucial: checkCollision.down must NOT be disabled globally (it stays true so solid ground below still stops the player)
+      expect(body.checkCollision.down).toBe(true);
+
+      // Timer decrements and resets after 250ms
+      player.updatePlayer({ ...input, jumpJustPressed: false }, 260);
+      expect(player.isDroppingThrough).toBe(false);
+      expect(body.checkCollision.down).toBe(true);
+    });
   });
 });

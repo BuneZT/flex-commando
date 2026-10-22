@@ -19,6 +19,63 @@ export type MuzzleAimState =
       isCrouching?: boolean;
     };
 
+export interface TileQueryable {
+  getTileAt(tileX: number, tileY: number, nonNull?: boolean): { index: number } | null | undefined;
+}
+
+export function shouldCollideWithTile(isDroppingThrough: boolean, tileIndex: number): boolean {
+  if (isDroppingThrough && tileIndex === 2) {
+    return false;
+  }
+  return true;
+}
+
+export function canPlayerDropThrough(
+  bodyBounds: { x: number; y: number; width: number; height: number },
+  layer?: TileQueryable | null,
+  tileSize: number = 16
+): boolean {
+  if (!layer || typeof layer.getTileAt !== 'function') {
+    return false;
+  }
+
+  const footY = bodyBounds.y + bodyBounds.height + 2;
+  const tileY = Math.floor(footY / tileSize);
+
+  const sampleXCoords = [
+    bodyBounds.x + 2,
+    bodyBounds.x + bodyBounds.width * 0.5,
+    bodyBounds.x + bodyBounds.width - 2,
+  ];
+
+  let hasOneWayPlatform = false;
+
+  for (const sampleX of sampleXCoords) {
+    const tileX = Math.floor(sampleX / tileSize);
+    const tile = layer.getTileAt(tileX, tileY, false);
+    const index = tile ? tile.index : 0;
+
+    // Empty space / air
+    if (!tile || index <= 0) {
+      continue;
+    }
+
+    // Solid ground (1) or solid obstacle/wall (3): immediately disallow drop-through
+    if (index === 1 || index === 3) {
+      return false;
+    }
+
+    // Tile 2 is the one-way drop-through platform
+    if (index === 2) {
+      hasOneWayPlatform = true;
+    } else {
+      return false;
+    }
+  }
+
+  return hasOneWayPlatform;
+}
+
 export class Player extends Phaser.Physics.Arcade.Sprite {
   public aimDirection: AimDirection = 'FORWARD';
   public aimAngle: number = 0;
@@ -30,6 +87,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public jumpVelocity: number = -340;
   public isDroppingThrough: boolean = false;
   private dropThroughTimer: number = 0;
+  public groundLayer?: TileQueryable | Phaser.Tilemaps.TilemapLayer;
 
   // Weapon System & Barrier
   public currentWeapon: WeaponType = 'PEA_SHOOTER';
@@ -82,7 +140,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return false; // No barrier to absorb hit
   }
 
-  public updatePlayer(input: RawInputState, delta: number = 16, projectilePool?: ProjectilePool): void {
+  public canDropThrough(layer?: TileQueryable | Phaser.Tilemaps.TilemapLayer): boolean {
+    const targetLayer = layer || this.groundLayer || (this.scene as any)?.tilemapResult?.groundLayer;
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (!body) return false;
+
+    const width = body.width || 16;
+    const height = body.height || 22;
+    const x = typeof (body as any).x === 'number' ? (body as any).x : this.x - width / 2;
+    const y = typeof (body as any).y === 'number' ? (body as any).y : this.y - height / 2;
+
+    return canPlayerDropThrough({ x, y, width, height }, targetLayer as any);
+  }
+
+  public updatePlayer(
+    input: RawInputState,
+    delta: number = 16,
+    projectilePool?: ProjectilePool,
+    groundLayer?: TileQueryable | Phaser.Tilemaps.TilemapLayer
+  ): void {
+    if (groundLayer) {
+      this.groundLayer = groundLayer;
+    }
+
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (!body) return;
 
@@ -150,18 +230,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.dropThroughTimer -= delta;
       if (this.dropThroughTimer <= 0) {
         this.isDroppingThrough = false;
-        if (body.checkCollision) {
-          body.checkCollision.down = true;
-        }
       }
     }
 
-    // Handle Drop-Through platform trigger
+    // Handle Drop-Through platform trigger: only allowed when supported by designated one-way platform
     if (isGrounded && input.down && input.jumpJustPressed) {
-      this.isDroppingThrough = true;
-      this.dropThroughTimer = 250; // ms to pass through one-way platform
-      if (body.checkCollision) {
-        body.checkCollision.down = false;
+      if (this.canDropThrough(groundLayer)) {
+        this.isDroppingThrough = true;
+        this.dropThroughTimer = 250; // ms to pass through one-way platform
+        if (typeof body.setVelocityY === 'function') {
+          body.setVelocityY(80);
+        }
       }
     } else if (isGrounded && input.jumpJustPressed) {
       // Regular Jump

@@ -3,7 +3,7 @@ import { GAME_CONSTANTS } from '../config/GameConstants';
 import { generateRoomGrid, GridCell, selectCapsuleRoomCoords } from '../core/GridGenerator';
 import { TilemapRenderer, TilemapRenderResult } from '../core/TilemapRenderer';
 import { CameraManager } from '../core/CameraManager';
-import { Player } from '../entities/Player';
+import { Player, shouldCollideWithTile } from '../entities/Player';
 import { Controls } from '../config/Controls';
 import { ProjectilePool } from '../weapons/ProjectilePool';
 import { EnemyBase } from '../entities/enemies/EnemyBase';
@@ -145,10 +145,24 @@ export class GameScene extends Phaser.Scene {
     const startX = startRoom.x * GAME_CONSTANTS.VIEW_WIDTH_PX + 120;
     const startY = startRoom.y * GAME_CONSTANTS.VIEW_HEIGHT_PX + 220;
     this.player = new Player(this, startX, startY);
-
-    // 5. Setup collision with tilemap ground layer
     if (this.tilemapResult?.groundLayer) {
-      this.physics.add.collider(this.player, this.tilemapResult.groundLayer);
+      this.player.groundLayer = this.tilemapResult.groundLayer;
+    }
+
+    // 5. Setup collision with tilemap ground layer (drop through only for Tile 2 platforms)
+    if (this.tilemapResult?.groundLayer) {
+      this.physics.add.collider(
+        this.player,
+        this.tilemapResult.groundLayer,
+        undefined,
+        (playerObj: any, tileObj: any) => {
+          return shouldCollideWithTile(
+            (playerObj as Player).isDroppingThrough,
+            (tileObj as Phaser.Tilemaps.Tile).index
+          );
+        },
+        this
+      );
     }
 
     // 6. Initialize camera manager focused on START room
@@ -288,7 +302,18 @@ export class GameScene extends Phaser.Scene {
     if (this.enemyGroup) this.enemyGroup.add(this.boss);
 
     if (this.tilemapResult?.groundLayer) {
-      this.physics.add.collider(this.boss, this.tilemapResult.groundLayer);
+      this.physics.add.collider(
+        this.boss,
+        this.tilemapResult.groundLayer,
+        undefined,
+        (bossObj: any, tileObj: any) => {
+          return shouldCollideWithTile(
+            (bossObj as Boss).isDroppingThrough,
+            (tileObj as Phaser.Tilemaps.Tile).index
+          );
+        },
+        this
+      );
     }
     this.lastCullGridX = -1;
     SoundManager.getInstance().startBGM('BOSS', this);
@@ -344,7 +369,7 @@ export class GameScene extends Phaser.Scene {
     // 2. Player input & movement
     if (this.controls && this.player) {
       const input = this.controls.getInputState(this.cameras?.main);
-      this.player.updatePlayer(input, delta, this.projectilePool);
+      this.player.updatePlayer(input, delta, this.projectilePool, this.tilemapResult?.groundLayer);
 
       if (this.crosshair && typeof this.crosshair.setPosition === 'function') {
         const cx = input.mouseX ?? this.input?.activePointer?.worldX ?? this.player.x;
