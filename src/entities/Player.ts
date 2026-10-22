@@ -92,6 +92,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   // Weapon System & Barrier
   public currentWeapon: WeaponType = 'PEA_SHOOTER';
   public shootTimer: number = 0;
+  public firingFlashTimer: number = 0;
   public barrierHits: number = 0;
   public isBarrierActive: boolean = false;
 
@@ -168,6 +169,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     const isGrounded = Boolean(body.blocked?.down || body.touching?.down);
 
+    if (this.firingFlashTimer > 0) {
+      this.firingFlashTimer -= delta;
+      if (this.firingFlashTimer < 0) {
+        this.firingFlashTimer = 0;
+      }
+    }
+
     // Crouch state: Grounded and pressing down without horizontal movement, not dropping through
     this.isCrouching = isGrounded && Boolean(input.down) && !input.left && !input.right && !this.isDroppingThrough;
 
@@ -176,12 +184,42 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.isUsingMouseAim = true;
       this.facingLeft = calculateFacingDirection(this.x, input.mouseX, this.facingLeft);
       this.aimAngle = calculateMouseAimAngle(this.x, this.y - 4, input.mouseX, input.mouseY);
-      this.aimDirection = calculateAimDirection(
-        Boolean(input.up),
-        Boolean(input.down),
-        Boolean(input.left),
-        Boolean(input.right)
-      );
+      if (input.up || input.down || input.left || input.right) {
+        this.aimDirection = calculateAimDirection(
+          Boolean(input.up),
+          Boolean(input.down),
+          Boolean(input.left),
+          Boolean(input.right)
+        );
+      } else {
+        // Derive aimDirection from mouse aimAngle when directional keys are not pressed
+        const angle = this.aimAngle;
+        if (this.facingLeft) {
+          if (angle >= -112.5 && angle < -67.5) {
+            this.aimDirection = 'UP';
+          } else if (angle >= -157.5 && angle < -112.5) {
+            this.aimDirection = 'UP_FORWARD';
+          } else if (angle >= 112.5 && angle < 157.5) {
+            this.aimDirection = 'DOWN_FORWARD';
+          } else if (angle >= 67.5 && angle < 112.5) {
+            this.aimDirection = 'DOWN';
+          } else {
+            this.aimDirection = 'FORWARD';
+          }
+        } else {
+          if (angle >= -112.5 && angle < -67.5) {
+            this.aimDirection = 'UP';
+          } else if (angle >= -67.5 && angle < -22.5) {
+            this.aimDirection = 'UP_FORWARD';
+          } else if (angle >= 22.5 && angle < 67.5) {
+            this.aimDirection = 'DOWN_FORWARD';
+          } else if (angle >= 67.5 && angle < 112.5) {
+            this.aimDirection = 'DOWN';
+          } else {
+            this.aimDirection = 'FORWARD';
+          }
+        }
+      }
     } else {
       this.isUsingMouseAim = false;
       if (input.left && !input.right) {
@@ -204,11 +242,51 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Play corresponding animation if registered; otherwise fallback to appropriate frame
     if (this.anims && typeof this.anims.play === 'function') {
-      const targetAnim = !isGrounded
-        ? 'player_jump'
-        : this.isCrouching
-        ? 'player_crouch'
-        : (input.left || input.right ? 'player_run' : 'player_idle');
+      const isFiring = this.firingFlashTimer > 0;
+      let targetAnim: string;
+      let fallbackFrame: number;
+
+      if (this.isCrouching) {
+        if (isFiring) {
+          targetAnim = 'player_crouch_shoot';
+          fallbackFrame = 5;
+        } else {
+          targetAnim = 'player_crouch';
+          fallbackFrame = 4;
+        }
+      } else if (!isGrounded) {
+        if (this.aimDirection === 'UP') {
+          targetAnim = isFiring ? 'player_shoot_up' : 'player_aim_up';
+          fallbackFrame = isFiring ? 7 : 6;
+        } else if (this.aimDirection === 'UP_FORWARD') {
+          targetAnim = isFiring ? 'player_shoot_up_forward' : 'player_aim_up_forward';
+          fallbackFrame = isFiring ? 9 : 8;
+        } else if (this.aimDirection === 'DOWN_FORWARD' || this.aimDirection === 'DOWN') {
+          targetAnim = isFiring ? 'player_shoot_down_forward' : 'player_aim_down_forward';
+          fallbackFrame = isFiring ? 11 : 10;
+        } else {
+          targetAnim = 'player_jump';
+          fallbackFrame = 3;
+        }
+      } else if (input.left || input.right) {
+        targetAnim = 'player_run';
+        fallbackFrame = 1;
+      } else {
+        // Grounded stationary
+        if (this.aimDirection === 'UP') {
+          targetAnim = isFiring ? 'player_shoot_up' : 'player_aim_up';
+          fallbackFrame = isFiring ? 7 : 6;
+        } else if (this.aimDirection === 'UP_FORWARD') {
+          targetAnim = isFiring ? 'player_shoot_up_forward' : 'player_aim_up_forward';
+          fallbackFrame = isFiring ? 9 : 8;
+        } else if (isFiring) {
+          targetAnim = 'player_shoot_forward';
+          fallbackFrame = 12;
+        } else {
+          targetAnim = 'player_idle';
+          fallbackFrame = 0;
+        }
+      }
 
       const animsManager = this.scene?.anims || this.scene?.sys?.anims;
       const animExists = animsManager && typeof animsManager.exists === 'function'
@@ -220,7 +298,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           this.anims.play(targetAnim, true);
         }
       } else if (typeof this.setFrame === 'function') {
-        const fallbackFrame = !isGrounded ? 3 : (this.isCrouching ? 4 : (input.left || input.right ? 1 : 0));
         this.setFrame(fallbackFrame);
       }
     }
@@ -252,10 +329,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Adjust Hitbox size based on crouch vs standing
     if (this.isCrouching) {
       if (typeof body.setSize === 'function') {
-        body.setSize(16, 14);
+        body.setSize(20, 10);
       }
       if (typeof body.setOffset === 'function') {
-        body.setOffset(4, 10);
+        body.setOffset(2, 14);
       }
     } else {
       if (typeof body.setSize === 'function') {
@@ -315,6 +392,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       SoundManager.getInstance().playShoot(this.currentWeapon, true);
     }
 
+    this.firingFlashTimer = 75;
     this.shootTimer = stats.fireRateMs;
   }
 
@@ -336,18 +414,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (crouching) {
-      return { x: facingLeft ? -12 : 12, y: 2 };
+      return { x: facingLeft ? -12 : 12, y: 6 };
     }
 
     switch (dir) {
       case 'UP':
         return { x: facingLeft ? -2 : 2, y: -16 };
       case 'UP_FORWARD':
-        return { x: facingLeft ? -9 : 9, y: -12 };
+        return { x: facingLeft ? -10 : 10, y: -11 };
       case 'DOWN':
         return { x: facingLeft ? -2 : 2, y: 8 };
       case 'DOWN_FORWARD':
-        return { x: facingLeft ? -9 : 9, y: 4 };
+        return { x: facingLeft ? -10 : 10, y: 6 };
       case 'FORWARD':
       default:
         return { x: facingLeft ? -12 : 12, y: -4 };

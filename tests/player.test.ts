@@ -96,10 +96,10 @@ describe('Player entity', () => {
     player.updatePlayer(input);
     expect(player.aimDirection).toBe('DOWN');
     expect(player.isCrouching).toBe(true);
-    expect(body.width).toBe(16);
-    expect(body.height).toBe(14);
-    expect(body.offset.x).toBe(4);
-    expect(body.offset.y).toBe(10);
+    expect(body.width).toBe(20);
+    expect(body.height).toBe(10);
+    expect(body.offset.x).toBe(2);
+    expect(body.offset.y).toBe(14);
   });
 
   it('should maintain standing hitbox (16x22, offset 4,2) when standing or running', () => {
@@ -229,31 +229,31 @@ describe('Player entity', () => {
     // Facing right (0 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 12, y: -4 });
     // Up-forward right (-45 deg)
-    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 9, y: -12 });
+    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 10, y: -11 });
     // Up straight (-90 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'UP', facingLeft: false, isCrouching: false })).toEqual({ x: 2, y: -16 });
     // Down-forward right (45 deg)
-    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 9, y: 4 });
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: false, isCrouching: false })).toEqual({ x: 10, y: 6 });
     // Down straight right (90 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'DOWN', facingLeft: false, isCrouching: false })).toEqual({ x: 2, y: 8 });
 
     // Facing left (180 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -12, y: -4 });
     // Up-forward left (-135 deg)
-    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -9, y: -12 });
+    expect(player.getMuzzleOffset({ aimDirection: 'UP_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -10, y: -11 });
     // Up straight left (-90 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'UP', facingLeft: true, isCrouching: false })).toEqual({ x: -2, y: -16 });
     // Down-forward left (135 deg)
-    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -9, y: 4 });
+    expect(player.getMuzzleOffset({ aimDirection: 'DOWN_FORWARD', facingLeft: true, isCrouching: false })).toEqual({ x: -10, y: 6 });
     // Down straight left (90 deg)
     expect(player.getMuzzleOffset({ aimDirection: 'DOWN', facingLeft: true, isCrouching: false })).toEqual({ x: -2, y: 8 });
 
-    // Crouching (lowered rifle barrel)
-    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: false })).toEqual({ x: 12, y: 2 });
-    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: true })).toEqual({ x: -12, y: 2 });
+    // Crouching (lowered prone rifle barrel)
+    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: false })).toEqual({ x: 12, y: 6 });
+    expect(player.getMuzzleOffset({ isCrouching: true, facingLeft: true })).toEqual({ x: -12, y: 6 });
   });
 
-  it('should safely guard anims and select correct animation keys', () => {
+  it('should safely guard anims and select correct animation keys across all aiming angles and firing states', () => {
     const mockScene = createMockScene();
     const player = new Player(mockScene, 100, 100);
     const body = createMockBody();
@@ -274,13 +274,47 @@ describe('Player entity', () => {
     player.updatePlayer({ up: false, down: false, left: true, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
     expect(playedAnim).toBe('player_run');
 
-    // Crouch
+    // Crouch idle
     player.updatePlayer({ up: false, down: true, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
     expect(playedAnim).toBe('player_crouch');
 
-    // Jump (airborne)
+    // Crouch shoot (firing active)
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: false, down: true, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_crouch_shoot');
+
+    // Aim Up standing
+    player.firingFlashTimer = 0;
+    player.updatePlayer({ up: true, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_aim_up');
+
+    // Shoot Up standing
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: true, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_shoot_up');
+
+    // Aim Up-Forward standing
+    player.firingFlashTimer = 0;
+    // We test facing right with up and right released or aiming up-forward
+    player.aimDirection = 'UP_FORWARD';
+    player.updatePlayer({ up: true, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    // Note: if input.up without left/right, calculateAimDirection gives UP. If mouse/preset UP_FORWARD:
+    expect(playedAnim).toBe('player_aim_up');
+
+    // Airborne Aim Down-Forward
     (body as any).blocked.down = false;
     (body as any).touching.down = false;
+    player.firingFlashTimer = 0;
+    player.updatePlayer({ up: false, down: true, left: true, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_aim_down_forward');
+
+    // Airborne Shoot Down-Forward
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: false, down: true, left: true, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_shoot_down_forward');
+
+    // Airborne neutral Jump
+    player.firingFlashTimer = 0;
     player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
     expect(playedAnim).toBe('player_jump');
   });
