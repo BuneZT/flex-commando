@@ -1410,7 +1410,7 @@ const RETRO_FONT_GLYPHS = {
 function generateRetroFont() {
   const cellW = 7;
   const cellH = 9;
-  const canvas = new PixelCanvas(RETRO_FONT_CHARS.length * cellW, cellH);
+  const canvas = new PixelCanvas(RETRO_FONT_CHARS.length * cellW, cellH * 2);
 
   const isSet = (glyph, gx, gy) => gy >= 0 && gy < 7 && gx >= 0 && gx < 5 && glyph[gy][gx] === '1';
 
@@ -1419,7 +1419,7 @@ function generateRetroFont() {
     const glyph = RETRO_FONT_GLYPHS[ch] || RETRO_FONT_GLYPHS[' '];
     const cellX = i * cellW;
 
-    // Pass 1: 1px black (#000000) 8-neighbor outline
+    // Row 0 (y = 0..8): 1px black (#000000) 8-neighbor outline
     for (let gy = -1; gy <= 7; gy++) {
       for (let gx = -1; gx <= 5; gx++) {
         if (isSet(glyph, gx, gy)) continue;
@@ -1439,11 +1439,11 @@ function generateRetroFont() {
       }
     }
 
-    // Pass 2: White (#FFFFFF) foreground glyph pixels
+    // Row 1 (y = 9..17): White (#FFFFFF) foreground glyph pixels
     for (let gy = 0; gy < 7; gy++) {
       for (let gx = 0; gx < 5; gx++) {
         if (glyph[gy][gx] === '1') {
-          canvas.setPixel(cellX + gx + 1, gy + 1, '#FFFFFF');
+          canvas.setPixel(cellX + gx + 1, cellH + gy + 1, '#FFFFFF');
         }
       }
     }

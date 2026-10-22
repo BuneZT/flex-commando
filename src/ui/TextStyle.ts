@@ -8,15 +8,16 @@ import type Phaser from 'phaser';
 export const RETRO_FONT_FAMILY = 'Consolas, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", monospace';
 
 /**
- * Character order matching the preloaded static sprite atlas `public/assets/ui/retro_font.png`.
- * Each character cell in `retro_font.png` is 7x9 pixels (5x7 white glyph + 1px black outline).
+ * Character order matching the preloaded static sprite atlas `public/assets/ui/retro_font.png` (406x18).
+ * Row 0 (y = 0..8): 1px black (#000000) outline for each 7x9 cell.
+ * Row 1 (y = 9..17): 5x7 white (#ffffff) foreground glyph for each 7x9 cell.
  */
 export const RETRO_FONT_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 :!?.,-+_/[]()%\'"❤∞★█░';
 export const RETRO_FONT_CELL_WIDTH = 7;
 export const RETRO_FONT_CELL_HEIGHT = 9;
 export const RETRO_FONT_CHAR_ADVANCE = 6;
 export const RETRO_FONT_ATLAS_WIDTH = RETRO_FONT_CHARS.length * RETRO_FONT_CELL_WIDTH; // 406
-export const RETRO_FONT_ATLAS_HEIGHT = RETRO_FONT_CELL_HEIGHT; // 9
+export const RETRO_FONT_ATLAS_HEIGHT = RETRO_FONT_CELL_HEIGHT * 2; // 18
 
 // Precomputed O(1) lookup table from charCode to glyph cell index in `retro_font.png`
 const ASCII_LOOKUP = new Int16Array(128).fill(-1);
@@ -27,7 +28,6 @@ for (let i = 0; i < RETRO_FONT_CHARS.length; i++) {
   const code = RETRO_FONT_CHARS.charCodeAt(i);
   if (code < 128) {
     ASCII_LOOKUP[code] = i;
-    // Map lowercase a-z (97..122) to uppercase A-Z (65..90)
     if (code >= 65 && code <= 90) {
       ASCII_LOOKUP[code + 32] = i;
     }
@@ -46,37 +46,6 @@ export function getRetroFontCharIndex(charCode: number): number {
   }
   const uIdx = UNICODE_LOOKUP.get(charCode);
   return uIdx !== undefined ? uIdx : SPACE_CELL_INDEX;
-}
-
-/**
- * Parses a hex color string (e.g. '#ffcc00' or '#fff') or number into a 24-bit RGB integer (0xRRGGBB)
- * without allocating substrings or arrays.
- */
-export function parseHexColor(color?: string | number | null): number {
-  if (typeof color === 'number') {
-    return color & 0xffffff;
-  }
-  if (!color || typeof color !== 'string') {
-    return 0xffffff;
-  }
-  const start = color.charCodeAt(0) === 35 ? 1 : 0; // '#'
-  const len = color.length - start;
-  let val = 0;
-  for (let i = start; i < color.length; i++) {
-    const c = color.charCodeAt(i);
-    let nibble = 0;
-    if (c >= 48 && c <= 57) nibble = c - 48;
-    else if (c >= 65 && c <= 70) nibble = c - 55;
-    else if (c >= 97 && c <= 102) nibble = c - 87;
-    val = (val << 4) | nibble;
-  }
-  if (len === 3) {
-    const r = (val >> 8) & 0xf;
-    const g = (val >> 4) & 0xf;
-    const b = val & 0xf;
-    return (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
-  }
-  return val & 0xffffff;
 }
 
 export interface RetroTextStyleOptions {
@@ -188,109 +157,94 @@ export function measurePixelText(
 }
 
 /**
- * Patches Phaser.GameObjects.Text.prototype so any Text using RETRO_FONT_FAMILY:
- * 1. Computes integer bounds and displayOrigin in `updateText()` with zero canvas drawing and zero GC.
- * 2. Renders glyphs in `renderWebGL()` directly from the preloaded `retro_font.png` GPU texture.
+ * Blits characters from the preloaded `retro_font.png` atlas onto the Text's 2D canvas
+ * with zero heap allocations and zero font anti-aliasing.
  */
-export function installPixelTextRenderer(phaserNamespace: any = (globalThis as any).Phaser): void {
-  const TextClass = phaserNamespace?.GameObjects?.Text;
-  if (!TextClass || !TextClass.prototype) return;
+export function renderRetroFontAtlasToCanvas(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  fontImage: CanvasImageSource,
+  text: string,
+  style: {
+    fontSize?: string | number;
+    color?: string;
+    stroke?: string;
+    strokeThickness?: number;
+    align?: string;
+    backgroundColor?: string | null;
+  },
+  padding?: { left?: number; right?: number; top?: number; bottom?: number },
+  lineSpacing: number = 0
+): PixelTextMetrics {
+  const scale = getPixelFontScale(style.fontSize);
+  const strokeThickness = style.strokeThickness !== undefined ? style.strokeThickness : 2;
+  const metrics = measurePixelText(text, scale, strokeThickness, lineSpacing, padding, SCRATCH_METRICS);
 
-  const proto = TextClass.prototype;
-  if (proto.__pixelTextPatched) return;
+  if (canvas.width !== metrics.width || canvas.height !== metrics.height) {
+    canvas.width = metrics.width;
+    canvas.height = metrics.height;
+  } else {
+    context.clearRect(0, 0, metrics.width, metrics.height);
+  }
 
-  const origUpdateText = proto.updateText;
-  const origRenderWebGL = proto.renderWebGL;
+  const len = text ? text.length : 0;
+  if (len === 0) {
+    if (style.backgroundColor) {
+      context.fillStyle = style.backgroundColor;
+      context.fillRect(0, 0, metrics.width, metrics.height);
+    }
+    return metrics;
+  }
 
-  proto.updateDisplayOrigin = function () {
-    this._displayOriginX = Math.round(this.originX * this.width);
-    this._displayOriginY = Math.round(this.originY * this.height);
-    return this;
-  };
+  context.imageSmoothingEnabled = false;
 
-  proto.updateText = function () {
-    if (this.style && this.style.fontFamily === RETRO_FONT_FAMILY) {
-      this.style.resolution = 1;
-      const scale = getPixelFontScale(this.style.fontSize);
-      const metrics = measurePixelText(
-        this._text || '',
-        scale,
-        this.style.strokeThickness !== undefined ? this.style.strokeThickness : 2,
-        this.lineSpacing || 0,
-        this.padding,
-        SCRATCH_METRICS
+  const padLeft = padding?.left ? Math.round(padding.left) : 0;
+  const padTop = padding?.top ? Math.round(padding.top) : 0;
+  const cellW = RETRO_FONT_CELL_WIDTH;
+  const cellH = RETRO_FONT_CELL_HEIGHT;
+  const drawW = cellW * metrics.scale;
+  const drawH = cellH * metrics.scale;
+  const advance = metrics.charAdvance;
+  const rowAdvance = metrics.lineHeight + Math.round(lineSpacing);
+
+  // Pass 1: Blit white foreground glyphs (Row 1: sy = 9)
+  let col = 0;
+  let row = 0;
+  for (let i = 0; i < len; i++) {
+    const code = text.charCodeAt(i);
+    if (code === 13) continue;
+    if (code === 10) {
+      col = 0;
+      row++;
+      continue;
+    }
+    if (code !== 32) {
+      const cellIdx = getRetroFontCharIndex(code);
+      context.drawImage(
+        fontImage,
+        cellIdx * cellW,
+        cellH,
+        cellW,
+        cellH,
+        padLeft + col * advance,
+        padTop + row * rowAdvance,
+        drawW,
+        drawH
       );
-
-      this.width = metrics.width;
-      this.height = metrics.height;
-      this.__retroScale = metrics.scale;
-      this.__retroColorInt = parseHexColor(this.style.color);
-      this.updateDisplayOrigin();
-
-      if (this.frame && typeof this.frame.setSize === 'function') {
-        this.frame.setSize(this.width, this.height);
-      }
-
-      if (this.input && !this.input.customHitArea && this.input.hitArea) {
-        this.input.hitArea.width = this.width;
-        this.input.hitArea.height = this.height;
-      }
-
-      return this;
     }
+    col++;
+  }
 
-    return origUpdateText ? origUpdateText.call(this) : this;
-  };
+  // Pass 2: Tint foreground glyphs to exact `style.color` in a single composite operation
+  context.globalCompositeOperation = 'source-in';
+  context.fillStyle = style.color || '#ffffff';
+  context.fillRect(0, 0, metrics.width, metrics.height);
+  context.globalCompositeOperation = 'source-over';
 
-  proto.renderWebGL = function (renderer: any, src: any, camera: any, parentMatrix: any) {
-    if (!src.style || src.style.fontFamily !== RETRO_FONT_FAMILY) {
-      if (origRenderWebGL) {
-        origRenderWebGL.call(this, renderer, src, camera, parentMatrix);
-      }
-      return;
-    }
-
-    const text: string = src._text || '';
-    const len = text.length;
-    if (len === 0 || src.width === 0 || src.height === 0) {
-      return;
-    }
-
-    const textures = src.scene?.sys?.textures || renderer?.game?.textures;
-    const fontTex = textures && typeof textures.get === 'function' ? textures.get('retro_font') : null;
-    const glTexture = fontTex?.source?.[0]?.glTexture;
-
-    if (!glTexture) {
-      if (origRenderWebGL) {
-        origRenderWebGL.call(this, renderer, src, camera, parentMatrix);
-      }
-      return;
-    }
-
-    camera.addToRenderList(src);
-
-    const pipeline = renderer.pipelines.set(src.pipeline, src);
-    const textureUnit = pipeline.setTexture2D(glTexture, src);
-
-    const scale = src.__retroScale || getPixelFontScale(src.style.fontSize);
-    const cellW = RETRO_FONT_CELL_WIDTH;
-    const cellH = RETRO_FONT_CELL_HEIGHT;
-    const drawW = cellW * scale;
-    const drawH = cellH * scale;
-    const charAdvance = RETRO_FONT_CHAR_ADVANCE * scale;
-    const lineHeight = cellH * scale + Math.round(src.lineSpacing || 0);
-
-    const colorInt = src.__retroColorInt !== undefined ? src.__retroColorInt : parseHexColor(src.style.color);
-    const alpha = camera.alpha * (src._alphaTL !== undefined ? src._alphaTL : 1);
-    const ua = ((alpha * 255) | 0) & 0xff;
-    const packedTint = ((ua << 24) | colorInt) >>> 0;
-
-    const padLeft = src.padding?.left ? Math.round(src.padding.left) : 0;
-    const padTop = src.padding?.top ? Math.round(src.padding.top) : 0;
-
-    let col = 0;
-    let row = 0;
-
+  // Pass 3: Blit 1px black pixel outline (Row 0: sy = 0)
+  if (strokeThickness > 0 && style.stroke !== '') {
+    col = 0;
+    row = 0;
     for (let i = 0; i < len; i++) {
       const code = text.charCodeAt(i);
       if (code === 13) continue;
@@ -299,51 +253,147 @@ export function installPixelTextRenderer(phaserNamespace: any = (globalThis as a
         row++;
         continue;
       }
-
       if (code !== 32) {
         const cellIdx = getRetroFontCharIndex(code);
-        const frameX = cellIdx * cellW;
-        const charOffsetX = padLeft + col * charAdvance;
-        const charOffsetY = padTop + row * lineHeight;
-
-        pipeline.batchTexture(
-          src,
-          glTexture,
-          RETRO_FONT_ATLAS_WIDTH,
-          RETRO_FONT_ATLAS_HEIGHT,
-          src.x,
-          src.y,
-          drawW,
-          drawH,
-          src.scaleX,
-          src.scaleY,
-          src.rotation,
-          src.flipX,
-          src.flipY,
-          src.scrollFactorX,
-          src.scrollFactorY,
-          src.displayOriginX - charOffsetX,
-          src.displayOriginY - charOffsetY,
-          frameX,
+        context.drawImage(
+          fontImage,
+          cellIdx * cellW,
           0,
           cellW,
           cellH,
-          packedTint,
-          packedTint,
-          packedTint,
-          packedTint,
-          0,
-          0,
-          0,
-          camera,
-          parentMatrix,
-          false,
-          textureUnit
+          padLeft + col * advance,
+          padTop + row * rowAdvance,
+          drawW,
+          drawH
         );
       }
-
       col++;
     }
+  }
+
+  // Optional solid background behind text
+  if (style.backgroundColor) {
+    context.globalCompositeOperation = 'destination-over';
+    context.fillStyle = style.backgroundColor;
+    context.fillRect(0, 0, metrics.width, metrics.height);
+    context.globalCompositeOperation = 'source-over';
+  }
+
+  return metrics;
+}
+
+// Fallback image loader if HMR reloads a scene before BootScene preloads `retro_font`
+let fallbackFontImg: HTMLImageElement | null = null;
+let fallbackFontLoaded = false;
+const pendingTextInstances = new Set<any>();
+
+function getFontSourceImage(textObj: any): CanvasImageSource | null {
+  const textures = textObj.scene?.sys?.textures;
+  if (textures && typeof textures.exists === 'function' && textures.exists('retro_font')) {
+    const tex = textures.get('retro_font');
+    const img = tex && typeof tex.getSourceImage === 'function' ? tex.getSourceImage() : null;
+    if (img) return img as CanvasImageSource;
+  }
+
+  if (fallbackFontLoaded && fallbackFontImg) {
+    return fallbackFontImg;
+  }
+
+  if (typeof Image !== 'undefined' && !fallbackFontImg) {
+    fallbackFontImg = new Image();
+    fallbackFontImg.onload = () => {
+      fallbackFontLoaded = true;
+      pendingTextInstances.forEach((inst) => {
+        if (inst && inst.canvas && inst.context && typeof inst.updateText === 'function') {
+          inst.updateText();
+        }
+      });
+      pendingTextInstances.clear();
+    };
+    fallbackFontImg.src = 'assets/ui/retro_font.png';
+  }
+
+  if (fallbackFontImg && !fallbackFontLoaded) {
+    pendingTextInstances.add(textObj);
+  }
+
+  return null;
+}
+
+/**
+ * Patches Phaser.GameObjects.Text.prototype so any Text using RETRO_FONT_FAMILY
+ * blits glyphs from the preloaded `retro_font.png` atlas with even-integer bounds and integer displayOrigins.
+ */
+export function installPixelTextRenderer(phaserNamespace: any = (globalThis as any).Phaser): void {
+  const TextClass = phaserNamespace?.GameObjects?.Text;
+  if (!TextClass || !TextClass.prototype) return;
+
+  const proto = TextClass.prototype;
+
+  if (!proto.__origUpdateText) {
+    proto.__origUpdateText = proto.updateText;
+  }
+  if (!proto.__origRenderWebGL && proto.renderWebGL) {
+    proto.__origRenderWebGL = proto.renderWebGL;
+  } else if (proto.__origRenderWebGL) {
+    // Restore native Phaser TextWebGLRenderer if HMR previously replaced renderWebGL
+    proto.renderWebGL = proto.__origRenderWebGL;
+  }
+
+  const origUpdateText = proto.__origUpdateText;
+
+  proto.updateDisplayOrigin = function () {
+    this._displayOriginX = Math.round(this.originX * this.width);
+    this._displayOriginY = Math.round(this.originY * this.height);
+    return this;
+  };
+
+  proto.updateText = function () {
+    if (this.style && this.style.fontFamily === RETRO_FONT_FAMILY && this.canvas && this.context) {
+      const fontImg = getFontSourceImage(this);
+      if (fontImg) {
+        this.style.resolution = 1;
+        const metrics = renderRetroFontAtlasToCanvas(
+          this.canvas,
+          this.context,
+          fontImg,
+          this._text || '',
+          this.style,
+          this.padding,
+          this.lineSpacing || 0
+        );
+
+        this.width = metrics.width;
+        this.height = metrics.height;
+        this.updateDisplayOrigin();
+
+        if (this.frame && typeof this.frame.setSize === 'function') {
+          this.frame.setSize(this.width, this.height);
+        }
+
+        if (
+          this.renderer &&
+          this.renderer.gl &&
+          typeof this.renderer.canvasToTexture === 'function' &&
+          this.frame?.source
+        ) {
+          this.frame.source.glTexture = this.renderer.canvasToTexture(
+            this.canvas,
+            this.frame.source.glTexture,
+            true
+          );
+        }
+
+        if (this.input && !this.input.customHitArea && this.input.hitArea) {
+          this.input.hitArea.width = this.width;
+          this.input.hitArea.height = this.height;
+        }
+
+        return this;
+      }
+    }
+
+    return origUpdateText ? origUpdateText.call(this) : this;
   };
 
   proto.__pixelTextPatched = true;

@@ -5,7 +5,7 @@ import path from 'path';
 describe('Asset Integrity', () => {
   const assetSpecs: { path: string; width: number; height: number }[] = [
     { path: 'public/assets/ui/logo.png', width: 200, height: 50 },
-    { path: 'public/assets/ui/retro_font.png', width: 406, height: 9 },
+    { path: 'public/assets/ui/retro_font.png', width: 406, height: 18 },
     { path: 'public/assets/bg/cyber_hangar_bg.png', width: 512, height: 288 },
     { path: 'public/assets/tiles/tileset.png', width: 80, height: 16 },
     { path: 'public/assets/sprites/player.png', width: 312, height: 24 },

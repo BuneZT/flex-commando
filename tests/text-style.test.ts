@@ -8,9 +8,9 @@ import {
   RETRO_FONT_ATLAS_WIDTH,
   RETRO_FONT_ATLAS_HEIGHT,
   getRetroFontCharIndex,
-  parseHexColor,
   getPixelFontScale,
   measurePixelText,
+  renderRetroFontAtlasToCanvas,
   installPixelTextRenderer,
 } from '../src/ui/TextStyle';
 
@@ -51,7 +51,7 @@ describe('TextStyle', () => {
     expect(RETRO_FONT_CELL_WIDTH).toBe(7);
     expect(RETRO_FONT_CELL_HEIGHT).toBe(9);
     expect(RETRO_FONT_ATLAS_WIDTH).toBe(406);
-    expect(RETRO_FONT_ATLAS_HEIGHT).toBe(9);
+    expect(RETRO_FONT_ATLAS_HEIGHT).toBe(18);
 
     const requiredChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 :![]/()%-❤∞★█░';
     for (let i = 0; i < requiredChars.length; i++) {
@@ -62,17 +62,8 @@ describe('TextStyle', () => {
       expect(RETRO_FONT_CHARS.charCodeAt(idx)).toBe(code);
     }
 
-    // Lowercase a-z maps to uppercase A-Z cell indices
     expect(getRetroFontCharIndex('a'.charCodeAt(0))).toBe(getRetroFontCharIndex('A'.charCodeAt(0)));
     expect(getRetroFontCharIndex('z'.charCodeAt(0))).toBe(getRetroFontCharIndex('Z'.charCodeAt(0)));
-  });
-
-  it('should parse hex colors to 24-bit RGB integers without allocations', () => {
-    expect(parseHexColor('#ffcc00')).toBe(0xffcc00);
-    expect(parseHexColor('#00ffff')).toBe(0x00ffff);
-    expect(parseHexColor('#ff4444')).toBe(0xff4444);
-    expect(parseHexColor('#fff')).toBe(0xffffff);
-    expect(parseHexColor(0x00ff88)).toBe(0x00ff88);
   });
 
   it('should compute integer pixel font scale from fontSize string', () => {
@@ -98,74 +89,90 @@ describe('TextStyle', () => {
     expect((m2.height * 0.5) % 1).toBe(0);
   });
 
-  it('should patch Phaser Text prototype to batch glyphs directly from preloaded retro_font texture with zero canvas drawing', () => {
-    const mockGlTexture = { id: 'gl_retro_font' };
-    const batchTextureSpy = vi.fn();
-    const setTexture2DSpy = vi.fn().mockReturnValue(0);
-    const mockPipeline = {
-      setTexture2D: setTexture2DSpy,
-      batchTexture: batchTextureSpy,
-    };
-    const mockRenderer = {
-      pipelines: {
-        set: vi.fn().mockReturnValue(mockPipeline),
-      },
-      canvasToTexture: vi.fn(),
-    };
-    const mockCamera = {
-      addToRenderList: vi.fn(),
-      alpha: 1,
-    };
+  it('should blit glyphs from preloaded retro_font image using integer drawImage calls without fillText or strokeText', () => {
+    const canvas = { width: 0, height: 0 } as HTMLCanvasElement;
+    const drawImageCalls: Array<number[]> = [];
+    const context = {
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      drawImage: vi.fn((_img: any, ...coords: number[]) => {
+        drawImageCalls.push(coords);
+      }),
+      fillText: vi.fn(),
+      strokeText: vi.fn(),
+      fillStyle: '',
+      globalCompositeOperation: 'source-over',
+      imageSmoothingEnabled: true,
+    } as unknown as CanvasRenderingContext2D;
+
+    const fakeFontImg = {} as CanvasImageSource;
+    const dims = renderRetroFontAtlasToCanvas(canvas, context, fakeFontImg, 'HI!', {
+      fontSize: '10px',
+      color: '#ffcc00',
+      stroke: '#000000',
+      strokeThickness: 2,
+      align: 'center',
+    });
+
+    expect(dims.width % 2).toBe(0);
+    expect(dims.height % 2).toBe(0);
+    expect(context.imageSmoothingEnabled).toBe(false);
+    expect(context.fillText).not.toHaveBeenCalled();
+    expect(context.strokeText).not.toHaveBeenCalled();
+    expect(drawImageCalls.length).toBe(6); // 3 foreground cells + 3 outline cells
+
+    for (const coords of drawImageCalls) {
+      for (const n of coords) {
+        expect(Number.isInteger(n)).toBe(true);
+      }
+    }
+  });
+
+  it('should patch Phaser Text prototype to blit from preloaded retro_font texture and upload to glTexture', () => {
+    const mockCanvas = { width: 0, height: 0 } as HTMLCanvasElement;
+    const mockContext = {
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+      fillStyle: '',
+      globalCompositeOperation: 'source-over',
+      imageSmoothingEnabled: true,
+    } as unknown as CanvasRenderingContext2D;
+    const fakeFontImg = {} as HTMLImageElement;
 
     class MockText {
-      public _text = 'HI!';
-      public style = {
-        fontFamily: RETRO_FONT_FAMILY,
-        fontSize: '10px',
-        color: '#ffcc00',
-        stroke: '#000000',
-        strokeThickness: 2,
-        align: 'center',
-        resolution: 1,
-      };
+      public canvas = mockCanvas;
+      public context = mockContext;
+      public _text = 'LIVES: ❤❤❤';
       public scene = {
         sys: {
           textures: {
-            get: vi.fn((key: string) =>
-              key === 'retro_font' ? { source: [{ glTexture: mockGlTexture }] } : null
-            ),
+            exists: vi.fn((key: string) => key === 'retro_font'),
+            get: vi.fn(() => ({
+              getSourceImage: () => fakeFontImg,
+            })),
           },
         },
+      };
+      public style = {
+        fontFamily: RETRO_FONT_FAMILY,
+        fontSize: '10px',
+        color: '#ff4444',
+        stroke: '#000000',
+        strokeThickness: 2,
+        align: 'left',
+        resolution: 1,
       };
       public padding = { left: 0, right: 0, top: 0, bottom: 0 };
       public lineSpacing = 0;
       public width = 0;
       public height = 0;
-      public x = 256;
-      public y = 144;
-      public scaleX = 1;
-      public scaleY = 1;
-      public rotation = 0;
-      public flipX = false;
-      public flipY = false;
-      public scrollFactorX = 0;
-      public scrollFactorY = 0;
       public originX = 0.5;
       public originY = 0.5;
       public _displayOriginX = 0;
       public _displayOriginY = 0;
-      public _alphaTL = 1;
-      public pipeline = {};
       public frame = { setSize: vi.fn(), source: { glTexture: {} } };
-      public renderer = mockRenderer;
-
-      get displayOriginX() {
-        return this._displayOriginX;
-      }
-
-      get displayOriginY() {
-        return this._displayOriginY;
-      }
+      public renderer = { gl: {}, canvasToTexture: vi.fn().mockReturnValue({ id: 'gl_tex' }) };
 
       updateDisplayOrigin() {
         this._displayOriginX = this.originX * this.width;
@@ -176,8 +183,6 @@ describe('TextStyle', () => {
       updateText() {
         return this;
       }
-
-      renderWebGL(_renderer: any, _src: any, _camera: any, _parentMatrix: any) {}
     }
 
     const fakePhaser = {
@@ -191,17 +196,12 @@ describe('TextStyle', () => {
     const textInstance = new MockText();
     textInstance.updateText();
 
-    // Verify zero canvas upload during updateText()
-    expect(mockRenderer.canvasToTexture).not.toHaveBeenCalled();
     expect(textInstance.width % 2).toBe(0);
     expect(textInstance.height % 2).toBe(0);
     expect(Number.isInteger(textInstance._displayOriginX)).toBe(true);
     expect(Number.isInteger(textInstance._displayOriginY)).toBe(true);
-
-    // Verify WebGL rendering batches character quads from preloaded retro_font texture
-    textInstance.renderWebGL(mockRenderer, textInstance, mockCamera, null);
-    expect(mockCamera.addToRenderList).toHaveBeenCalledWith(textInstance);
-    expect(setTexture2DSpy).toHaveBeenCalledWith(mockGlTexture, textInstance);
-    expect(batchTextureSpy).toHaveBeenCalledTimes(3); // 'H', 'I', '!'
+    expect(mockContext.drawImage).toHaveBeenCalled();
+    expect(textInstance.frame.setSize).toHaveBeenCalledWith(textInstance.width, textInstance.height);
+    expect(textInstance.renderer.canvasToTexture).toHaveBeenCalled();
   });
 });
