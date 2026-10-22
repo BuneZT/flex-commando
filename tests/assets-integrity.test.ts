@@ -7,7 +7,7 @@ describe('Asset Integrity', () => {
     { path: 'public/assets/ui/logo.png', width: 200, height: 50 },
     { path: 'public/assets/bg/cyber_hangar_bg.png', width: 512, height: 288 },
     { path: 'public/assets/tiles/tileset.png', width: 80, height: 16 },
-    { path: 'public/assets/sprites/player.png', width: 144, height: 24 },
+    { path: 'public/assets/sprites/player.png', width: 312, height: 24 },
     { path: 'public/assets/sprites/trooper.png', width: 96, height: 24 },
     { path: 'public/assets/sprites/turret.png', width: 64, height: 24 },
     { path: 'public/assets/sprites/drone.png', width: 128, height: 20 },

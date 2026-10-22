@@ -522,54 +522,208 @@ function generateTileset() {
 }
 
 /**
- * 4. public/assets/sprites/player.png (144x24)
- * 6 frames of 24x24:
- * 0: Idle, 1: Run1, 2: Run2, 3: Jump, 4: Crouch, 5: Shoot
- * High-visibility Action Hero palette: Desert khaki pants, bright cobalt vest,
- * white/chrome harness, white wrist wraps, and crimson headband.
+ * 4. public/assets/sprites/player.png (312x24)
+ * 13 frames of 24x24:
+ * 0: Idle forward
+ * 1: Run 1
+ * 2: Run 2
+ * 3: Jump
+ * 4: Prone / Crouch idle (classic Contra low flat crawl on ground)
+ * 5: Prone / Crouch shoot (prone stance with low horizontal muzzle flash)
+ * 6: Aim straight up idle (90°)
+ * 7: Shoot straight up (90° with top muzzle flare)
+ * 8: Aim diagonal up idle (45°)
+ * 9: Shoot diagonal up (45° with top-right muzzle flare)
+ * 10: Aim diagonal down idle (45° in air)
+ * 11: Shoot diagonal down (45° with bottom-right muzzle flare)
+ * 12: Shoot forward (standing horizontal muzzle flash)
  */
 function generatePlayer() {
-  const canvas = new PixelCanvas(144, 24);
+  const canvas = new PixelCanvas(312, 24);
 
-  for (let f = 0; f < 6; f++) {
+  for (let f = 0; f < 13; f++) {
     const ox = f * 24;
 
-    // Headband & hair
-    canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E'); // Vibrant crimson headband
-    canvas.fillRect(ox + 6, 3, 2, 2, '#FF5555'); // Trailing ribbon
-    canvas.fillRect(ox + 4, 4, 2, 2, '#D01010'); // Ribbon tail
-    canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A'); // Hair spikes
+    if (f === 4 || f === 5) {
+      // =========================================================================
+      // --- CROUCH / PRONE FRAMES (Classic Contra flat ground crawl) ---
+      // =========================================================================
+      // Ribbon trailing back low
+      canvas.fillRect(ox + 1, 12, 4, 2, '#D01010');
+      canvas.fillRect(ox + 4, 12, 3, 2, '#FF5555');
 
-    // Face / skin
-    canvas.fillRect(ox + 9, 5, 7, 4, '#FFCCA0'); // Face
-    canvas.fillRect(ox + 12, 5, 2, 2, '#1A1A1A'); // Eye / visor
-    canvas.fillRect(ox + 9, 8, 6, 1, '#D99570'); // Jaw shadow
+      // Head lowered to ground level (y=11..16)
+      canvas.fillRect(ox + 7, 11, 6, 2, '#1E120A'); // Hair
+      canvas.fillRect(ox + 7, 12, 7, 2, '#FF1E1E'); // Headband
+      canvas.fillRect(ox + 8, 14, 6, 3, '#FFCCA0'); // Face
+      canvas.fillRect(ox + 11, 14, 2, 2, '#1A1A1A'); // Eye/visor
+      canvas.fillRect(ox + 8, 16, 6, 1, '#D99570'); // Jaw
 
-    if (f === 4) {
-      // --- CROUCH FRAME ---
-      // Torso lowered: Cobalt vest with white/chrome harness
-      canvas.fillRect(ox + 8, 10, 8, 6, '#1E58E8'); // Electric cobalt vest
-      canvas.fillRect(ox + 9, 11, 6, 4, '#3878FF'); // Chest highlight
-      canvas.fillRect(ox + 8, 10, 2, 6, '#FFFFFF'); // Chrome shoulder strap
-      canvas.fillRect(ox + 14, 10, 2, 6, '#D0DCF2');
-      // Kneeling legs: High-contrast Desert Khaki
-      canvas.fillRect(ox + 6, 16, 12, 5, '#E5C28A'); // Khaki base
-      canvas.fillRect(ox + 8, 17, 8, 3, '#BA945A'); // Khaki crease/shadow
-      canvas.fillRect(ox + 5, 19, 14, 4, '#302016'); // Polished combat boots
-      canvas.fillRect(ox + 6, 20, 12, 1, '#EDE5DC'); // Silver boot lace trim
-      // Weapon lowered forward
-      canvas.fillRect(ox + 11, 12, 4, 3, '#FFCCA0'); // Arm
-      canvas.fillRect(ox + 13, 12, 2, 3, '#FFFFFF'); // White wrist wrap
-      canvas.fillRect(ox + 14, 12, 8, 3, '#707A8C'); // Rifle barrel
-      canvas.fillRect(ox + 19, 11, 2, 2, '#00FFFF'); // Cyan optic
-    } else if (f === 3) {
-      // --- JUMP FRAME ---
-      // Torso angled
+      // Body prone flat (y=16..20)
+      canvas.fillRect(ox + 3, 16, 6, 3, '#1E58E8'); // Cobalt vest back
+      canvas.fillRect(ox + 5, 16, 2, 3, '#FFFFFF'); // Shoulder strap
+      canvas.fillRect(ox + 2, 17, 3, 2, '#2A2016'); // Belt
+
+      // Legs stretched back flat along ground (y=18..22)
+      canvas.fillRect(ox + 0, 18, 5, 3, '#E5C28A'); // Khaki pants
+      canvas.fillRect(ox + 0, 20, 4, 3, '#302016'); // Boots flat on floor
+      canvas.fillRect(ox + 1, 21, 2, 1, '#EDE5DC'); // Lace trim
+
+      // Grounded arms & Low horizontal rifle (y=17..20)
+      canvas.fillRect(ox + 9, 17, 5, 3, '#FFCCA0'); // Muscular arm on floor
+      canvas.fillRect(ox + 13, 17, 2, 3, '#FFFFFF'); // Wrist wrap
+      canvas.fillRect(ox + 14, 17, 7, 3, '#707A8C'); // Rifle barrel level
+      canvas.fillRect(ox + 18, 16, 2, 2, '#00FFFF'); // Optic
+
+      if (f === 5) {
+        // Prone Shoot: Low horizontal muzzle flare
+        canvas.fillRect(ox + 21, 16, 2, 5, '#FFCC00');
+        canvas.fillRect(ox + 21, 17, 3, 3, '#FFFFFF');
+        canvas.setPixel(ox + 23, 18, '#FF4400');
+      }
+    } else if (f === 6 || f === 7) {
+      // =========================================================================
+      // --- AIM STRAIGHT UP (90°) ---
+      // =========================================================================
+      // Hair & Headband looking up
+      canvas.fillRect(ox + 8, 3, 7, 2, '#1E120A'); // Hair
+      canvas.fillRect(ox + 8, 4, 7, 2, '#FF1E1E'); // Headband
+      canvas.fillRect(ox + 5, 5, 3, 2, '#FF5555'); // Ribbon
+      canvas.fillRect(ox + 3, 6, 2, 2, '#D01010');
+      canvas.fillRect(ox + 8, 6, 7, 3, '#FFCCA0'); // Face looking up
+      canvas.fillRect(ox + 11, 5, 2, 2, '#1A1A1A'); // Eye looking upward
+
+      // Torso tilted back
+      canvas.fillRect(ox + 7, 9, 8, 7, '#1E58E8');
+      canvas.fillRect(ox + 8, 10, 6, 5, '#3878FF');
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF');
+      canvas.fillRect(ox + 13, 9, 2, 7, '#D0DCF2');
+      canvas.fillRect(ox + 7, 15, 8, 2, '#2A2016');
+      canvas.fillRect(ox + 10, 15, 2, 2, '#FFD700');
+
+      // Solid standing legs
+      canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
+      canvas.fillRect(ox + 12, 16, 4, 5, '#E5C28A');
+      canvas.fillRect(ox + 7, 17, 2, 3, '#BA945A');
+      canvas.fillRect(ox + 13, 17, 2, 3, '#BA945A');
+      canvas.fillRect(ox + 5, 20, 5, 4, '#302016');
+      canvas.fillRect(ox + 12, 20, 5, 4, '#302016');
+      canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
+      canvas.fillRect(ox + 13, 21, 3, 1, '#EDE5DC');
+
+      // Arms & Vertical Rifle pointing straight up
+      canvas.fillRect(ox + 10, 8, 3, 4, '#FFCCA0'); // Arms raised
+      canvas.fillRect(ox + 10, 7, 3, 2, '#FFFFFF'); // Wrist wrap
+      canvas.fillRect(ox + 11, 2, 3, 8, '#707A8C'); // Vertical rifle barrel
+      canvas.fillRect(ox + 14, 5, 2, 2, '#00FFFF'); // Optic
+
+      if (f === 7) {
+        // Vertical Muzzle Flare on top of barrel
+        canvas.fillRect(ox + 10, 0, 5, 2, '#FFCC00');
+        canvas.fillRect(ox + 11, 0, 3, 3, '#FFFFFF');
+        canvas.setPixel(ox + 12, 0, '#FF4400');
+      }
+    } else if (f === 8 || f === 9) {
+      // =========================================================================
+      // --- AIM DIAGONAL UP (45°) ---
+      // =========================================================================
+      // Head looking up-forward
+      canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
+      canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E');
+      canvas.fillRect(ox + 6, 4, 2, 2, '#FF5555');
+      canvas.fillRect(ox + 4, 5, 2, 2, '#D01010');
+      canvas.fillRect(ox + 9, 5, 7, 4, '#FFCCA0');
+      canvas.fillRect(ox + 12, 4, 2, 2, '#1A1A1A'); // Eye angled up
+
+      // Torso
       canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
       canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
-      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF'); // Chrome strap
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF');
       canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
-      // Legs tucked up: Desert Khaki
+      canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
+      canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700');
+
+      // Stance legs
+      canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
+      canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
+      canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
+      canvas.fillRect(ox + 14, 17, 2, 3, '#BA945A');
+      canvas.fillRect(ox + 6, 20, 5, 4, '#302016');
+      canvas.fillRect(ox + 13, 20, 5, 4, '#302016');
+      canvas.fillRect(ox + 7, 21, 3, 1, '#EDE5DC');
+      canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
+
+      // Diagonal Up Rifle (45°)
+      canvas.fillRect(ox + 11, 10, 4, 3, '#FFCCA0'); // Arm
+      canvas.fillRect(ox + 13, 9, 3, 3, '#FFFFFF'); // Wrist wrap
+      // Diagonal barrel stepping up-right
+      canvas.fillRect(ox + 14, 8, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 16, 6, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 18, 4, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 16, 4, 2, 2, '#00FFFF'); // Optic
+
+      if (f === 9) {
+        // Diagonal Up Muzzle Flare (top-right)
+        canvas.fillRect(ox + 20, 2, 3, 3, '#FFCC00');
+        canvas.fillRect(ox + 21, 3, 2, 2, '#FFFFFF');
+        canvas.setPixel(ox + 22, 2, '#FF4400');
+      }
+    } else if (f === 10 || f === 11) {
+      // =========================================================================
+      // --- AIM DIAGONAL DOWN (45° in air / descent) ---
+      // =========================================================================
+      // Head looking down-forward
+      canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
+      canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E');
+      canvas.fillRect(ox + 6, 2, 2, 2, '#FF5555');
+      canvas.fillRect(ox + 4, 2, 2, 2, '#D01010');
+      canvas.fillRect(ox + 9, 5, 7, 4, '#FFCCA0');
+      canvas.fillRect(ox + 12, 6, 2, 2, '#1A1A1A'); // Eye angled down
+
+      // Torso
+      canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
+      canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF');
+      canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
+      canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
+
+      // Tucked airborne legs
+      canvas.fillRect(ox + 7, 16, 5, 5, '#E5C28A');
+      canvas.fillRect(ox + 13, 15, 5, 5, '#E5C28A');
+      canvas.fillRect(ox + 6, 18, 5, 4, '#302016');
+      canvas.fillRect(ox + 13, 18, 5, 4, '#302016');
+
+      // Diagonal Down Rifle (45°)
+      canvas.fillRect(ox + 11, 11, 4, 3, '#FFCCA0');
+      canvas.fillRect(ox + 13, 12, 3, 3, '#FFFFFF');
+      // Diagonal barrel stepping down-right
+      canvas.fillRect(ox + 14, 13, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 16, 15, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 18, 17, 3, 3, '#707A8C');
+      canvas.fillRect(ox + 15, 12, 2, 2, '#00FFFF'); // Optic
+
+      if (f === 11) {
+        // Diagonal Down Muzzle Flare (bottom-right)
+        canvas.fillRect(ox + 20, 18, 3, 3, '#FFCC00');
+        canvas.fillRect(ox + 21, 18, 2, 2, '#FFFFFF');
+        canvas.setPixel(ox + 22, 19, '#FF4400');
+      }
+    } else if (f === 3) {
+      // =========================================================================
+      // --- JUMP FRAME ---
+      // =========================================================================
+      canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
+      canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E');
+      canvas.fillRect(ox + 6, 3, 2, 2, '#FF5555');
+      canvas.fillRect(ox + 4, 4, 2, 2, '#D01010');
+      canvas.fillRect(ox + 9, 5, 7, 4, '#FFCCA0');
+      canvas.fillRect(ox + 12, 5, 2, 2, '#1A1A1A');
+
+      canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
+      canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF');
+      canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
+
       canvas.fillRect(ox + 7, 16, 5, 5, '#E5C28A');
       canvas.fillRect(ox + 13, 15, 5, 5, '#E5C28A');
       canvas.fillRect(ox + 8, 17, 3, 3, '#BA945A');
@@ -578,24 +732,32 @@ function generatePlayer() {
       canvas.fillRect(ox + 13, 18, 5, 4, '#302016');
       canvas.fillRect(ox + 7, 19, 3, 1, '#EDE5DC');
       canvas.fillRect(ox + 14, 19, 3, 1, '#EDE5DC');
-      // Weapon aimed
-      canvas.fillRect(ox + 11, 10, 4, 3, '#FFCCA0'); // Arm
-      canvas.fillRect(ox + 13, 10, 2, 3, '#FFFFFF'); // White wrist wrap
+
+      canvas.fillRect(ox + 11, 10, 4, 3, '#FFCCA0');
+      canvas.fillRect(ox + 13, 10, 2, 3, '#FFFFFF');
       canvas.fillRect(ox + 14, 10, 8, 3, '#707A8C');
       canvas.fillRect(ox + 19, 9, 2, 2, '#00FFFF');
     } else {
-      // --- STANDING / RUNNING / SHOOTING FRAMES ---
-      // Torso: Cobalt vest with white/chrome shoulder harness
+      // =========================================================================
+      // --- FRAMES 0, 1, 2, 12 (Idle, Run1, Run2, Standing Shoot Forward) ---
+      // =========================================================================
+      canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
+      canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E');
+      canvas.fillRect(ox + 6, 3, 2, 2, '#FF5555');
+      canvas.fillRect(ox + 4, 4, 2, 2, '#D01010');
+      canvas.fillRect(ox + 9, 5, 7, 4, '#FFCCA0');
+      canvas.fillRect(ox + 12, 5, 2, 2, '#1A1A1A');
+      canvas.fillRect(ox + 9, 8, 6, 1, '#D99570');
+
       canvas.fillRect(ox + 8, 9, 8, 7, '#1E58E8');
       canvas.fillRect(ox + 9, 10, 6, 5, '#3878FF');
-      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF'); // Chrome harness
+      canvas.fillRect(ox + 8, 9, 2, 7, '#FFFFFF');
       canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
-      canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016'); // Utility belt
-      canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700'); // Brass buckle
+      canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
+      canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700');
 
-      // Legs animation: Vivid Desert Khaki with contrast shading
       if (f === 1) {
-        // Run 1: left forward, right back
+        // Run 1
         canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
         canvas.fillRect(ox + 14, 16, 4, 4, '#BA945A');
         canvas.fillRect(ox + 5, 20, 5, 4, '#302016');
@@ -603,7 +765,7 @@ function generatePlayer() {
         canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
         canvas.fillRect(ox + 16, 20, 3, 1, '#EDE5DC');
       } else if (f === 2) {
-        // Run 2: right forward, left back
+        // Run 2
         canvas.fillRect(ox + 6, 16, 4, 4, '#BA945A');
         canvas.fillRect(ox + 14, 16, 4, 5, '#E5C28A');
         canvas.fillRect(ox + 5, 19, 5, 4, '#302016');
@@ -611,7 +773,7 @@ function generatePlayer() {
         canvas.fillRect(ox + 6, 20, 3, 1, '#EDE5DC');
         canvas.fillRect(ox + 16, 21, 3, 1, '#EDE5DC');
       } else {
-        // Idle / Shoot: solid stance
+        // Stance (Frame 0 or 12)
         canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
         canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
         canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
@@ -622,14 +784,14 @@ function generatePlayer() {
         canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
       }
 
-      // Arms & Weapon with white wrist wrap
-      canvas.fillRect(ox + 11, 11, 4, 4, '#FFCCA0'); // Muscular arm
-      canvas.fillRect(ox + 13, 11, 2, 4, '#FFFFFF'); // White wrist wrap
-      canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C'); // Polished rifle
-      canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF'); // Cyan optic
+      // Arms & Horizontal Rifle
+      canvas.fillRect(ox + 11, 11, 4, 4, '#FFCCA0');
+      canvas.fillRect(ox + 13, 11, 2, 4, '#FFFFFF');
+      canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C');
+      canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF');
 
-      if (f === 5) {
-        // Shoot frame: muzzle flash flare!
+      if (f === 12) {
+        // Standing horizontal muzzle flare!
         canvas.fillRect(ox + 22, 10, 2, 5, '#FFCC00');
         canvas.fillRect(ox + 21, 11, 3, 3, '#FFFFFF');
         canvas.setPixel(ox + 23, 12, '#FF4400');
