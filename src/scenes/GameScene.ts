@@ -20,6 +20,7 @@ import { createRetroTextStyle } from '../ui/TextStyle';
 import { ImpactFXPool } from '../core/ImpactFXPool';
 import { CombatFX } from '../core/CombatFX';
 import { ScoreManager, POWERUP_SCORE_VALUE } from '../core/ScoreManager';
+import { getRoomDoorBarriers, isRoomCleared, clampPlayerInsideRoom } from '../core/RoomLockdown';
 
 export interface GameSceneInitData {
   infiniteLives?: boolean;
@@ -54,6 +55,9 @@ export class GameScene extends Phaser.Scene {
   public exitDoors: Phaser.GameObjects.Sprite[] = [];
   public isPortalUnlocked: boolean = false;
   public exitPortalText?: Phaser.GameObjects.Text;
+  public roomBarriers: Phaser.GameObjects.Sprite[] = [];
+  public roomBarrierGroup?: Phaser.Physics.Arcade.StaticGroup | Phaser.Physics.Arcade.Group;
+  public isRoomLockdownActive: boolean = false;
 
   public invulnerableTimer: number = 0;
   public isGameOver: boolean = false;
@@ -88,6 +92,9 @@ export class GameScene extends Phaser.Scene {
     this.pickupItems = [];
     this.exitDoor = undefined;
     this.exitDoors = [];
+    this.roomBarriers = [];
+    this.roomBarrierGroup = undefined;
+    this.isRoomLockdownActive = false;
     this.isPortalUnlocked = false;
     this.exitPortalText = undefined;
     this.crosshair = undefined;
@@ -116,6 +123,11 @@ export class GameScene extends Phaser.Scene {
     if (this.physics && typeof this.physics.add?.group === 'function') {
       this.enemyGroup = this.physics.add.group();
       this.pickupItemGroup = this.physics.add.group();
+      if (typeof this.physics.add?.staticGroup === 'function') {
+        this.roomBarrierGroup = this.physics.add.staticGroup();
+      } else if (typeof this.physics.add?.group === 'function') {
+        this.roomBarrierGroup = this.physics.add.group();
+      }
     }
 
     // 0.5. Parallax cyber hangar background
@@ -164,6 +176,41 @@ export class GameScene extends Phaser.Scene {
         },
         this
       );
+    }
+
+    // 5.5 Setup room barrier pool and collision with player
+    this.roomBarriers = [];
+    for (let i = 0; i < 4; i++) {
+      let barrier: any = null;
+      if (this.roomBarrierGroup && typeof this.roomBarrierGroup.create === 'function') {
+        barrier = this.roomBarrierGroup.create(0, 0, 'tileset', 4);
+      } else if (this.add && typeof this.add.sprite === 'function') {
+        barrier = this.add.sprite(0, 0, 'tileset', 4);
+        if (this.roomBarrierGroup && typeof this.roomBarrierGroup.add === 'function') {
+          this.roomBarrierGroup.add(barrier);
+        }
+      }
+      if (barrier) {
+        if (typeof barrier.setTint === 'function') barrier.setTint(0xff3333);
+        if (typeof barrier.setAlpha === 'function') barrier.setAlpha(0.85);
+        if (typeof barrier.setDepth === 'function') barrier.setDepth(15);
+        if (typeof barrier.setActive === 'function') barrier.setActive(false);
+        if (typeof barrier.setVisible === 'function') barrier.setVisible(false);
+        if (barrier.body) {
+          barrier.body.enable = false;
+          barrier.body.immovable = true;
+          if (typeof barrier.body.setImmovable === 'function') {
+            barrier.body.setImmovable(true);
+          }
+          if (typeof barrier.body.setAllowGravity === 'function') {
+            barrier.body.setAllowGravity(false);
+          }
+        }
+        this.roomBarriers.push(barrier);
+      }
+    }
+    if (this.roomBarrierGroup && this.player && typeof this.physics?.add?.collider === 'function') {
+      this.physics.add.collider(this.player, this.roomBarrierGroup);
     }
 
     // 6. Initialize camera manager focused on START room
@@ -317,6 +364,7 @@ export class GameScene extends Phaser.Scene {
       );
     }
     this.lastCullGridX = -1;
+    this.updateRoomLockdown(gridX, gridY);
     SoundManager.getInstance().startBGM('BOSS', this);
   }
 
@@ -508,6 +556,7 @@ export class GameScene extends Phaser.Scene {
     this.activePickupCapsules = this.cullCapsules(this.pickupCapsules, gridX, gridY, this.activePickupCapsules);
     this.lastCullGridX = gridX;
     this.lastCullGridY = gridY;
+    this.updateRoomLockdown(gridX, gridY);
   }
 
   public cullCapsules(
@@ -537,6 +586,85 @@ export class GameScene extends Phaser.Scene {
       }
     }
     return activeCapsules;
+  }
+
+  public updateRoomLockdown(gridX: number, gridY: number): void {
+    if (!this.grid || !this.grid[gridY] || !this.grid[gridY][gridX]) {
+      return;
+    }
+
+    const cell = this.grid[gridY][gridX];
+    const cleared = isRoomCleared(this.enemies, gridX, gridY);
+
+    if (cleared) {
+      this.isRoomLockdownActive = false;
+      for (let i = 0; i < this.roomBarriers.length; i++) {
+        const b = this.roomBarriers[i];
+        if (typeof b.setActive === 'function') b.setActive(false);
+        if (typeof b.setVisible === 'function') b.setVisible(false);
+        if (b.body) b.body.enable = false;
+      }
+      return;
+    }
+
+    this.isRoomLockdownActive = true;
+    const configs = getRoomDoorBarriers(gridX, gridY, cell.doors);
+
+    for (let i = 0; i < this.roomBarriers.length; i++) {
+      const barrier = this.roomBarriers[i];
+      if (i < configs.length) {
+        const cfg = configs[i];
+        if (typeof barrier.setPosition === 'function') {
+          barrier.setPosition(cfg.x, cfg.y);
+        }
+        if (typeof barrier.setDisplaySize === 'function') {
+          barrier.setDisplaySize(cfg.width, cfg.height);
+        }
+        if (typeof barrier.setActive === 'function') {
+          barrier.setActive(true);
+        }
+        if (typeof barrier.setVisible === 'function') {
+          barrier.setVisible(true);
+        }
+        if (barrier.body) {
+          barrier.body.enable = true;
+          if (typeof barrier.body.setSize === 'function') {
+            barrier.body.setSize(cfg.width, cfg.height);
+          }
+          if (typeof barrier.body.reset === 'function') {
+            barrier.body.reset(cfg.x, cfg.y);
+          }
+        }
+      } else {
+        if (typeof barrier.setActive === 'function') barrier.setActive(false);
+        if (typeof barrier.setVisible === 'function') barrier.setVisible(false);
+        if (barrier.body) barrier.body.enable = false;
+      }
+    }
+
+    if (this.player) {
+      const clamped = clampPlayerInsideRoom(this.player.x, this.player.y, gridX, gridY);
+      if (this.player.x !== clamped.x || this.player.y !== clamped.y) {
+        this.player.setPosition(clamped.x, clamped.y);
+        if (this.player.body && typeof this.player.body.reset === 'function') {
+          this.player.body.reset(clamped.x, clamped.y);
+        }
+      }
+    }
+  }
+
+  public unlockRoomBarriers(): void {
+    if (!this.isRoomLockdownActive && this.roomBarriers.every((b) => !b.active)) {
+      return;
+    }
+    this.isRoomLockdownActive = false;
+    for (let i = 0; i < this.roomBarriers.length; i++) {
+      const b = this.roomBarriers[i];
+      if (typeof b.setActive === 'function') b.setActive(false);
+      if (typeof b.setVisible === 'function') b.setVisible(false);
+      if (b.body) b.body.enable = false;
+    }
+    SoundManager.getInstance().playSfx('pickup');
   }
 
   public unlockExitPortal(): void {
