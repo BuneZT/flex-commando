@@ -180,19 +180,22 @@ export class GameScene extends Phaser.Scene {
 
     // 5.5 Setup room barrier pool and collision with player
     this.roomBarriers = [];
+    const barrierTexKey = this.textures?.exists?.('tex_laser_barrier') ? 'tex_laser_barrier' : 'tileset';
     for (let i = 0; i < 4; i++) {
       let barrier: any = null;
       if (this.roomBarrierGroup && typeof this.roomBarrierGroup.create === 'function') {
-        barrier = this.roomBarrierGroup.create(0, 0, 'tileset', 4);
+        barrier = this.roomBarrierGroup.create(0, 0, barrierTexKey, 0);
       } else if (this.add && typeof this.add.sprite === 'function') {
-        barrier = this.add.sprite(0, 0, 'tileset', 4);
+        barrier = this.add.sprite(0, 0, barrierTexKey, 0);
         if (this.roomBarrierGroup && typeof this.roomBarrierGroup.add === 'function') {
           this.roomBarrierGroup.add(barrier);
         }
       }
       if (barrier) {
-        if (typeof barrier.setTint === 'function') barrier.setTint(0xff3333);
-        if (typeof barrier.setAlpha === 'function') barrier.setAlpha(0.85);
+        if (typeof barrier.setBlendMode === 'function' && Phaser.BlendModes?.ADD !== undefined) {
+          barrier.setBlendMode(Phaser.BlendModes.ADD);
+        }
+        if (typeof barrier.setAlpha === 'function') barrier.setAlpha(0);
         if (typeof barrier.setDepth === 'function') barrier.setDepth(15);
         if (typeof barrier.setActive === 'function') barrier.setActive(false);
         if (typeof barrier.setVisible === 'function') barrier.setVisible(false);
@@ -541,6 +544,20 @@ export class GameScene extends Phaser.Scene {
     // 8. Collisions & Overlaps handling
     this.handleCollisions();
 
+    // 8.5 Animate active room laser barriers with subtle pulsing glow
+    if (this.isRoomLockdownActive && this.roomBarriers.length > 0) {
+      const pulse = Math.sin(time * 0.007) * 0.08;
+      for (let i = 0; i < this.roomBarriers.length; i++) {
+        const b = this.roomBarriers[i];
+        if (b.active && b.visible) {
+          const isTweening = this.tweens && typeof this.tweens.isTweening === 'function' && this.tweens.isTweening(b);
+          if (!isTweening && typeof b.setAlpha === 'function') {
+            b.setAlpha(Math.max(0.32, Math.min(0.58, 0.45 + pulse)));
+          }
+        }
+      }
+    }
+
     // 9. Update HUD
     if (this.hud && this.player && this.grid) {
       this.hud.update(this.player, this.grid, currentGridX, currentGridY, this.boss, this.infiniteLives, this.score);
@@ -620,6 +637,12 @@ export class GameScene extends Phaser.Scene {
         if (typeof barrier.setDisplaySize === 'function') {
           barrier.setDisplaySize(cfg.width, cfg.height);
         }
+        if (typeof barrier.setBlendMode === 'function' && Phaser.BlendModes?.ADD !== undefined) {
+          barrier.setBlendMode(Phaser.BlendModes.ADD);
+        }
+        if (typeof barrier.play === 'function' && this.anims?.exists?.('laser_barrier_pulse')) {
+          barrier.play('laser_barrier_pulse', true);
+        }
         if (typeof barrier.setActive === 'function') {
           barrier.setActive(true);
         }
@@ -635,6 +658,17 @@ export class GameScene extends Phaser.Scene {
           if (typeof body.reset === 'function') {
             body.reset(cfg.x, cfg.y);
           }
+        }
+        if (this.tweens && typeof this.tweens.add === 'function') {
+          if (typeof barrier.setAlpha === 'function') barrier.setAlpha(0);
+          this.tweens.add({
+            targets: barrier,
+            alpha: 0.45,
+            duration: 220,
+            ease: 'Power2',
+          });
+        } else if (typeof barrier.setAlpha === 'function') {
+          barrier.setAlpha(0.45);
         }
       } else {
         if (typeof barrier.setActive === 'function') barrier.setActive(false);
@@ -659,13 +693,38 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     this.isRoomLockdownActive = false;
+
+    // Immediately disable physics bodies so player movement is not impeded
     for (let i = 0; i < this.roomBarriers.length; i++) {
       const b = this.roomBarriers[i];
-      if (typeof b.setActive === 'function') b.setActive(false);
-      if (typeof b.setVisible === 'function') b.setVisible(false);
       if (b.body) (b.body as any).enable = false;
     }
     SoundManager.getInstance().playSfx('pickup');
+
+    // Smooth fade-out over 300ms
+    const activeBarriers = this.roomBarriers.filter((b) => b.active);
+    if (this.tweens && typeof this.tweens.add === 'function' && activeBarriers.length > 0) {
+      this.tweens.add({
+        targets: activeBarriers,
+        alpha: 0,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => {
+          for (let i = 0; i < activeBarriers.length; i++) {
+            const b = activeBarriers[i];
+            if (typeof b.setActive === 'function') b.setActive(false);
+            if (typeof b.setVisible === 'function') b.setVisible(false);
+          }
+        },
+      });
+    } else {
+      for (let i = 0; i < this.roomBarriers.length; i++) {
+        const b = this.roomBarriers[i];
+        if (typeof b.setActive === 'function') b.setActive(false);
+        if (typeof b.setVisible === 'function') b.setVisible(false);
+        if (typeof b.setAlpha === 'function') b.setAlpha(0);
+      }
+    }
   }
 
   public unlockExitPortal(): void {

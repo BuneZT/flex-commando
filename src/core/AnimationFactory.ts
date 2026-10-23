@@ -34,6 +34,7 @@ export class AnimationFactory {
     this.createAnimFrameRangeIfNotExists(scene, 'capsule_spin', capsuleKey, 0, 1, 6, -1);
     this.createAnimFrameRangeIfNotExists(scene, 'enemy_explosion', 'tex_explosion', 0, 3, 16, 0);
     this.createAnimFrameRangeIfNotExists(scene, 'bullet_impact_spark', 'tex_bullet_impact', 0, 3, 24, 0);
+    this.createAnimFrameRangeIfNotExists(scene, 'laser_barrier_pulse', 'tex_laser_barrier', 0, 3, 10, -1);
   }
 
   private static createAnimIfNotExists(

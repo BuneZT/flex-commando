@@ -311,4 +311,42 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     expect(bulletDeactivated).toBe(true);
     expect(damageSpy).not.toHaveBeenCalled();
   });
+
+  it('triggers fade-in and fade-out tweens with additive blend mode for sci-fi barriers', () => {
+    scene.create();
+
+    const tweenSpy = vi.fn((config: any) => {
+      if (config.onComplete) config.onComplete();
+    });
+    scene.tweens = {
+      add: tweenSpy,
+      isTweening: () => false,
+    } as any;
+
+    const mockEnemy: any = {
+      x: 600,
+      y: 100,
+      isAlive: true,
+      active: true,
+      visible: true,
+    };
+    scene.enemies = [mockEnemy];
+    if (scene.grid && scene.grid[0] && scene.grid[0][1]) {
+      scene.grid[0][1].doors = { north: false, south: true, east: true, west: false };
+    }
+
+    // Trigger lockdown (fade-in)
+    scene.updateRoomLockdown(1, 0);
+
+    expect(tweenSpy).toHaveBeenCalled();
+    const activeBarriers = scene.roomBarriers.filter((b) => b.active);
+    expect(activeBarriers.length).toBe(2);
+
+    // Trigger unlock (fade-out)
+    tweenSpy.mockClear();
+    scene.unlockRoomBarriers();
+
+    expect(tweenSpy).toHaveBeenCalled();
+    expect(scene.roomBarriers.every((b) => !b.active && !b.visible)).toBe(true);
+  });
 });
