@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { BootScene } from '../src/scenes/BootScene';
 import { MainMenuScene } from '../src/scenes/MainMenuScene';
 import { GameOverScene } from '../src/scenes/GameOverScene';
-import { TextureFactory } from '../src/core/TextureFactory';
+import { AnimationFactory } from '../src/core/AnimationFactory';
 
 describe('Menu Scenes', () => {
   it('BootScene preloads assets and ensures all required textures exist before launching MainMenu', () => {
@@ -60,13 +60,13 @@ describe('Menu Scenes', () => {
 
     const startSpy = vi.fn();
     (boot as any).scene = { start: startSpy };
-    const generateSpy = vi.spyOn(TextureFactory, 'generateAllTextures').mockImplementation(() => {});
+    const registerSpy = vi.spyOn(AnimationFactory, 'registerAnimations').mockImplementation(() => {});
 
     boot.create();
 
-    expect(generateSpy).toHaveBeenCalledWith(boot);
+    expect(registerSpy).toHaveBeenCalledWith(boot);
     expect(startSpy).toHaveBeenCalledWith('MainMenuScene');
-    generateSpy.mockRestore();
+    registerSpy.mockRestore();
   });
 
   it('should instantiate MainMenuScene and GameOverScene correctly', () => {

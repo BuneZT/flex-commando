@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TextureFactory } from '../core/TextureFactory';
+import { AnimationFactory } from '../core/AnimationFactory';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -41,7 +41,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     // Generate any fallback textures if running headless or missing
-    TextureFactory.generateAllTextures(this);
+    AnimationFactory.registerAnimations(this);
     this.scene?.start('MainMenuScene');
   }
 }
