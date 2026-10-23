@@ -339,8 +339,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           fallbackFrame = 3;
         }
       } else if (input.left || input.right) {
-        targetAnim = 'player_run';
-        fallbackFrame = 1;
+        if (this.aimDirection === 'UP_FORWARD') {
+          targetAnim = isFiring ? 'player_run_shoot_up' : 'player_run_up';
+          fallbackFrame = isFiring ? 17 : 15;
+        } else if (this.aimDirection === 'DOWN_FORWARD') {
+          targetAnim = isFiring ? 'player_run_shoot_down' : 'player_run_down';
+          fallbackFrame = isFiring ? 21 : 19;
+        } else if (this.aimDirection === 'UP') {
+          targetAnim = isFiring ? 'player_shoot_up' : 'player_aim_up';
+          fallbackFrame = isFiring ? 7 : 6;
+        } else {
+          targetAnim = isFiring ? 'player_run_shoot' : 'player_run';
+          fallbackFrame = isFiring ? 13 : 1;
+        }
       } else {
         // Grounded stationary
         if (this.aimDirection === 'UP') {
@@ -349,6 +360,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         } else if (this.aimDirection === 'UP_FORWARD') {
           targetAnim = isFiring ? 'player_shoot_up_forward' : 'player_aim_up_forward';
           fallbackFrame = isFiring ? 9 : 8;
+        } else if (this.aimDirection === 'DOWN_FORWARD') {
+          targetAnim = isFiring ? 'player_shoot_down_forward' : 'player_aim_down_forward';
+          fallbackFrame = isFiring ? 11 : 10;
         } else if (isFiring) {
           targetAnim = 'player_shoot_forward';
           fallbackFrame = 12;

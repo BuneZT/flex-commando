@@ -319,6 +319,56 @@ describe('Player entity', () => {
     expect(playedAnim).toBe('player_jump');
   });
 
+  it('should play running aim and shoot animations and stationary diagonal-down animations correctly', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    const body = createMockBody();
+    player.body = body;
+
+    let playedAnim = '';
+    player.anims = {
+      play: (key: string) => { playedAnim = key; },
+      currentAnim: null,
+    } as any;
+    (mockScene.sys.anims as any).exists = () => true;
+
+    // 1. Moving forward while shooting
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: false, down: false, left: false, right: true, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run_shoot');
+
+    // 2. Moving up-forward while running
+    player.firingFlashTimer = 0;
+    player.updatePlayer({ up: true, down: false, left: false, right: true, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run_up');
+
+    // 3. Moving up-forward while running and shooting
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: true, down: false, left: false, right: true, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run_shoot_up');
+
+    // 4. Moving down-forward while running
+    player.firingFlashTimer = 0;
+    player.updatePlayer({ up: false, down: true, left: false, right: true, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run_down');
+
+    // 5. Moving down-forward while running and shooting
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: false, down: true, left: false, right: true, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false });
+    expect(playedAnim).toBe('player_run_shoot_down');
+
+    // 6. Stationary grounded mouse aiming down-forward
+    player.firingFlashTimer = 0;
+    player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false, mouseX: 150, mouseY: 150 });
+    expect(player.aimDirection).toBe('DOWN_FORWARD');
+    expect(playedAnim).toBe('player_aim_down_forward');
+
+    // 7. Stationary grounded mouse aiming down-forward while shooting
+    player.firingFlashTimer = 60;
+    player.updatePlayer({ up: false, down: false, left: false, right: false, jump: false, jumpJustPressed: false, shoot: false, shootJustPressed: false, mouseX: 150, mouseY: 150 });
+    expect(playedAnim).toBe('player_shoot_down_forward');
+  });
+
   describe('Drop-Through Platform logic', () => {
     function createMockGroundLayer(tileMatrix: number[][]) {
       return {
