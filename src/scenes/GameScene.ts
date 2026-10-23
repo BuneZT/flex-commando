@@ -12,7 +12,7 @@ import { Turret } from '../entities/enemies/Turret';
 import { FalconDrone } from '../entities/enemies/FalconDrone';
 import { JumperMercenary } from '../entities/enemies/JumperMercenary';
 import { Boss } from '../entities/enemies/Boss';
-import { PickupCapsule, PickupItem } from '../entities/PickupCapsule';
+import { PickupCapsule, PickupItem, getRandomCapsuleDrop } from '../entities/PickupCapsule';
 import { getRandomPickupWeapon } from '../weapons/WeaponTypes';
 import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
@@ -276,8 +276,8 @@ export class GameScene extends Phaser.Scene {
           // Spawn flying weapon capsule in curated rooms
           const shouldSpawnCapsule = capsuleRooms.some((cr) => cr.x === c && cr.y === r);
           if (shouldSpawnCapsule) {
-            const roomCapsuleWeapon = getRandomPickupWeapon();
-            const roomCapsule = new PickupCapsule(this, roomX + 60, roomY + 90, roomCapsuleWeapon);
+            const roomCapsuleDrop = getRandomCapsuleDrop();
+            const roomCapsule = new PickupCapsule(this, roomX + 60, roomY + 90, roomCapsuleDrop);
             this.pickupCapsules.push(roomCapsule);
           }
         }
@@ -729,8 +729,13 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
       if (this.checkOverlap(this.player, item, 4)) {
-        const weapon = item.collect();
-        this.player.equipWeapon(weapon);
+        const drop = item.collect();
+        if (drop === 'HEART') {
+          this.player.heal(1);
+        } else {
+          this.player.equipWeapon(drop);
+        }
+        SoundManager.getInstance().playSfx('pickup');
         this.score += POWERUP_SCORE_VALUE;
         this.pickupItems.splice(i, 1);
         if (typeof item.destroy === 'function') {

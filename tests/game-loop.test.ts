@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { formatHUDLives } from '../src/ui/HUD';
 import { Boss } from '../src/entities/enemies/Boss';
 import { GameScene } from '../src/scenes/GameScene';
+import { SoundManager } from '../src/core/SoundManager';
 
 function createMockScene() {
   return {
@@ -669,6 +670,31 @@ describe('Portal Lock State and Win Condition', () => {
       expect(mockItem.collect).toHaveBeenCalled();
       expect(scene.score).toBe(500);
       expect(scene.player!.currentWeapon).toBe('SPREAD_SHOT');
+    });
+
+    it('should heal player by 1 life, play sfx_pickup, and add 500 points when collecting a HEART item', () => {
+      const scene = createInitializedGameScene();
+      scene.create();
+      scene.player!.lives = 1;
+      const sfxSpy = vi.spyOn(SoundManager.getInstance(), 'playSfx');
+
+      const mockHeartItem = {
+        active: true,
+        x: scene.player!.x,
+        y: scene.player!.y,
+        body: { width: 16, height: 16, x: scene.player!.x - 8, y: scene.player!.y - 8 },
+        collect: vi.fn().mockReturnValue('HEART'),
+        destroy: vi.fn(),
+      } as any;
+      scene.pickupItems.push(mockHeartItem);
+
+      (scene as any).handleCollisions();
+
+      expect(mockHeartItem.collect).toHaveBeenCalled();
+      expect(scene.player!.lives).toBe(2);
+      expect(scene.score).toBe(500);
+      expect(sfxSpy).toHaveBeenCalledWith('pickup');
+      sfxSpy.mockRestore();
     });
 
     it('should persist high score upon victory and launch GameOverScene with victory data', () => {
