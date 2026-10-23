@@ -8,7 +8,7 @@ describe('Asset Integrity', () => {
     { path: 'public/assets/ui/retro_font.png', width: 406, height: 18 },
     { path: 'public/assets/bg/cyber_hangar_bg.png', width: 512, height: 288 },
     { path: 'public/assets/tiles/tileset.png', width: 80, height: 16 },
-    { path: 'public/assets/sprites/player.png', width: 312, height: 24 },
+    { path: 'public/assets/sprites/player.png', width: 552, height: 24 },
     { path: 'public/assets/sprites/trooper.png', width: 96, height: 24 },
     { path: 'public/assets/sprites/turret.png', width: 64, height: 24 },
     { path: 'public/assets/sprites/drone.png', width: 128, height: 20 },

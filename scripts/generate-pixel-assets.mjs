@@ -522,8 +522,8 @@ function generateTileset() {
 }
 
 /**
- * 4. public/assets/sprites/player.png (312x24)
- * 13 frames of 24x24:
+ * 4. public/assets/sprites/player.png (552x24)
+ * 23 frames of 24x24:
  * 0: Idle forward
  * 1: Run 1
  * 2: Run 2
@@ -534,14 +534,24 @@ function generateTileset() {
  * 7: Shoot straight up (90° with top muzzle flare)
  * 8: Aim diagonal up idle (45°)
  * 9: Shoot diagonal up (45° with top-right muzzle flare)
- * 10: Aim diagonal down idle (45° in air)
+ * 10: Aim diagonal down idle (45° standing/air)
  * 11: Shoot diagonal down (45° with bottom-right muzzle flare)
  * 12: Shoot forward (standing horizontal muzzle flash)
+ * 13: Run shoot forward 1 (run step 1 + horizontal muzzle flash)
+ * 14: Run shoot forward 2 (run step 2 + horizontal muzzle flash)
+ * 15: Run aim up-forward 1 (run step 1 + 45° upward rifle)
+ * 16: Run aim up-forward 2 (run step 2 + 45° upward rifle)
+ * 17: Run shoot up-forward 1 (run step 1 + 45° upward muzzle flare)
+ * 18: Run shoot up-forward 2 (run step 2 + 45° upward muzzle flare)
+ * 19: Run aim down-forward 1 (run step 1 + 45° downward rifle)
+ * 20: Run aim down-forward 2 (run step 2 + 45° downward rifle)
+ * 21: Run shoot down-forward 1 (run step 1 + 45° downward muzzle flare)
+ * 22: Run shoot down-forward 2 (run step 2 + 45° downward muzzle flare)
  */
 function generatePlayer() {
-  const canvas = new PixelCanvas(312, 24);
+  const canvas = new PixelCanvas(552, 24);
 
-  for (let f = 0; f < 13; f++) {
+  for (let f = 0; f < 23; f++) {
     const ox = f * 24;
 
     if (f === 4 || f === 5) {
@@ -623,9 +633,9 @@ function generatePlayer() {
         canvas.fillRect(ox + 11, 0, 3, 3, '#FFFFFF');
         canvas.setPixel(ox + 12, 0, '#FF4400');
       }
-    } else if (f === 8 || f === 9) {
+    } else if (f === 8 || f === 9 || f === 15 || f === 16 || f === 17 || f === 18) {
       // =========================================================================
-      // --- AIM DIAGONAL UP (45°) ---
+      // --- AIM DIAGONAL UP (45°) STANDING & RUNNING ---
       // =========================================================================
       // Head looking up-forward
       canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
@@ -643,15 +653,34 @@ function generatePlayer() {
       canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
       canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700');
 
-      // Stance legs
-      canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
-      canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
-      canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
-      canvas.fillRect(ox + 14, 17, 2, 3, '#BA945A');
-      canvas.fillRect(ox + 6, 20, 5, 4, '#302016');
-      canvas.fillRect(ox + 13, 20, 5, 4, '#302016');
-      canvas.fillRect(ox + 7, 21, 3, 1, '#EDE5DC');
-      canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
+      // Legs (Standing: 8, 9; Run1: 15, 17; Run2: 16, 18)
+      if (f === 15 || f === 17) {
+        // Run Step 1
+        canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 14, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 5, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 20, 3, 1, '#EDE5DC');
+      } else if (f === 16 || f === 18) {
+        // Run Step 2
+        canvas.fillRect(ox + 6, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 14, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 5, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 20, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 21, 3, 1, '#EDE5DC');
+      } else {
+        // Standing stance
+        canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 14, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 6, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 13, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 7, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
+      }
 
       // Diagonal Up Rifle (45°)
       canvas.fillRect(ox + 11, 10, 4, 3, '#FFCCA0'); // Arm
@@ -662,15 +691,15 @@ function generatePlayer() {
       canvas.fillRect(ox + 18, 4, 3, 3, '#707A8C');
       canvas.fillRect(ox + 16, 4, 2, 2, '#00FFFF'); // Optic
 
-      if (f === 9) {
+      if (f === 9 || f === 17 || f === 18) {
         // Diagonal Up Muzzle Flare (top-right)
         canvas.fillRect(ox + 20, 2, 3, 3, '#FFCC00');
         canvas.fillRect(ox + 21, 3, 2, 2, '#FFFFFF');
         canvas.setPixel(ox + 22, 2, '#FF4400');
       }
-    } else if (f === 10 || f === 11) {
+    } else if (f === 10 || f === 11 || f === 19 || f === 20 || f === 21 || f === 22) {
       // =========================================================================
-      // --- AIM DIAGONAL DOWN (45° in air / descent) ---
+      // --- AIM DIAGONAL DOWN (45°) STANDING & RUNNING ---
       // =========================================================================
       // Head looking down-forward
       canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
@@ -687,11 +716,34 @@ function generatePlayer() {
       canvas.fillRect(ox + 14, 9, 2, 7, '#D0DCF2');
       canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
 
-      // Tucked airborne legs
-      canvas.fillRect(ox + 7, 16, 5, 5, '#E5C28A');
-      canvas.fillRect(ox + 13, 15, 5, 5, '#E5C28A');
-      canvas.fillRect(ox + 6, 18, 5, 4, '#302016');
-      canvas.fillRect(ox + 13, 18, 5, 4, '#302016');
+      // Legs (Standing/Air: 10, 11; Run1: 19, 21; Run2: 20, 22)
+      if (f === 19 || f === 21) {
+        // Run Step 1
+        canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 14, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 5, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 20, 3, 1, '#EDE5DC');
+      } else if (f === 20 || f === 22) {
+        // Run Step 2
+        canvas.fillRect(ox + 6, 16, 4, 4, '#BA945A');
+        canvas.fillRect(ox + 14, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 5, 19, 5, 4, '#302016');
+        canvas.fillRect(ox + 15, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 6, 20, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 16, 21, 3, 1, '#EDE5DC');
+      } else {
+        // Standing stance
+        canvas.fillRect(ox + 7, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 13, 16, 4, 5, '#E5C28A');
+        canvas.fillRect(ox + 8, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 14, 17, 2, 3, '#BA945A');
+        canvas.fillRect(ox + 6, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 13, 20, 5, 4, '#302016');
+        canvas.fillRect(ox + 7, 21, 3, 1, '#EDE5DC');
+        canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
+      }
 
       // Diagonal Down Rifle (45°)
       canvas.fillRect(ox + 11, 11, 4, 3, '#FFCCA0');
@@ -702,7 +754,7 @@ function generatePlayer() {
       canvas.fillRect(ox + 18, 17, 3, 3, '#707A8C');
       canvas.fillRect(ox + 15, 12, 2, 2, '#00FFFF'); // Optic
 
-      if (f === 11) {
+      if (f === 11 || f === 21 || f === 22) {
         // Diagonal Down Muzzle Flare (bottom-right)
         canvas.fillRect(ox + 20, 18, 3, 3, '#FFCC00');
         canvas.fillRect(ox + 21, 18, 2, 2, '#FFFFFF');
@@ -739,7 +791,7 @@ function generatePlayer() {
       canvas.fillRect(ox + 19, 9, 2, 2, '#00FFFF');
     } else {
       // =========================================================================
-      // --- FRAMES 0, 1, 2, 12 (Idle, Run1, Run2, Standing Shoot Forward) ---
+      // --- FORWARD FRAMES: 0 (Idle), 1 (Run1), 2 (Run2), 12 (Shoot Idle), 13 (Run1 Shoot), 14 (Run2 Shoot) ---
       // =========================================================================
       canvas.fillRect(ox + 8, 1, 7, 2, '#1E120A');
       canvas.fillRect(ox + 8, 2, 8, 3, '#FF1E1E');
@@ -756,7 +808,7 @@ function generatePlayer() {
       canvas.fillRect(ox + 8, 15, 8, 2, '#2A2016');
       canvas.fillRect(ox + 11, 15, 2, 2, '#FFD700');
 
-      if (f === 1) {
+      if (f === 1 || f === 13) {
         // Run 1
         canvas.fillRect(ox + 6, 16, 4, 5, '#E5C28A');
         canvas.fillRect(ox + 14, 16, 4, 4, '#BA945A');
@@ -764,7 +816,7 @@ function generatePlayer() {
         canvas.fillRect(ox + 15, 19, 5, 4, '#302016');
         canvas.fillRect(ox + 6, 21, 3, 1, '#EDE5DC');
         canvas.fillRect(ox + 16, 20, 3, 1, '#EDE5DC');
-      } else if (f === 2) {
+      } else if (f === 2 || f === 14) {
         // Run 2
         canvas.fillRect(ox + 6, 16, 4, 4, '#BA945A');
         canvas.fillRect(ox + 14, 16, 4, 5, '#E5C28A');
@@ -790,8 +842,8 @@ function generatePlayer() {
       canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C');
       canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF');
 
-      if (f === 12) {
-        // Standing horizontal muzzle flare!
+      if (f === 12 || f === 13 || f === 14) {
+        // Horizontal muzzle flare!
         canvas.fillRect(ox + 22, 10, 2, 5, '#FFCC00');
         canvas.fillRect(ox + 21, 11, 3, 3, '#FFFFFF');
         canvas.setPixel(ox + 23, 12, '#FF4400');
