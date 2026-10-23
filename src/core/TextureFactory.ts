@@ -41,8 +41,8 @@ export class TextureFactory {
   private static createPlayerTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists('tex_player')) return;
     const g = scene.add.graphics();
-    // 13 frames of 24x24 = 312x24 total width
-    for (let f = 0; f < 13; f++) {
+    // 23 frames of 24x24 = 552x24 total width
+    for (let f = 0; f < 23; f++) {
       const ox = f * 24;
 
       if (f === 4 || f === 5) {
@@ -124,8 +124,8 @@ export class TextureFactory {
           g.fillStyle(0xffffff, 1);
           g.fillRect(ox + 11, 0, 3, 3);
         }
-      } else if (f === 8 || f === 9) {
-        // Aim Diagonal Up (45°)
+      } else if (f === 8 || f === 9 || f === 15 || f === 16 || f === 17 || f === 18) {
+        // Aim Diagonal Up (45°) Standing & Running
         g.fillStyle(0xff1e1e, 1);
         g.fillRect(ox + 8, 2, 8, 3);
         g.fillStyle(0xffcca0, 1);
@@ -134,12 +134,28 @@ export class TextureFactory {
         g.fillRect(ox + 8, 9, 8, 7);
         g.fillStyle(0xffffff, 1);
         g.fillRect(ox + 8, 9, 2, 7);
+
+        // Legs (Standing: 8, 9; Run1: 15, 17; Run2: 16, 18)
         g.fillStyle(0xe5c28a, 1);
-        g.fillRect(ox + 7, 16, 4, 5);
-        g.fillRect(ox + 13, 16, 4, 5);
-        g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 6, 20, 5, 4);
-        g.fillRect(ox + 13, 20, 5, 4);
+        if (f === 15 || f === 17) {
+          g.fillRect(ox + 6, 16, 4, 5);
+          g.fillRect(ox + 14, 16, 4, 4);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 20, 5, 4);
+          g.fillRect(ox + 15, 19, 5, 4);
+        } else if (f === 16 || f === 18) {
+          g.fillRect(ox + 6, 16, 4, 4);
+          g.fillRect(ox + 14, 16, 4, 5);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 19, 5, 4);
+          g.fillRect(ox + 15, 20, 5, 4);
+        } else {
+          g.fillRect(ox + 7, 16, 4, 5);
+          g.fillRect(ox + 13, 16, 4, 5);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 6, 20, 5, 4);
+          g.fillRect(ox + 13, 20, 5, 4);
+        }
 
         // Diagonal Up Rifle
         g.fillStyle(0xffcca0, 1);
@@ -153,14 +169,14 @@ export class TextureFactory {
         g.fillStyle(0x00ffff, 1);
         g.fillRect(ox + 16, 4, 2, 2);
 
-        if (f === 9) {
+        if (f === 9 || f === 17 || f === 18) {
           g.fillStyle(0xffcc00, 1);
           g.fillRect(ox + 20, 2, 3, 3);
           g.fillStyle(0xffffff, 1);
           g.fillRect(ox + 21, 3, 2, 2);
         }
-      } else if (f === 10 || f === 11) {
-        // Aim Diagonal Down (45°)
+      } else if (f === 10 || f === 11 || f === 19 || f === 20 || f === 21 || f === 22) {
+        // Aim Diagonal Down (45°) Standing & Running
         g.fillStyle(0xff1e1e, 1);
         g.fillRect(ox + 8, 2, 8, 3);
         g.fillStyle(0xffcca0, 1);
@@ -169,12 +185,28 @@ export class TextureFactory {
         g.fillRect(ox + 8, 9, 8, 7);
         g.fillStyle(0xffffff, 1);
         g.fillRect(ox + 8, 9, 2, 7);
+
+        // Legs (Standing/Air: 10, 11; Run1: 19, 21; Run2: 20, 22)
         g.fillStyle(0xe5c28a, 1);
-        g.fillRect(ox + 7, 16, 5, 5);
-        g.fillRect(ox + 13, 15, 5, 5);
-        g.fillStyle(0x302016, 1);
-        g.fillRect(ox + 6, 18, 5, 4);
-        g.fillRect(ox + 13, 18, 5, 4);
+        if (f === 19 || f === 21) {
+          g.fillRect(ox + 6, 16, 4, 5);
+          g.fillRect(ox + 14, 16, 4, 4);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 20, 5, 4);
+          g.fillRect(ox + 15, 19, 5, 4);
+        } else if (f === 20 || f === 22) {
+          g.fillRect(ox + 6, 16, 4, 4);
+          g.fillRect(ox + 14, 16, 4, 5);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 5, 19, 5, 4);
+          g.fillRect(ox + 15, 20, 5, 4);
+        } else {
+          g.fillRect(ox + 7, 16, 4, 5);
+          g.fillRect(ox + 13, 16, 4, 5);
+          g.fillStyle(0x302016, 1);
+          g.fillRect(ox + 6, 20, 5, 4);
+          g.fillRect(ox + 13, 20, 5, 4);
+        }
 
         // Diagonal Down Rifle
         g.fillStyle(0xffcca0, 1);
@@ -188,7 +220,7 @@ export class TextureFactory {
         g.fillStyle(0x00ffff, 1);
         g.fillRect(ox + 15, 12, 2, 2);
 
-        if (f === 11) {
+        if (f === 11 || f === 21 || f === 22) {
           g.fillStyle(0xffcc00, 1);
           g.fillRect(ox + 20, 18, 3, 3);
           g.fillStyle(0xffffff, 1);
@@ -220,7 +252,7 @@ export class TextureFactory {
         g.fillStyle(0x00ffff, 1);
         g.fillRect(ox + 19, 9, 2, 2);
       } else {
-        // Frames 0, 1, 2, 12 (Idle, Run1, Run2, Standing Shoot)
+        // Forward Frames: 0, 1, 2, 12, 13, 14
         g.fillStyle(0xff2222, 1);
         g.fillRect(ox + 8, 2, 8, 2);
         g.fillStyle(0xffcc99, 1);
@@ -235,14 +267,14 @@ export class TextureFactory {
         g.fillRect(ox + 8, 15, 8, 2);
 
         g.fillStyle(0xe5c28a, 1);
-        if (f === 1) {
+        if (f === 1 || f === 13) {
           // Walk 1
           g.fillRect(ox + 6, 17, 5, 4);
           g.fillRect(ox + 13, 17, 5, 3);
           g.fillStyle(0x302016, 1);
           g.fillRect(ox + 5, 21, 5, 3);
           g.fillRect(ox + 14, 20, 5, 3);
-        } else if (f === 2) {
+        } else if (f === 2 || f === 14) {
           // Walk 2
           g.fillRect(ox + 6, 17, 5, 3);
           g.fillRect(ox + 13, 17, 5, 4);
@@ -263,18 +295,18 @@ export class TextureFactory {
         g.fillRect(ox + 12, 11, 2, 3);
         g.fillStyle(0x707a8c, 1);
         g.fillRect(ox + 14, 11, 6, 3);
-        if (f === 12) {
+        if (f === 12 || f === 13 || f === 14) {
           g.fillStyle(0xffcc00, 1);
           g.fillRect(ox + 20, 11, 3, 3);
         }
       }
     }
 
-    g.generateTexture('tex_player', 312, 24);
+    g.generateTexture('tex_player', 552, 24);
     g.destroy();
 
     const tex = scene.textures.get('tex_player');
-    for (let i = 0; i < 13; i++) {
+    for (let i = 0; i < 23; i++) {
       tex.add(i, 0, i * 24, 0, 24, 24);
     }
   }
@@ -525,6 +557,51 @@ export class TextureFactory {
       scene.anims.create({
         key: 'player_run',
         frames: scene.anims.generateFrameNumbers('tex_player', { start: 1, end: 2 }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('player_run_shoot')) {
+      scene.anims.create({
+        key: 'player_run_shoot',
+        frames: [{ key: 'tex_player', frame: 13 }, { key: 'tex_player', frame: 14 }],
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('player_run_up')) {
+      scene.anims.create({
+        key: 'player_run_up',
+        frames: [{ key: 'tex_player', frame: 15 }, { key: 'tex_player', frame: 16 }],
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('player_run_shoot_up')) {
+      scene.anims.create({
+        key: 'player_run_shoot_up',
+        frames: [{ key: 'tex_player', frame: 17 }, { key: 'tex_player', frame: 18 }],
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('player_run_down')) {
+      scene.anims.create({
+        key: 'player_run_down',
+        frames: [{ key: 'tex_player', frame: 19 }, { key: 'tex_player', frame: 20 }],
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+
+    if (!scene.anims.exists('player_run_shoot_down')) {
+      scene.anims.create({
+        key: 'player_run_shoot_down',
+        frames: [{ key: 'tex_player', frame: 21 }, { key: 'tex_player', frame: 22 }],
         frameRate: 8,
         repeat: -1,
       });

@@ -66,6 +66,11 @@ describe('TextureFactory', () => {
     const animKeys = [
       'player_idle',
       'player_run',
+      'player_run_shoot',
+      'player_run_up',
+      'player_run_shoot_up',
+      'player_run_down',
+      'player_run_shoot_down',
       'player_jump',
       'player_crouch',
       'player_crouch_shoot',
