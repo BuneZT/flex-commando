@@ -375,6 +375,7 @@ describe('Procedural Textures for Projectiles and Pickups', () => {
       get: () => ({}),
     };
     const proj = new Projectile(mockScene, 0, 0);
+    expect(proj.texture.key).toBe('tex_projectiles');
     const body = createMockBody();
     proj.body = body;
 

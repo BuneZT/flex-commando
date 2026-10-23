@@ -453,6 +453,7 @@ export class TextureFactory {
   }
 
   private static createBulletTextures(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tex_projectiles')) return;
     if (!scene.textures.exists('tex_bullet_pea')) {
       const g = scene.add.graphics();
       g.fillStyle(0xffff00, 1);
@@ -505,6 +506,7 @@ export class TextureFactory {
   }
 
   private static createCapsuleAndPickupTextures(scene: Phaser.Scene): void {
+    if (scene.textures.exists('tex_pickups')) return;
     if (!scene.textures.exists('tex_capsule_flying')) {
       const g = scene.add.graphics();
       for (let f = 0; f < 2; f++) {

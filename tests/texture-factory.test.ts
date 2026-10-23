@@ -106,4 +106,49 @@ describe('TextureFactory', () => {
     // Reference must remain identical to pre-existing texture
     expect(scene.textures.get('logo')).toBe(existingTexture);
   });
+
+  it('does not call scene.add.graphics() when all 15 static textures preloaded by BootScene already exist', () => {
+    const preloadedKeys = [
+      'logo',
+      'retro_font',
+      'cyber_hangar_bg',
+      'tileset',
+      'tex_player',
+      'tex_enemy_trooper',
+      'tex_enemy_turret',
+      'tex_enemy_drone',
+      'tex_enemy_jumper',
+      'tex_enemy_boss',
+      'tex_crosshair',
+      'tex_projectiles',
+      'tex_pickups',
+      'tex_explosion',
+      'tex_bullet_impact',
+    ];
+
+    for (const key of preloadedKeys) {
+      if (!scene.textures.exists(key)) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 552;
+        canvas.height = 64;
+        const tex = scene.textures.addCanvas(key, canvas);
+        if (tex) {
+          for (let f = 0; f < 23; f++) {
+            tex.add(f, 0, f * 16, 0, 16, 16);
+          }
+        }
+      }
+    }
+
+    let graphicsCalls = 0;
+    const origGraphics = scene.add.graphics.bind(scene.add);
+    scene.add.graphics = ((...args: any[]) => {
+      graphicsCalls++;
+      return origGraphics(...args);
+    }) as any;
+
+    TextureFactory.generateAllTextures(scene);
+
+    expect(graphicsCalls).toBe(0);
+  });
 });

@@ -14,8 +14,10 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
   private baseAngleRad: number = 0;
   private travelDistance: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, texture: string = 'tex_bullet_pea') {
-    super(scene, x, y, texture);
+  constructor(scene: Phaser.Scene, x: number, y: number, texture?: string) {
+    const hasProjectilesSheet = Boolean(scene?.textures?.exists?.('tex_projectiles'));
+    const defaultTexture = hasProjectilesSheet ? 'tex_projectiles' : 'tex_bullet_pea';
+    super(scene, x, y, texture || defaultTexture);
 
     if (scene.add && typeof scene.add.existing === 'function') {
       scene.add.existing(this);

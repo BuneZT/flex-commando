@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { BootScene } from '../src/scenes/BootScene';
 
 describe('Asset Integrity', () => {
   const assetSpecs: { path: string; width: number; height: number }[] = [
@@ -39,7 +40,7 @@ describe('Asset Integrity', () => {
     });
   });
 
-  it('verifies all expected BGM and SFX audio asset files exist and have non-zero size', () => {
+  it('verifies all expected BGM and SFX audio asset files exist with valid headers and non-zero size', () => {
     const bgmFiles = [
       'public/assets/audio/bgm_stage.ogg',
       'public/assets/audio/bgm_stage.mp3',
@@ -51,6 +52,10 @@ describe('Asset Integrity', () => {
       expect(fs.existsSync(fullPath), `Missing audio asset: ${relPath}`).toBe(true);
       const stat = fs.statSync(fullPath);
       expect(stat.size).toBeGreaterThan(100000); // Greater than 100KB
+      const buf = fs.readFileSync(fullPath);
+      if (relPath.endsWith('.ogg')) {
+        expect(buf.subarray(0, 4).toString('ascii')).toBe('OggS');
+      }
     });
 
     const sfxFiles = [
@@ -68,6 +73,37 @@ describe('Asset Integrity', () => {
       expect(fs.existsSync(fullPath), `Missing SFX asset: ${relPath}`).toBe(true);
       const stat = fs.statSync(fullPath);
       expect(stat.size).toBeGreaterThan(5000); // Greater than 5KB
+      const buf = fs.readFileSync(fullPath);
+      expect(buf.subarray(0, 4).toString('ascii')).toBe('OggS');
     });
+  });
+
+  it('verifies every asset path registered in BootScene.preload() exists as a static file in public/', () => {
+    const boot = new BootScene();
+    const loadedPaths: string[] = [];
+
+    (boot as any).load = {
+      image: (_key: string, relPath: string) => {
+        loadedPaths.push(relPath);
+      },
+      spritesheet: (_key: string, relPath: string) => {
+        loadedPaths.push(relPath);
+      },
+      audio: (_key: string, paths: string | string[]) => {
+        if (Array.isArray(paths)) {
+          loadedPaths.push(...paths);
+        } else {
+          loadedPaths.push(paths);
+        }
+      },
+    };
+
+    boot.preload();
+    expect(loadedPaths.length).toBeGreaterThanOrEqual(27);
+
+    for (const relPath of loadedPaths) {
+      const fullPath = path.resolve(process.cwd(), 'public', relPath);
+      expect(fs.existsSync(fullPath), `BootScene preloads missing static file: public/${relPath}`).toBe(true);
+    }
   });
 });

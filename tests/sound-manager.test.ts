@@ -142,5 +142,12 @@ describe('SoundManager', () => {
     sm.playShoot('SPREAD_SHOT', true);
     expect(playCount).toBe(initialPlayCount + 1);
   });
-});
 
+  it('does not contain runtime Web Audio synthesis methods or procedural BGM timers', () => {
+    const sm = SoundManager.getInstance() as any;
+    expect(sm.tickBGMStep).toBeUndefined();
+    expect(sm.getNoiseBuffer).toBeUndefined();
+    expect(sm.noiseBuffer).toBeUndefined();
+    expect(sm.bgmTimer).toBeUndefined();
+  });
+});
