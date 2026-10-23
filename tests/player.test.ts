@@ -575,4 +575,36 @@ describe('Player entity', () => {
       expect(body.velocity.x).toBe(0);
     });
   });
+
+  describe('Player Healing', () => {
+    it('should increase lives by amount up to 3 max lives', () => {
+      const mockScene = createMockScene();
+      const player = new Player(mockScene, 100, 100);
+      player.lives = 1;
+
+      const healed1 = player.heal(1);
+      expect(healed1).toBe(1);
+      expect(player.lives).toBe(2);
+
+      const healed2 = player.heal(1);
+      expect(healed2).toBe(1);
+      expect(player.lives).toBe(3);
+
+      // Cannot exceed 3
+      const overhealed = player.heal(1);
+      expect(overhealed).toBe(0);
+      expect(player.lives).toBe(3);
+    });
+
+    it('should not heal if player is dead (lives <= 0 or isDead)', () => {
+      const mockScene = createMockScene();
+      const player = new Player(mockScene, 100, 100);
+      player.lives = 0;
+      player.isDead = true;
+
+      const healed = player.heal(1);
+      expect(healed).toBe(0);
+      expect(player.lives).toBe(0);
+    });
+  });
 });

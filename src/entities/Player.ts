@@ -131,6 +131,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  public heal(amount: number = 1): number {
+    if (this.lives <= 0 || this.isDead) return 0;
+    const prevLives = this.lives;
+    this.lives = Math.min(3, this.lives + amount);
+    return this.lives - prevLives;
+  }
+
   public hitBarrier(): boolean {
     if (this.isBarrierActive && this.barrierHits > 0) {
       this.barrierHits -= 1;
