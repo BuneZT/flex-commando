@@ -602,7 +602,7 @@ export class GameScene extends Phaser.Scene {
         const b = this.roomBarriers[i];
         if (typeof b.setActive === 'function') b.setActive(false);
         if (typeof b.setVisible === 'function') b.setVisible(false);
-        if (b.body) b.body.enable = false;
+        if (b.body) (b.body as any).enable = false;
       }
       return;
     }
@@ -626,19 +626,20 @@ export class GameScene extends Phaser.Scene {
         if (typeof barrier.setVisible === 'function') {
           barrier.setVisible(true);
         }
-        if (barrier.body) {
-          barrier.body.enable = true;
-          if (typeof barrier.body.setSize === 'function') {
-            barrier.body.setSize(cfg.width, cfg.height);
+        const body = barrier.body as any;
+        if (body) {
+          body.enable = true;
+          if (typeof body.setSize === 'function') {
+            body.setSize(cfg.width, cfg.height);
           }
-          if (typeof barrier.body.reset === 'function') {
-            barrier.body.reset(cfg.x, cfg.y);
+          if (typeof body.reset === 'function') {
+            body.reset(cfg.x, cfg.y);
           }
         }
       } else {
         if (typeof barrier.setActive === 'function') barrier.setActive(false);
         if (typeof barrier.setVisible === 'function') barrier.setVisible(false);
-        if (barrier.body) barrier.body.enable = false;
+        if (barrier.body) (barrier.body as any).enable = false;
       }
     }
 
@@ -662,7 +663,7 @@ export class GameScene extends Phaser.Scene {
       const b = this.roomBarriers[i];
       if (typeof b.setActive === 'function') b.setActive(false);
       if (typeof b.setVisible === 'function') b.setVisible(false);
-      if (b.body) b.body.enable = false;
+      if (b.body) (b.body as any).enable = false;
     }
     SoundManager.getInstance().playSfx('pickup');
   }

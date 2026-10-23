@@ -147,7 +147,7 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     expect(activeBarriers.length).toBe(3);
     for (const barrier of activeBarriers) {
       expect(barrier.visible).toBe(true);
-      expect(barrier.body?.enable).toBe(true);
+      expect((barrier.body as any)?.enable).toBe(true);
     }
   });
 
@@ -180,12 +180,12 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     for (const b of scene.roomBarriers) {
       b.setActive(true);
       b.setVisible(true);
-      if (b.body) b.body.enable = true;
+      if (b.body) (b.body as any).enable = true;
     }
 
     scene.unlockRoomBarriers();
 
-    expect(scene.roomBarriers.every((b) => !b.active && !b.visible && !b.body?.enable)).toBe(true);
+    expect(scene.roomBarriers.every((b) => !b.active && !b.visible && !(b.body as any)?.enable)).toBe(true);
     expect(mockSoundManagerPlaySfx).toHaveBeenCalledWith('pickup');
   });
 
@@ -196,10 +196,11 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     barrier.setActive(true);
     barrier.setPosition(500, 200);
     barrier.setDisplaySize(32, 96);
-    if (barrier.body) {
-      barrier.body.enable = true;
-      barrier.body.setSize(32, 96);
-      barrier.body.reset(500, 200);
+    const body = barrier.body as any;
+    if (body) {
+      body.enable = true;
+      body.setSize(32, 96);
+      body.reset(500, 200);
     }
 
     let bulletDeactivated = false;
@@ -281,10 +282,11 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     barrier.setActive(true);
     barrier.setPosition(500, 200);
     barrier.setDisplaySize(32, 96);
-    if (barrier.body) {
-      barrier.body.enable = true;
-      barrier.body.setSize(32, 96);
-      barrier.body.reset(500, 200);
+    const body = barrier.body as any;
+    if (body) {
+      body.enable = true;
+      body.setSize(32, 96);
+      body.reset(500, 200);
     }
 
     let bulletDeactivated = false;
