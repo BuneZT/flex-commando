@@ -723,9 +723,9 @@ export class GameScene extends Phaser.Scene {
     padding: number = 4
   ): boolean {
     let cx1 = a.x, cy1 = a.y, w1 = 16, h1 = 16;
-    if (a.body) {
-      w1 = a.body.width;
-      h1 = a.body.height;
+    if (a.body && typeof a.body.x === 'number') {
+      w1 = a.body.width || 16;
+      h1 = a.body.height || 16;
       cx1 = a.body.x + w1 * 0.5;
       cy1 = a.body.y + h1 * 0.5;
     } else {
@@ -734,9 +734,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     let cx2 = b.x, cy2 = b.y, w2 = 16, h2 = 16;
-    if (b.body) {
-      w2 = b.body.width;
-      h2 = b.body.height;
+    if (b.body && typeof b.body.x === 'number') {
+      w2 = b.body.width || 16;
+      h2 = b.body.height || 16;
       cx2 = b.body.x + w2 * 0.5;
       cy2 = b.body.y + h2 * 0.5;
     } else {
@@ -763,6 +763,23 @@ export class GameScene extends Phaser.Scene {
         const proj = activeBullets[p];
         if (!proj.active) continue;
 
+        // Bullets detonate on active energy barriers
+        if (this.isRoomLockdownActive) {
+          let hitBarrier = false;
+          for (let b = 0; b < this.roomBarriers.length; b++) {
+            const barrier = this.roomBarriers[b];
+            if (barrier.active && this.checkOverlap(proj, barrier, 2)) {
+              if (this.impactFXPool && typeof this.impactFXPool.spawn === 'function') {
+                this.impactFXPool.spawn(proj.x, proj.y);
+              }
+              proj.deactivate();
+              hitBarrier = true;
+              break;
+            }
+          }
+          if (hitBarrier || !proj.active) continue;
+        }
+
         if (proj.isPlayerBullet) {
           // Player bullet vs Enemies
           for (let e = 0; e < this.activeEnemies.length; e++) {
@@ -784,6 +801,13 @@ export class GameScene extends Phaser.Scene {
                   this.score += enemy.scoreValue;
                   if (enemy === this.boss) {
                     this.unlockExitPortal();
+                  }
+                  const currentRoom = this.cameraManager?.getCurrentRoom() ?? {
+                    gridX: Math.max(0, Math.min(3, Math.floor(this.player.x / GAME_CONSTANTS.VIEW_WIDTH_PX))),
+                    gridY: Math.max(0, Math.min(3, Math.floor(this.player.y / GAME_CONSTANTS.VIEW_HEIGHT_PX))),
+                  };
+                  if (isRoomCleared(this.enemies, currentRoom.gridX, currentRoom.gridY)) {
+                    this.unlockRoomBarriers();
                   }
                   // Regular enemies drop nothing
                 }

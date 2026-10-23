@@ -188,4 +188,125 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     expect(scene.roomBarriers.every((b) => !b.active && !b.visible && !b.body?.enable)).toBe(true);
     expect(mockSoundManagerPlaySfx).toHaveBeenCalledWith('pickup');
   });
+
+  it('detonates bullets colliding with active barriers and triggers impact FX', () => {
+    scene.create();
+    scene.isRoomLockdownActive = true;
+    const barrier = scene.roomBarriers[0];
+    barrier.setActive(true);
+    barrier.setPosition(500, 200);
+    barrier.setDisplaySize(32, 96);
+    if (barrier.body) {
+      barrier.body.enable = true;
+      barrier.body.setSize(32, 96);
+      barrier.body.reset(500, 200);
+    }
+
+    let bulletDeactivated = false;
+    const mockBullet: any = {
+      x: 500,
+      y: 200,
+      active: true,
+      isPlayerBullet: true,
+      damage: 10,
+      body: { width: 8, height: 8, x: 496, y: 196 },
+      deactivate: () => { bulletDeactivated = true; mockBullet.active = false; },
+    };
+
+    scene.projectilePool = {
+      getActiveProjectiles: () => [mockBullet],
+    } as any;
+
+    const spawnImpactSpy = vi.fn();
+    scene.impactFXPool = { spawn: spawnImpactSpy } as any;
+
+    (scene as any).handleCollisions();
+
+    expect(bulletDeactivated).toBe(true);
+    expect(spawnImpactSpy).toHaveBeenCalledWith(500, 200);
+  });
+
+  it('automatically unlocks room when the last enemy in room is killed', () => {
+    scene.create();
+    if (scene.player) {
+      scene.player.x = 600;
+      scene.player.y = 200;
+    }
+
+    let enemy1Alive = true;
+    const enemy1: any = {
+      x: 650,
+      y: 200,
+      isAlive: true,
+      active: true,
+      scoreValue: 100,
+      body: { width: 16, height: 16, x: 642, y: 192 },
+      takeDamage: () => { enemy1Alive = false; enemy1.isAlive = false; return true; },
+    };
+
+    scene.enemies = [enemy1];
+    scene.activeEnemies = [enemy1];
+    scene.updateRoomLockdown(1, 0);
+
+    expect(scene.isRoomLockdownActive).toBe(true);
+
+    const mockBullet: any = {
+      x: 650,
+      y: 200,
+      active: true,
+      isPlayerBullet: true,
+      damage: 10,
+      body: { width: 8, height: 8, x: 646, y: 196 },
+      deactivate: () => { mockBullet.active = false; },
+      hasHitTarget: () => false,
+      recordTargetHit: () => {},
+    };
+
+    scene.projectilePool = {
+      getActiveProjectiles: () => [mockBullet],
+    } as any;
+
+    (scene as any).handleCollisions();
+
+    expect(enemy1.isAlive).toBe(false);
+    expect(scene.isRoomLockdownActive).toBe(false);
+    expect(scene.roomBarriers.every((b) => !b.active)).toBe(true);
+    expect(mockSoundManagerPlaySfx).toHaveBeenCalledWith('pickup');
+  });
+
+  it('detonates enemy bullets on active barriers without damaging player', () => {
+    scene.create();
+    scene.isRoomLockdownActive = true;
+    const barrier = scene.roomBarriers[0];
+    barrier.setActive(true);
+    barrier.setPosition(500, 200);
+    barrier.setDisplaySize(32, 96);
+    if (barrier.body) {
+      barrier.body.enable = true;
+      barrier.body.setSize(32, 96);
+      barrier.body.reset(500, 200);
+    }
+
+    let bulletDeactivated = false;
+    const mockEnemyBullet: any = {
+      x: 500,
+      y: 200,
+      active: true,
+      isPlayerBullet: false,
+      damage: 1,
+      body: { width: 8, height: 8, x: 496, y: 196 },
+      deactivate: () => { bulletDeactivated = true; mockEnemyBullet.active = false; },
+    };
+
+    scene.projectilePool = {
+      getActiveProjectiles: () => [mockEnemyBullet],
+    } as any;
+
+    const damageSpy = vi.spyOn(scene, 'handlePlayerDamage');
+
+    (scene as any).handleCollisions();
+
+    expect(bulletDeactivated).toBe(true);
+    expect(damageSpy).not.toHaveBeenCalled();
+  });
 });
