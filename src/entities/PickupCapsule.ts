@@ -1,8 +1,19 @@
 import Phaser from 'phaser';
-import { WeaponType } from '../weapons/WeaponTypes';
+import { WeaponType, getRandomPickupWeapon } from '../weapons/WeaponTypes';
 import { CombatFX } from '../core/CombatFX';
 
-export type PickupLetter = 'S' | 'L' | 'M' | 'F' | 'B';
+export type CapsuleDropType = WeaponType | 'HEART';
+export const HEART_DROP_CHANCE = 0.25;
+
+export function getRandomCapsuleDrop(rng?: () => number): CapsuleDropType {
+  const randomFn = rng || Math.random;
+  if (randomFn() < HEART_DROP_CHANCE) {
+    return 'HEART';
+  }
+  return getRandomPickupWeapon(randomFn);
+}
+
+export type PickupLetter = 'S' | 'L' | 'M' | 'F' | 'B' | 'H';
 
 export function weaponTypeToLetter(weaponType: WeaponType): PickupLetter {
   switch (weaponType) {
@@ -22,15 +33,19 @@ export function letterToWeaponType(letter: PickupLetter): WeaponType {
     case 'M': return 'MACHINE_GUN';
     case 'F': return 'FLAME';
     case 'B': return 'BARRIER';
+    case 'H': return 'SPREAD_SHOT';
+    default: return 'SPREAD_SHOT';
   }
 }
 
 export class PickupItem extends Phaser.Physics.Arcade.Sprite {
+  public dropType: CapsuleDropType = 'SPREAD_SHOT';
   public weaponType: WeaponType = 'SPREAD_SHOT';
   public letter: PickupLetter = 'S';
 
-  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT') {
-    const letter = weaponTypeToLetter(weaponType);
+  constructor(scene: Phaser.Scene, x: number, y: number, dropType: CapsuleDropType = 'SPREAD_SHOT') {
+    const isHeart = dropType === 'HEART';
+    const letter = isHeart ? 'H' : weaponTypeToLetter(dropType);
     const hasPickupsSheet = Boolean(scene?.textures?.exists?.('tex_pickups'));
     super(scene, x, y, hasPickupsSheet ? 'tex_pickups' : `tex_pickup_${letter}`);
 
@@ -41,32 +56,42 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
       scene.physics.add.existing(this);
     }
 
-    this.initPickup(x, y, weaponType);
+    this.initPickup(x, y, dropType);
   }
 
-  public initPickup(x: number, y: number, weaponType: WeaponType): void {
+  public initPickup(x: number, y: number, dropType: CapsuleDropType): void {
     this.setPosition(x, y);
-    this.weaponType = weaponType;
-    this.letter = weaponTypeToLetter(weaponType);
+    this.dropType = dropType;
+    if (dropType === 'HEART') {
+      this.letter = 'H';
+      this.weaponType = 'SPREAD_SHOT';
+    } else {
+      this.weaponType = dropType;
+      this.letter = weaponTypeToLetter(dropType);
+    }
 
     if (this.scene?.textures?.exists?.('tex_pickups')) {
       let badgeFrame = 2;
-      switch (this.letter) {
-        case 'S':
-          badgeFrame = 2;
-          break;
-        case 'L':
-          badgeFrame = 3;
-          break;
-        case 'F':
-          badgeFrame = 4;
-          break;
-        case 'M':
-          badgeFrame = 5;
-          break;
-        case 'B':
-          badgeFrame = 6;
-          break;
+      if (dropType === 'HEART') {
+        badgeFrame = 7;
+      } else {
+        switch (this.letter) {
+          case 'S':
+            badgeFrame = 2;
+            break;
+          case 'L':
+            badgeFrame = 3;
+            break;
+          case 'F':
+            badgeFrame = 4;
+            break;
+          case 'M':
+            badgeFrame = 5;
+            break;
+          case 'B':
+            badgeFrame = 6;
+            break;
+        }
       }
       this.setTexture('tex_pickups', badgeFrame);
     } else {
@@ -88,7 +113,7 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  public collect(): WeaponType {
+  public collect(): CapsuleDropType {
     this.setActive(false);
     this.setVisible(false);
 
@@ -98,18 +123,24 @@ export class PickupItem extends Phaser.Physics.Arcade.Sprite {
       if (typeof body.setVelocity === 'function') body.setVelocity(0, 0);
     }
 
-    return this.weaponType;
+    return this.dropType;
   }
 }
 
 export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
-  public weaponType: WeaponType = 'SPREAD_SHOT';
+  public dropType: CapsuleDropType = 'SPREAD_SHOT';
+  public get weaponType(): WeaponType {
+    return this.dropType === 'HEART' ? 'SPREAD_SHOT' : this.dropType;
+  }
+  public set weaponType(w: WeaponType) {
+    this.dropType = w;
+  }
   public speed: number = 60;
   public hp: number = 1;
   private flightTime: number = 0;
   private startY: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, weaponType: WeaponType = 'SPREAD_SHOT', texture?: string) {
+  constructor(scene: Phaser.Scene, x: number, y: number, dropType: CapsuleDropType = 'SPREAD_SHOT', texture?: string) {
     const hasPickupsSheet = Boolean(scene?.textures?.exists?.('tex_pickups'));
     const defaultTexture = hasPickupsSheet ? 'tex_pickups' : 'tex_capsule_flying';
     super(scene, x, y, texture || defaultTexture);
@@ -134,13 +165,13 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
-    this.spawnCapsule(x, y, weaponType);
+    this.spawnCapsule(x, y, dropType);
   }
 
-  public spawnCapsule(x: number, y: number, weaponType: WeaponType): void {
+  public spawnCapsule(x: number, y: number, dropType: CapsuleDropType): void {
     this.setPosition(x, y);
     this.startY = y;
-    this.weaponType = weaponType;
+    this.dropType = dropType;
     this.hp = 1;
     this.flightTime = 0;
 
@@ -202,6 +233,6 @@ export class PickupCapsule extends Phaser.Physics.Arcade.Sprite {
       if (typeof body.setVelocity === 'function') body.setVelocity(0, 0);
     }
 
-    return new PickupItem(this.scene, this.x, this.y, this.weaponType);
+    return new PickupItem(this.scene, this.x, this.y, this.dropType);
   }
 }

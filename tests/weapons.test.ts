@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import Phaser from 'phaser';
 import { getSpreadShotAngles, WEAPON_CONFIGS, WeaponType, getRandomPickupWeapon, PICKUP_WEAPON_TYPES } from '../src/weapons/WeaponTypes';
 import { Projectile, ProjectilePool } from '../src/weapons/ProjectilePool';
-import { PickupCapsule, PickupItem, weaponTypeToLetter, letterToWeaponType } from '../src/entities/PickupCapsule';
+import { PickupCapsule, PickupItem, weaponTypeToLetter, letterToWeaponType, getRandomCapsuleDrop, CapsuleDropType, HEART_DROP_CHANCE } from '../src/entities/PickupCapsule';
 import { Player } from '../src/entities/Player';
 import { RawInputState } from '../src/config/Controls';
 import { CombatFX } from '../src/core/CombatFX';
@@ -441,6 +441,36 @@ describe('Procedural Textures for Projectiles and Pickups', () => {
     testBadge('FLAME', 4);
     testBadge('MACHINE_GUN', 5);
     testBadge('BARRIER', 6);
+    testBadge('HEART' as any, 7);
+  });
+
+  describe('getRandomCapsuleDrop', () => {
+    it('returns HEART when rng < HEART_DROP_CHANCE (0.25)', () => {
+      const mockRng = () => 0.15;
+      expect(getRandomCapsuleDrop(mockRng)).toBe('HEART');
+    });
+
+    it('returns a weapon when rng >= HEART_DROP_CHANCE', () => {
+      const mockRng = () => 0.5;
+      const result = getRandomCapsuleDrop(mockRng);
+      expect(result).not.toBe('HEART');
+      expect(PICKUP_WEAPON_TYPES).toContain(result);
+    });
+  });
+
+  describe('PickupCapsule with HEART', () => {
+    it('spawns and drops a HEART PickupItem', () => {
+      const mockScene = createMockScene();
+      const capsule = new PickupCapsule(mockScene, 100, 100, 'HEART');
+      capsule.body = createMockBody();
+      expect(capsule.dropType).toBe('HEART');
+
+      const droppedItem = capsule.hit();
+      expect(droppedItem).not.toBeNull();
+      expect(droppedItem?.dropType).toBe('HEART');
+      expect(droppedItem?.letter).toBe('H');
+      expect(droppedItem?.collect()).toBe('HEART');
+    });
   });
 
   describe('Projectile Obstacle Impacts', () => {
