@@ -11,6 +11,7 @@ export class BootScene extends Phaser.Scene {
 
     // Standard Phaser loaders for browser execution
     this.load.image('logo', 'assets/ui/logo.png');
+    this.load.image('retro_font', 'assets/ui/retro_font.png');
     this.load.image('cyber_hangar_bg', 'assets/bg/cyber_hangar_bg.png');
     this.load.spritesheet('tileset', 'assets/tiles/tileset.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('tex_player', 'assets/sprites/player.png', { frameWidth: 24, frameHeight: 24 });

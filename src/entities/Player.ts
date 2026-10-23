@@ -82,6 +82,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public facingLeft: boolean = false;
   public isCrouching: boolean = false;
   public isUsingMouseAim: boolean = false;
+  public isDead: boolean = false;
   public lives: number = 3;
   public moveSpeed: number = 120;
   public jumpVelocity: number = -340;
@@ -152,6 +153,75 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const y = typeof (body as any).y === 'number' ? (body as any).y : this.y - height / 2;
 
     return canPlayerDropThrough({ x, y, width, height }, targetLayer as any);
+  }
+
+  public triggerDeath(hitX?: number): void {
+    this.isDead = true;
+    this.isDroppingThrough = false;
+    this.isCrouching = false;
+
+    if (typeof this.setAlpha === 'function') {
+      this.setAlpha(1.0);
+    }
+    if (typeof this.setTint === 'function') {
+      this.setTint(0xff4444);
+    }
+
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (body) {
+      let knockbackVx = this.facingLeft ? 90 : -90;
+      if (hitX !== undefined && hitX !== this.x) {
+        knockbackVx = hitX > this.x ? -90 : 90;
+      }
+      if (typeof body.setVelocityX === 'function') {
+        body.setVelocityX(knockbackVx);
+      }
+      if (typeof body.setVelocityY === 'function') {
+        body.setVelocityY(-220);
+      }
+    }
+
+    const animsManager = this.scene?.anims || this.scene?.sys?.anims;
+    const hasJumpAnim = animsManager && typeof animsManager.exists === 'function' && animsManager.exists('player_jump');
+    if (hasJumpAnim && this.anims && typeof this.anims.play === 'function') {
+      this.anims.play('player_jump', true);
+    } else if (typeof this.setFrame === 'function') {
+      this.setFrame(3);
+    }
+  }
+
+  public updateDeath(delta: number = 16): void {
+    if (!this.isDead) return;
+
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (!body) return;
+
+    const isGrounded = Boolean(body.blocked?.down || body.touching?.down);
+    const vy = body.velocity?.y ?? (body as any).velocityY ?? 0;
+
+    if (isGrounded && vy >= 0) {
+      if (typeof body.setVelocityX === 'function') {
+        body.setVelocityX(0);
+      }
+      if (typeof this.setAngle === 'function') {
+        this.setAngle(0);
+      }
+      const animsManager = this.scene?.anims || this.scene?.sys?.anims;
+      const hasCrouchAnim = animsManager && typeof animsManager.exists === 'function' && animsManager.exists('player_crouch');
+      if (hasCrouchAnim && this.anims && typeof this.anims.play === 'function') {
+        if (this.anims.currentAnim?.key !== 'player_crouch') {
+          this.anims.play('player_crouch', true);
+        }
+      } else if (typeof this.setFrame === 'function') {
+        this.setFrame(4);
+      }
+    } else {
+      // Airborne Contra tumble
+      const spinDir = this.facingLeft ? 1 : -1;
+      if (typeof this.setAngle === 'function') {
+        this.setAngle((this.angle || 0) + spinDir * 0.45 * delta);
+      }
+    }
   }
 
   public updatePlayer(

@@ -446,4 +446,34 @@ describe('Player entity', () => {
       expect(body.checkCollision.down).toBe(true);
     });
   });
+
+  describe('Player Death Sequence', () => {
+    it('launches player into backward-upward knockback arc on triggerDeath and settles prone when grounded', () => {
+      const mockScene = createMockScene();
+      const player = new Player(mockScene, 200, 200);
+      const body = createMockBody();
+      player.body = body;
+      player.facingLeft = false; // facing right -> knockback should be left (-90)
+
+      expect(player.isDead).toBe(false);
+      player.triggerDeath();
+
+      expect(player.isDead).toBe(true);
+      expect(body.velocity.x).toBe(-90);
+      expect(body.velocity.y).toBe(-220);
+
+      // Airborne tumble update
+      (body as any).blocked.down = false;
+      (body as any).touching.down = false;
+      player.updateDeath(16);
+      expect(body.velocity.x).toBe(-90);
+
+      // Landing on ground settles into prone frame and stops horizontal slide
+      (body as any).blocked.down = true;
+      (body as any).touching.down = true;
+      body.setVelocityY(0);
+      player.updateDeath(16);
+      expect(body.velocity.x).toBe(0);
+    });
+  });
 });

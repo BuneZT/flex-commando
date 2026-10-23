@@ -33,6 +33,7 @@ describe('Menu Scenes', () => {
     expect(loadedAudio['sfx_pickup']).toBe('assets/audio/sfx_pickup.ogg');
 
     expect(loadedImages['logo']).toBe('assets/ui/logo.png');
+    expect(loadedImages['retro_font']).toBe('assets/ui/retro_font.png');
     expect(loadedImages['cyber_hangar_bg']).toBe('assets/bg/cyber_hangar_bg.png');
     expect(loadedImages['tex_crosshair']).toBe('assets/vfx/crosshair.png');
 
@@ -358,6 +359,47 @@ describe('Menu Scenes', () => {
     expect(scoreText).toBeDefined();
     expect(scoreText).toContain('SCORE: 008000');
     expect(scoreText).toContain('HIGH: 008000');
+  });
+
+  it('fades in camera and renders tinted cyber_hangar_bg backdrop on GameOverScene', () => {
+    const gameOver = new GameOverScene();
+    gameOver.init({ victory: false, score: 1200, highScore: 5000, isNewHighScore: false });
+
+    const fadeInSpy = vi.fn();
+    const mockBg: any = {
+      setOrigin: vi.fn().mockReturnThis(),
+      setTint: vi.fn().mockReturnThis(),
+      setAlpha: vi.fn().mockReturnThis(),
+      setDepth: vi.fn().mockReturnThis(),
+    };
+    const tileSpriteSpy = vi.fn().mockReturnValue(mockBg);
+
+    (gameOver as any).cameras = {
+      main: {
+        width: 512,
+        height: 288,
+        fadeIn: fadeInSpy,
+      },
+    };
+    (gameOver as any).textures = {
+      exists: vi.fn((key: string) => key === 'cyber_hangar_bg'),
+    };
+    (gameOver as any).add = {
+      tileSprite: tileSpriteSpy,
+      image: vi.fn(),
+      text: vi.fn().mockReturnValue({ setOrigin: vi.fn() }),
+    };
+    (gameOver as any).input = {
+      keyboard: { once: vi.fn(), on: vi.fn() },
+    };
+
+    gameOver.create();
+
+    expect(fadeInSpy).toHaveBeenCalledWith(400, 7, 9, 20);
+    expect(tileSpriteSpy).toHaveBeenCalledWith(0, 0, 512, 288, 'cyber_hangar_bg');
+    expect(mockBg.setOrigin).toHaveBeenCalledWith(0, 0);
+    expect(mockBg.setTint).toHaveBeenCalledWith(0x661a22);
+    expect(mockBg.setAlpha).toHaveBeenCalledWith(0.45);
   });
 });
 

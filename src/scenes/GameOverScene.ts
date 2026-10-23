@@ -32,10 +32,25 @@ export class GameOverScene extends Phaser.Scene {
     if (this.input && typeof this.input.setDefaultCursor === 'function') {
       this.input.setDefaultCursor('default');
     }
-    if (this.cameras?.main && typeof this.cameras.main.setRoundPixels === 'function') {
-      this.cameras.main.setRoundPixels(true);
+    if (this.cameras?.main) {
+      if (typeof this.cameras.main.setRoundPixels === 'function') {
+        this.cameras.main.setRoundPixels(true);
+      }
+      if (typeof this.cameras.main.fadeIn === 'function') {
+        this.cameras.main.fadeIn(400, 7, 9, 20);
+      }
     }
     const { width, height } = this.cameras.main;
+
+    if (this.textures?.exists('cyber_hangar_bg') && typeof this.add?.tileSprite === 'function') {
+      const bg = this.add.tileSprite(0, 0, width, height, 'cyber_hangar_bg');
+      if (bg) {
+        if (typeof bg.setOrigin === 'function') bg.setOrigin(0, 0);
+        if (typeof bg.setTint === 'function') bg.setTint(this.victory ? 0x1a5533 : 0x661a22);
+        if (typeof bg.setAlpha === 'function') bg.setAlpha(0.45);
+        if (typeof bg.setDepth === 'function') bg.setDepth(-10);
+      }
+    }
 
     if (this.textures?.exists('logo')) {
       const logo = this.add.image(Math.round(width / 2), 35, 'logo');

@@ -731,6 +731,74 @@ describe('Portal Lock State and Win Condition', () => {
       expect(boss.health).toBe(initialHp - laser.damage);
       expect(laser.active).toBe(true);
     });
+
+    it('should trigger hit flash, screen shake, and impact spark on non-fatal player damage', () => {
+      const scene = createInitializedGameScene();
+      const shakeSpy = vi.fn();
+      scene.cameras.main.shake = shakeSpy;
+      scene.create();
+      scene.player!.lives = 3;
+
+      const sparkSpy = vi.spyOn(scene.impactFXPool!, 'spawn');
+      scene.handlePlayerDamage(scene.player!.x + 4, scene.player!.y);
+
+      expect(scene.player!.lives).toBe(2);
+      expect(scene.isGameOver).toBe(false);
+      expect(shakeSpy).toHaveBeenCalledWith(120, 0.006);
+      expect(sparkSpy).toHaveBeenCalledWith(scene.player!.x + 4, scene.player!.y);
+    });
+
+    it('should play player death sequence, fade out camera, and delay GameOverScene transition when time.delayedCall is available', () => {
+      const scene = createInitializedGameScene();
+      const fadeOutSpy = vi.fn();
+      const shakeSpy = vi.fn();
+      scene.cameras.main.fadeOut = fadeOutSpy;
+      scene.cameras.main.shake = shakeSpy;
+
+      const scheduledTimers: Array<{ delay: number; cb: () => void }> = [];
+      (scene as any).time = {
+        delayedCall: vi.fn((delay: number, cb: () => void) => {
+          scheduledTimers.push({ delay, cb });
+        }),
+      };
+
+      scene.create();
+      scene.score = 1850;
+      scene.player!.lives = 1;
+      const triggerDeathSpy = vi.spyOn(scene.player!, 'triggerDeath');
+      const updateDeathSpy = vi.spyOn(scene.player!, 'updateDeath');
+
+      scene.handlePlayerDamage(scene.player!.x + 10, scene.player!.y);
+
+      expect(scene.player!.lives).toBe(0);
+      expect(scene.isGameOver).toBe(true);
+      expect(triggerDeathSpy).toHaveBeenCalledWith(scene.player!.x + 10);
+      // Should not immediately switch scene before death animation completes
+      expect(scene.scene.start).not.toHaveBeenCalled();
+
+      // While dying, scene.update should update player death physics
+      scene.update(1016, 16);
+      expect(updateDeathSpy).toHaveBeenCalledWith(16);
+
+      // Fire 700ms fadeOut timer
+      const fadeTimer = scheduledTimers.find((t) => t.delay === 700);
+      expect(fadeTimer).toBeDefined();
+      fadeTimer!.cb();
+      expect(fadeOutSpy).toHaveBeenCalledWith(500, 7, 9, 20);
+
+      // Fire 1200ms scene transition timer
+      const sceneTimer = scheduledTimers.find((t) => t.delay === 1200);
+      expect(sceneTimer).toBeDefined();
+      sceneTimer!.cb();
+      expect(scene.scene.start).toHaveBeenCalledWith(
+        'GameOverScene',
+        expect.objectContaining({
+          victory: false,
+          score: 1850,
+          isNewHighScore: false,
+        })
+      );
+    });
   });
 });
 

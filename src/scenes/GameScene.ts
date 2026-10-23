@@ -18,6 +18,7 @@ import { HUD } from '../ui/HUD';
 import { SoundManager } from '../core/SoundManager';
 import { createRetroTextStyle } from '../ui/TextStyle';
 import { ImpactFXPool } from '../core/ImpactFXPool';
+import { CombatFX } from '../core/CombatFX';
 import { ScoreManager, POWERUP_SCORE_VALUE } from '../core/ScoreManager';
 
 export interface GameSceneInitData {
@@ -343,18 +344,63 @@ export class GameScene extends Phaser.Scene {
       if (this.input && typeof this.input.setDefaultCursor === 'function') {
         this.input.setDefaultCursor('default');
       }
+      if (this.crosshair && typeof this.crosshair.setVisible === 'function') {
+        this.crosshair.setVisible(false);
+      }
+      SoundManager.getInstance().stopBGM();
+
+      if (typeof this.player.triggerDeath === 'function') {
+        this.player.triggerDeath(hitX);
+      }
+      CombatFX.spawnPlayerDeathSequence(this, this.player);
+
+      if (this.hud && this.grid) {
+        const room = this.cameraManager?.getCurrentRoom() ?? {
+          gridX: Math.max(0, Math.min(3, Math.floor(this.player.x / GAME_CONSTANTS.VIEW_WIDTH_PX))),
+          gridY: Math.max(0, Math.min(3, Math.floor(this.player.y / GAME_CONSTANTS.VIEW_HEIGHT_PX))),
+        };
+        this.hud.update(this.player, this.grid, room.gridX, room.gridY, this.boss, this.infiniteLives, this.score);
+      }
+
       const currentHigh = ScoreManager.getHighScore();
-      this.scene.start('GameOverScene', {
+      const payload = {
         victory: false,
         score: this.score,
         highScore: currentHigh,
         isNewHighScore: false,
-      });
+      };
+
+      if (this.time && typeof this.time.delayedCall === 'function') {
+        this.time.delayedCall(700, () => {
+          if (this.cameras?.main && typeof this.cameras.main.fadeOut === 'function') {
+            this.cameras.main.fadeOut(500, 7, 9, 20);
+          }
+        });
+        this.time.delayedCall(1200, () => {
+          this.scene.start('GameOverScene', payload);
+        });
+      } else {
+        this.scene.start('GameOverScene', payload);
+      }
+      return;
     }
+
+    // Non-fatal hit feedback
+    CombatFX.applyHitFlash(this.player, 120);
+    CombatFX.triggerScreenShake(this, 120, 0.006);
+    if (this.impactFXPool && typeof this.impactFXPool.spawn === 'function') {
+      this.impactFXPool.spawn(hitX ?? this.player.x, hitY ?? this.player.y);
+    }
+    SoundManager.getInstance().playSfx('explosion');
   }
 
   update(time: number, delta: number): void {
-    if (this.isGameOver) return;
+    if (this.isGameOver) {
+      if (this.player && this.player.isDead && typeof this.player.updateDeath === 'function') {
+        this.player.updateDeath(delta);
+      }
+      return;
+    }
 
     // 1. Invulnerability flash timer update
     if (this.invulnerableTimer > 0 && this.player) {
@@ -532,6 +578,9 @@ export class GameScene extends Phaser.Scene {
       isNewHighScore: result.isNewRecord,
     };
     if (this.time && typeof this.time.delayedCall === 'function') {
+      if (this.cameras?.main && typeof this.cameras.main.fadeOut === 'function') {
+        this.cameras.main.fadeOut(450, 7, 9, 20);
+      }
       this.time.delayedCall(500, () => {
         this.scene.start('GameOverScene', payload);
       });
@@ -665,7 +714,7 @@ export class GameScene extends Phaser.Scene {
         const enemy = this.activeEnemies[i];
         if (enemy.isAlive && enemy.active) {
           if (this.checkOverlap(this.player, enemy, 2)) {
-            this.handlePlayerDamage();
+            this.handlePlayerDamage(enemy.x, enemy.y);
             break;
           }
         }
