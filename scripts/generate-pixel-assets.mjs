@@ -836,17 +836,23 @@ function generatePlayer() {
         canvas.fillRect(ox + 14, 21, 3, 1, '#EDE5DC');
       }
 
-      // Arms & Horizontal Rifle
-      canvas.fillRect(ox + 11, 11, 4, 4, '#FFCCA0');
-      canvas.fillRect(ox + 13, 11, 2, 4, '#FFFFFF');
-      canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C');
-      canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF');
-
       if (f === 12 || f === 13 || f === 14) {
+        // Recoil kickback on rifle and arm
+        canvas.fillRect(ox + 10, 10, 4, 4, '#FFCCA0');
+        canvas.fillRect(ox + 12, 10, 2, 4, '#FFFFFF');
+        canvas.fillRect(ox + 13, 10, 8, 3, '#707A8C');
+        canvas.fillRect(ox + 18, 9, 2, 2, '#00FFFF');
+
         // Horizontal muzzle flare!
-        canvas.fillRect(ox + 22, 10, 2, 5, '#FFCC00');
-        canvas.fillRect(ox + 21, 11, 3, 3, '#FFFFFF');
-        canvas.setPixel(ox + 23, 12, '#FF4400');
+        canvas.fillRect(ox + 21, 9, 2, 5, '#FFCC00');
+        canvas.fillRect(ox + 20, 10, 3, 3, '#FFFFFF');
+        canvas.setPixel(ox + 22, 11, '#FF4400');
+      } else {
+        // Arms & Horizontal Rifle
+        canvas.fillRect(ox + 11, 11, 4, 4, '#FFCCA0');
+        canvas.fillRect(ox + 13, 11, 2, 4, '#FFFFFF');
+        canvas.fillRect(ox + 14, 11, 8, 3, '#707A8C');
+        canvas.fillRect(ox + 19, 10, 2, 2, '#00FFFF');
       }
     }
   }

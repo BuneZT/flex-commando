@@ -290,14 +290,20 @@ export class TextureFactory {
           g.fillRect(ox + 13, 21, 5, 3);
         }
 
-        // Gun & white wrist wrap
-        g.fillStyle(0xffffff, 1);
-        g.fillRect(ox + 12, 11, 2, 3);
-        g.fillStyle(0x707a8c, 1);
-        g.fillRect(ox + 14, 11, 6, 3);
         if (f === 12 || f === 13 || f === 14) {
+          // Recoil kickback on rifle and wrist wrap
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 11, 10, 2, 3);
+          g.fillStyle(0x707a8c, 1);
+          g.fillRect(ox + 13, 10, 6, 3);
           g.fillStyle(0xffcc00, 1);
-          g.fillRect(ox + 20, 11, 3, 3);
+          g.fillRect(ox + 19, 10, 3, 3);
+        } else {
+          // Gun & white wrist wrap
+          g.fillStyle(0xffffff, 1);
+          g.fillRect(ox + 12, 11, 2, 3);
+          g.fillStyle(0x707a8c, 1);
+          g.fillRect(ox + 14, 11, 6, 3);
         }
       }
     }

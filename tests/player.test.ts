@@ -369,6 +369,55 @@ describe('Player entity', () => {
     expect(playedAnim).toBe('player_shoot_down_forward');
   });
 
+  it('should maintain mouse aim direction (e.g. DOWN_FORWARD) when moving left or right', () => {
+    const mockScene = createMockScene();
+    const player = new Player(mockScene, 100, 100);
+    const body = createMockBody();
+    player.body = body;
+
+    let playedAnim = '';
+    player.anims = {
+      play: (key: string) => { playedAnim = key; },
+      currentAnim: null,
+    } as any;
+    (mockScene.sys.anims as any).exists = () => true;
+
+    // Moving right (holding D) while mouse is aiming down-right (e.g. x: 150, y: 150)
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: true,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: false,
+      shootJustPressed: false,
+      mouseX: 150,
+      mouseY: 150,
+    });
+
+    expect(player.aimDirection).toBe('DOWN_FORWARD');
+    expect(playedAnim).toBe('player_run_down');
+
+    // Moving right (holding D) while mouse is aiming down-right and shooting
+    player.firingFlashTimer = 60;
+    player.updatePlayer({
+      up: false,
+      down: false,
+      left: false,
+      right: true,
+      jump: false,
+      jumpJustPressed: false,
+      shoot: true,
+      shootJustPressed: false,
+      mouseX: 150,
+      mouseY: 150,
+    });
+
+    expect(player.aimDirection).toBe('DOWN_FORWARD');
+    expect(playedAnim).toBe('player_run_shoot_down');
+  });
+
   describe('Drop-Through Platform logic', () => {
     function createMockGroundLayer(tileMatrix: number[][]) {
       return {

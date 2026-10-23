@@ -254,40 +254,32 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.isUsingMouseAim = true;
       this.facingLeft = calculateFacingDirection(this.x, input.mouseX, this.facingLeft);
       this.aimAngle = calculateMouseAimAngle(this.x, this.y - 4, input.mouseX, input.mouseY);
-      if (input.up || input.down || input.left || input.right) {
-        this.aimDirection = calculateAimDirection(
-          Boolean(input.up),
-          Boolean(input.down),
-          Boolean(input.left),
-          Boolean(input.right)
-        );
-      } else {
-        // Derive aimDirection from mouse aimAngle when directional keys are not pressed
-        const angle = this.aimAngle;
-        if (this.facingLeft) {
-          if (angle >= -112.5 && angle < -67.5) {
-            this.aimDirection = 'UP';
-          } else if (angle >= -157.5 && angle < -112.5) {
-            this.aimDirection = 'UP_FORWARD';
-          } else if (angle >= 112.5 && angle < 157.5) {
-            this.aimDirection = 'DOWN_FORWARD';
-          } else if (angle >= 67.5 && angle < 112.5) {
-            this.aimDirection = 'DOWN';
-          } else {
-            this.aimDirection = 'FORWARD';
-          }
+
+      // Derive aimDirection from mouse aimAngle
+      const angle = this.aimAngle;
+      if (this.facingLeft) {
+        if (angle >= -112.5 && angle < -67.5) {
+          this.aimDirection = 'UP';
+        } else if (angle >= -157.5 && angle < -112.5) {
+          this.aimDirection = 'UP_FORWARD';
+        } else if (angle >= 112.5 && angle < 157.5) {
+          this.aimDirection = 'DOWN_FORWARD';
+        } else if (angle >= 67.5 && angle < 112.5) {
+          this.aimDirection = 'DOWN';
         } else {
-          if (angle >= -112.5 && angle < -67.5) {
-            this.aimDirection = 'UP';
-          } else if (angle >= -67.5 && angle < -22.5) {
-            this.aimDirection = 'UP_FORWARD';
-          } else if (angle >= 22.5 && angle < 67.5) {
-            this.aimDirection = 'DOWN_FORWARD';
-          } else if (angle >= 67.5 && angle < 112.5) {
-            this.aimDirection = 'DOWN';
-          } else {
-            this.aimDirection = 'FORWARD';
-          }
+          this.aimDirection = 'FORWARD';
+        }
+      } else {
+        if (angle >= -112.5 && angle < -67.5) {
+          this.aimDirection = 'UP';
+        } else if (angle >= -67.5 && angle < -22.5) {
+          this.aimDirection = 'UP_FORWARD';
+        } else if (angle >= 22.5 && angle < 67.5) {
+          this.aimDirection = 'DOWN_FORWARD';
+        } else if (angle >= 67.5 && angle < 112.5) {
+          this.aimDirection = 'DOWN';
+        } else {
+          this.aimDirection = 'FORWARD';
         }
       }
     } else {
