@@ -170,8 +170,8 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
 
     scene.updateRoomLockdown(1, 0);
 
-    // Clamped inward away from west door (512 + 36 = 548)
-    expect(scene.player!.x).toBeGreaterThanOrEqual(548);
+    // Clamped inward away from west door (512 + 24 = 536)
+    expect(scene.player!.x).toBeGreaterThanOrEqual(536);
   });
 
   it('unlocks barriers and plays pickup sfx chime when unlockRoomBarriers is called', () => {
@@ -195,11 +195,11 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     const barrier = scene.roomBarriers[0];
     barrier.setActive(true);
     barrier.setPosition(500, 200);
-    barrier.setDisplaySize(32, 96);
+    barrier.setDisplaySize(16, 96);
     const body = barrier.body as any;
     if (body) {
       body.enable = true;
-      body.setSize(32, 96);
+      body.setSize(16, 96);
       body.reset(500, 200);
     }
 
@@ -281,11 +281,11 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     const barrier = scene.roomBarriers[0];
     barrier.setActive(true);
     barrier.setPosition(500, 200);
-    barrier.setDisplaySize(32, 96);
+    barrier.setDisplaySize(16, 96);
     const body = barrier.body as any;
     if (body) {
       body.enable = true;
-      body.setSize(32, 96);
+      body.setSize(16, 96);
       body.reset(500, 200);
     }
 

@@ -13,16 +13,16 @@ describe('RoomLockdown pure module', () => {
 
     const west = barriers.find(b => b.direction === 'WEST');
     expect(west).toBeDefined();
-    expect(west?.x).toBe(512 + 16);
+    expect(west?.x).toBe(512 + 8);
     expect(west?.y).toBe(288 + 224);
-    expect(west?.width).toBe(32);
+    expect(west?.width).toBe(16);
     expect(west?.height).toBe(96);
 
     const east = barriers.find(b => b.direction === 'EAST');
     expect(east).toBeDefined();
-    expect(east?.x).toBe(512 + 496);
+    expect(east?.x).toBe(512 + 504);
     expect(east?.y).toBe(288 + 224);
-    expect(east?.width).toBe(32);
+    expect(east?.width).toBe(16);
     expect(east?.height).toBe(96);
 
     const north = barriers.find(b => b.direction === 'NORTH');
@@ -69,11 +69,11 @@ describe('RoomLockdown pure module', () => {
 
   it('clamps player coordinates inside room bounds', () => {
     // Room (1, 1) has bounds [512..1024, 288..576]
-    const clampedWest = clampPlayerInsideRoom(515, 400, 1, 1, 512, 288, 36);
-    expect(clampedWest.x).toBe(512 + 36);
+    const clampedWest = clampPlayerInsideRoom(515, 400, 1, 1, 512, 288, 24);
+    expect(clampedWest.x).toBe(512 + 24);
 
-    const clampedEast = clampPlayerInsideRoom(1020, 400, 1, 1, 512, 288, 36);
-    expect(clampedEast.x).toBe(1024 - 36);
+    const clampedEast = clampPlayerInsideRoom(1020, 400, 1, 1, 512, 288, 24);
+    expect(clampedEast.x).toBe(1024 - 24);
 
     const clampedNorth = clampPlayerInsideRoom(700, 290, 1, 1, 512, 288, 20);
     expect(clampedNorth.y).toBe(288 + 20);

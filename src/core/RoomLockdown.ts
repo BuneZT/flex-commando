@@ -37,24 +37,24 @@ export function getRoomDoorBarriers(
   const originY = gridY * roomHeightPx;
   const barriers: BarrierConfig[] = [];
 
-  // West door: rows 11-16 (height 96), cols 0-1 (width 32)
+  // West door: rows 11-16 (height 96), col 0 matches wall width (16px)
   if (doors.west) {
     barriers.push({
       direction: 'WEST',
-      x: originX + 16,
+      x: originX + 8,
       y: originY + 224,
-      width: 32,
+      width: 16,
       height: 96,
     });
   }
 
-  // East door: rows 11-16 (height 96), cols 30-31 (width 32)
+  // East door: rows 11-16 (height 96), col 31 matches wall width (16px)
   if (doors.east) {
     barriers.push({
       direction: 'EAST',
-      x: originX + 496,
+      x: originX + 504,
       y: originY + 224,
-      width: 32,
+      width: 16,
       height: 96,
     });
   }
@@ -136,7 +136,7 @@ export function clampPlayerInsideRoom(
   gridY: number,
   roomWidthPx: number = GAME_CONSTANTS.VIEW_WIDTH_PX,
   roomHeightPx: number = GAME_CONSTANTS.VIEW_HEIGHT_PX,
-  margin: number = 36
+  margin: number = 24
 ): { x: number; y: number } {
   const minX = gridX * roomWidthPx + margin;
   const maxX = (gridX + 1) * roomWidthPx - margin;
