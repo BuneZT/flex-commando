@@ -1424,6 +1424,75 @@ function generateBulletImpact() {
  * 15. Retro Font Atlas: public/assets/ui/retro_font.png (406x9)
  * 58 cells of 7x9 pixels (5x7 white '#FFFFFF' glyph + 1px black '#000000' 8-neighbor outline).
  */
+
+/**
+ * 16. Sci-Fi Laser Barrier: public/assets/vfx/laser_barrier.png (64x16)
+ * 4 frames of 16x16:
+ * Shimmering energy barrier with top/bottom emitter nodes and cycling plasma scanlines.
+ */
+function generateLaserBarrier() {
+  const canvas = new PixelCanvas(64, 16);
+
+  for (let f = 0; f < 4; f++) {
+    const ox = f * 16;
+
+    // Top & bottom gunmetal emitter nodes
+    canvas.fillRect(ox + 1, 0, 14, 2, '#1E2436');
+    canvas.fillRect(ox + 3, 1, 10, 1, '#3B4868');
+    canvas.fillRect(ox + 1, 14, 14, 2, '#1E2436');
+    canvas.fillRect(ox + 3, 14, 10, 1, '#3B4868');
+
+    // Emitter node glowing diode LEDs
+    canvas.setPixel(ox + 2, 0, '#00FFFF');
+    canvas.setPixel(ox + 13, 0, '#00FFFF');
+    canvas.setPixel(ox + 2, 15, '#00FFFF');
+    canvas.setPixel(ox + 13, 15, '#00FFFF');
+
+    // Translucent plasma energy grid background (y=2..13)
+    for (let y = 2; y <= 13; y++) {
+      for (let x = 1; x <= 14; x++) {
+        if ((x + y + f) % 3 === 0) {
+          canvas.setPixel(ox + x, y, '#FF1155', 70);
+        } else if ((x * 2 + y + f * 2) % 4 === 0) {
+          canvas.setPixel(ox + x, y, '#00E5FF', 50);
+        }
+      }
+    }
+
+    // Dynamic scanning laser beams and plasma core lines depending on frame
+    if (f === 0) {
+      // Horizontal laser beams at y=4, y=8, y=11
+      canvas.fillRect(ox + 2, 4, 12, 1, '#FF3377', 160);
+      canvas.fillRect(ox + 1, 8, 14, 1, '#00FFFF', 220);
+      canvas.fillRect(ox + 4, 8, 8, 1, '#FFFFFF', 255);
+      canvas.fillRect(ox + 2, 11, 12, 1, '#FF3377', 160);
+    } else if (f === 1) {
+      // Shifted scanning beam + diagonal plasma discharge
+      canvas.fillRect(ox + 1, 6, 14, 1, '#00FFFF', 200);
+      canvas.fillRect(ox + 3, 6, 10, 1, '#FFFFFF', 255);
+      canvas.fillRect(ox + 2, 10, 12, 1, '#FF5588', 180);
+      canvas.drawLine(ox + 2, 3, ox + 13, 12, '#33EEFF', 140);
+    } else if (f === 2) {
+      // High-intensity central plasma core
+      canvas.fillRect(ox + 2, 5, 12, 1, '#FF2266', 170);
+      canvas.fillRect(ox + 1, 7, 14, 2, '#00FFFF', 240);
+      canvas.fillRect(ox + 3, 7, 10, 2, '#FFFFFF', 255);
+      canvas.fillRect(ox + 2, 11, 12, 1, '#FF2266', 170);
+    } else {
+      // Pulsing wave with electric particle sparks
+      canvas.fillRect(ox + 1, 9, 14, 1, '#00FFFF', 210);
+      canvas.fillRect(ox + 4, 9, 8, 1, '#FFFFFF', 255);
+      canvas.fillRect(ox + 2, 3, 12, 1, '#FF5599', 160);
+      canvas.setPixel(ox + 5, 6, '#FFFFFF');
+      canvas.setPixel(ox + 10, 12, '#FFFFFF');
+      canvas.setPixel(ox + 3, 8, '#00FFFF');
+      canvas.setPixel(ox + 12, 5, '#00FFFF');
+    }
+  }
+
+  return canvas.toPNG();
+}
+
 const RETRO_FONT_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 :!?.,-+_/[]()%\'"❤∞★█░';
 
 const RETRO_FONT_GLYPHS = {
@@ -1552,6 +1621,7 @@ const ASSET_REGISTRY = [
   { path: 'public/assets/vfx/crosshair.png', build: generateCrosshair },
   { path: 'public/assets/vfx/explosion.png', build: generateExplosion },
   { path: 'public/assets/vfx/bullet_impact.png', build: generateBulletImpact },
+  { path: 'public/assets/vfx/laser_barrier.png', build: generateLaserBarrier },
 ];
 
 function main() {

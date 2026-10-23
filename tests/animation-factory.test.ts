@@ -23,6 +23,7 @@ describe('AnimationFactory', () => {
               tex_pickups: 8,
               tex_explosion: 4,
               tex_bullet_impact: 4,
+              tex_laser_barrier: 4,
             };
             for (const [key, frameCount] of Object.entries(texConfigs)) {
               if (!this.textures.exists(key)) {
@@ -72,9 +73,10 @@ describe('AnimationFactory', () => {
       'capsule_spin',
       'enemy_explosion',
       'bullet_impact_spark',
+      'laser_barrier_pulse',
     ];
 
-    expect(animKeys).toHaveLength(24);
+    expect(animKeys).toHaveLength(25);
     animKeys.forEach((key) => {
       expect(scene.anims.exists(key), `Expected animation '${key}' to exist`).toBe(true);
     });
