@@ -16,7 +16,7 @@ describe('Asset Integrity', () => {
     { path: 'public/assets/sprites/jumper.png', width: 96, height: 28 },
     { path: 'public/assets/sprites/boss.png', width: 256, height: 64 },
     { path: 'public/assets/vfx/projectiles.png', width: 80, height: 16 },
-    { path: 'public/assets/vfx/pickups.png', width: 112, height: 16 },
+    { path: 'public/assets/vfx/pickups.png', width: 128, height: 16 },
     { path: 'public/assets/vfx/crosshair.png', width: 16, height: 16 },
     { path: 'public/assets/vfx/explosion.png', width: 80, height: 20 },
     { path: 'public/assets/vfx/bullet_impact.png', width: 64, height: 16 },

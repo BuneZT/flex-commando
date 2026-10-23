@@ -1214,12 +1214,12 @@ function generateProjectiles() {
 }
 
 /**
- * 11. public/assets/vfx/pickups.png (112x16)
- * Seven 16x16 frames:
- * 0: Capsule 1, 1: Capsule 2, 2: Badge 'S', 3: Badge 'L', 4: Badge 'F', 5: Badge 'M', 6: Badge 'B'
+ * 11. public/assets/vfx/pickups.png (128x16)
+ * Eight 16x16 frames:
+ * 0: Capsule 1, 1: Capsule 2, 2: Badge 'S', 3: Badge 'L', 4: Badge 'F', 5: Badge 'M', 6: Badge 'B', 7: Badge Heart
  */
 function generatePickups() {
-  const canvas = new PixelCanvas(112, 16);
+  const canvas = new PixelCanvas(128, 16);
 
   // --- Capsule Frames (0 & 1) ---
   for (let f = 0; f < 2; f++) {
@@ -1257,6 +1257,28 @@ function generatePickups() {
     // Top highlight bevel
     canvas.fillRect(ox + 2, 2, 12, 1, '#FFFFFF');
   });
+
+  // --- Frame 7: Heart Badge ---
+  const hx = 7 * 16;
+  canvas.fillRect(hx + 1, 1, 14, 14, '#1C2430');
+  canvas.strokeRect(hx + 2, 2, 12, 12, '#FF2244');
+  canvas.fillRect(hx + 3, 3, 10, 10, '#4A0011');
+  canvas.fillRect(hx + 2, 2, 12, 1, '#FFFFFF'); // Top highlight bevel
+
+  const heartPixels = [
+    [hx + 5, 5], [hx + 6, 5], [hx + 9, 5], [hx + 10, 5],
+    [hx + 4, 6], [hx + 5, 6], [hx + 6, 6], [hx + 7, 6], [hx + 8, 6], [hx + 9, 6], [hx + 10, 6], [hx + 11, 6],
+    [hx + 4, 7], [hx + 5, 7], [hx + 6, 7], [hx + 7, 7], [hx + 8, 7], [hx + 9, 7], [hx + 10, 7], [hx + 11, 7],
+    [hx + 5, 8], [hx + 6, 8], [hx + 7, 8], [hx + 8, 8], [hx + 9, 8], [hx + 10, 8],
+    [hx + 6, 9], [hx + 7, 9], [hx + 8, 9], [hx + 9, 9],
+    [hx + 7, 10], [hx + 8, 10],
+    [hx + 7, 11], [hx + 8, 11],
+  ];
+  for (const [px, py] of heartPixels) {
+    canvas.fillRect(px, py, 1, 1, '#FF2244');
+  }
+  // Pink highlight on top-left lobe
+  canvas.fillRect(hx + 5, 6, 1, 1, '#FFAAAA');
 
   return canvas.toPNG();
 }

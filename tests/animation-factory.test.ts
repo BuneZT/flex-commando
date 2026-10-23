@@ -20,7 +20,7 @@ describe('AnimationFactory', () => {
               tex_enemy_jumper: 2,
               tex_enemy_boss: 2,
               tex_capsule_flying: 2,
-              tex_pickups: 7,
+              tex_pickups: 8,
               tex_explosion: 4,
               tex_bullet_impact: 4,
             };
