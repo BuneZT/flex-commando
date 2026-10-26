@@ -456,6 +456,32 @@ describe('Enemy Classes AI and Damage Behavior', () => {
     boss.updateAI(7300, 1550, player, pool);
     expect(boss.state).toBe('PATROL');
   });
+
+  it('Boss should toggle pre-allocated Phaser 4 glow filter color and active state across telegraph and overheat states', () => {
+    const scene = createMockScene();
+    const boss = new Boss(scene, 200, 200);
+    const mockGlow = { color: 0xffffff, outerStrength: 2, active: false };
+    (boss as any).glowFilter = mockGlow;
+
+    boss.enterState('SWEEP_TELEGRAPH', { x: 300, y: 200 });
+    expect(mockGlow.active).toBe(true);
+    expect(mockGlow.color).toBe(0xff3333);
+
+    boss.enterState('LEAP_TELEGRAPH', { x: 300, y: 200 });
+    expect(mockGlow.active).toBe(true);
+    expect(mockGlow.color).toBe(0xffaa00);
+
+    boss.enterState('CHARGE_TELEGRAPH', { x: 300, y: 200 });
+    expect(mockGlow.active).toBe(true);
+    expect(mockGlow.color).toBe(0xff6600);
+
+    boss.enterState('OVERHEAT', { x: 300, y: 200 });
+    expect(mockGlow.active).toBe(true);
+    expect(mockGlow.color).toBe(0x44ddff);
+
+    boss.enterState('PATROL', { x: 300, y: 200 });
+    expect(mockGlow.active).toBe(false);
+  });
 });
 
 

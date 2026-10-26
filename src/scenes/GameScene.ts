@@ -53,6 +53,7 @@ export class GameScene extends Phaser.Scene {
   public crosshair?: Phaser.GameObjects.Sprite;
   public exitDoor?: Phaser.GameObjects.Sprite;
   public exitDoors: Phaser.GameObjects.Sprite[] = [];
+  public exitPortalGlow: any | null = null;
   public isPortalUnlocked: boolean = false;
   public exitPortalText?: Phaser.GameObjects.Text;
   public roomBarriers: Phaser.GameObjects.Sprite[] = [];
@@ -92,6 +93,7 @@ export class GameScene extends Phaser.Scene {
     this.pickupItems = [];
     this.exitDoor = undefined;
     this.exitDoors = [];
+    this.exitPortalGlow = null;
     this.roomBarriers = [];
     this.roomBarrierGroup = undefined;
     this.isRoomLockdownActive = false;
@@ -195,6 +197,11 @@ export class GameScene extends Phaser.Scene {
         if (typeof barrier.setBlendMode === 'function' && Phaser.BlendModes?.ADD !== undefined) {
           barrier.setBlendMode(Phaser.BlendModes.ADD);
         }
+        const barrierGlow = CombatFX.attachGlowFilter(barrier, 0x00ffff, 2, 6, 4);
+        if (barrierGlow) {
+          barrierGlow.active = false;
+          (barrier as any).__glowFilter = barrierGlow;
+        }
         if (typeof barrier.setAlpha === 'function') barrier.setAlpha(0);
         if (typeof barrier.setDepth === 'function') barrier.setDepth(15);
         if (typeof barrier.setActive === 'function') barrier.setActive(false);
@@ -260,6 +267,7 @@ export class GameScene extends Phaser.Scene {
       if (typeof portal.setAlpha === 'function') {
         portal.setAlpha(0.75);
       }
+      this.exitPortalGlow = CombatFX.attachGlowFilter(portal, 0xff4444, 2, 6, 4);
       this.exitDoor = portal;
       this.exitDoors.push(portal);
     }
@@ -619,6 +627,7 @@ export class GameScene extends Phaser.Scene {
         const b = this.roomBarriers[i];
         if (typeof b.setActive === 'function') b.setActive(false);
         if (typeof b.setVisible === 'function') b.setVisible(false);
+        if ((b as any).__glowFilter) (b as any).__glowFilter.active = false;
         if (b.body) (b.body as any).enable = false;
       }
       return;
@@ -649,6 +658,9 @@ export class GameScene extends Phaser.Scene {
         if (typeof barrier.setVisible === 'function') {
           barrier.setVisible(true);
         }
+        if ((barrier as any).__glowFilter) {
+          (barrier as any).__glowFilter.active = true;
+        }
         const body = barrier.body as any;
         if (body) {
           body.enable = true;
@@ -673,6 +685,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         if (typeof barrier.setActive === 'function') barrier.setActive(false);
         if (typeof barrier.setVisible === 'function') barrier.setVisible(false);
+        if ((barrier as any).__glowFilter) (barrier as any).__glowFilter.active = false;
         if (barrier.body) (barrier.body as any).enable = false;
       }
     }
@@ -714,6 +727,7 @@ export class GameScene extends Phaser.Scene {
             const b = activeBarriers[i];
             if (typeof b.setActive === 'function') b.setActive(false);
             if (typeof b.setVisible === 'function') b.setVisible(false);
+            if ((b as any).__glowFilter) (b as any).__glowFilter.active = false;
           }
         },
       });
@@ -723,12 +737,17 @@ export class GameScene extends Phaser.Scene {
         if (typeof b.setActive === 'function') b.setActive(false);
         if (typeof b.setVisible === 'function') b.setVisible(false);
         if (typeof b.setAlpha === 'function') b.setAlpha(0);
+        if ((b as any).__glowFilter) (b as any).__glowFilter.active = false;
       }
     }
   }
 
   public unlockExitPortal(): void {
     this.isPortalUnlocked = true;
+    if (this.exitPortalGlow) {
+      this.exitPortalGlow.color = 0x00ff88;
+      this.exitPortalGlow.outerStrength = 3;
+    }
     for (let i = 0; i < this.exitDoors.length; i++) {
       const door = this.exitDoors[i];
       if (typeof door.clearTint === 'function') door.clearTint();

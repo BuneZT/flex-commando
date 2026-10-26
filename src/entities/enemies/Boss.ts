@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { EnemyBase } from './EnemyBase';
 import { ProjectilePool } from '../../weapons/ProjectilePool';
+import { CombatFX } from '../../core/CombatFX';
 
 export type BossState =
   | 'PATROL'
@@ -66,12 +67,18 @@ export class Boss extends EnemyBase {
   private sweepShotCount: number = 0;
   private moveTimer: number = 0;
   private moveDirection: number = 1;
+  public glowFilter: any | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, health: number = 120, texture: string = 'tex_enemy_boss') {
     super(scene, x, y, texture, health);
     this.scoreValue = 5000;
     this.damageOnContact = 2;
     this.explosionScale = 2.0;
+
+    this.glowFilter = CombatFX.attachGlowFilter(this, 0xff3333, 2, 6, 4);
+    if (this.glowFilter) {
+      this.glowFilter.active = false;
+    }
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (body) {
@@ -100,6 +107,30 @@ export class Boss extends EnemyBase {
 
     if (typeof this.clearTint === 'function') {
       this.clearTint();
+    }
+
+    if (this.glowFilter) {
+      switch (newState) {
+        case 'SWEEP_TELEGRAPH':
+          this.glowFilter.active = true;
+          this.glowFilter.color = 0xff3333;
+          break;
+        case 'LEAP_TELEGRAPH':
+          this.glowFilter.active = true;
+          this.glowFilter.color = 0xffaa00;
+          break;
+        case 'CHARGE_TELEGRAPH':
+          this.glowFilter.active = true;
+          this.glowFilter.color = 0xff6600;
+          break;
+        case 'OVERHEAT':
+          this.glowFilter.active = true;
+          this.glowFilter.color = 0x44ddff;
+          break;
+        default:
+          this.glowFilter.active = false;
+          break;
+      }
     }
 
     if (player) {

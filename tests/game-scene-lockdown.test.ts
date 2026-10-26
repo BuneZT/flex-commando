@@ -349,4 +349,15 @@ describe('GameScene Room Lockdown & Barrier Integration', () => {
     expect(tweenSpy).toHaveBeenCalled();
     expect(scene.roomBarriers.every((b) => !b.active && !b.visible)).toBe(true);
   });
+
+  it('updates exit portal Phaser 4 glow filter color and strength when unlocked', () => {
+    scene.create();
+    const mockPortalGlow = { color: 0xff4444, outerStrength: 2, active: true };
+    (scene as any).exitPortalGlow = mockPortalGlow;
+
+    scene.unlockExitPortal();
+
+    expect(mockPortalGlow.color).toBe(0x00ff88);
+    expect(mockPortalGlow.outerStrength).toBe(3);
+  });
 });
