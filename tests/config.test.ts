@@ -48,6 +48,12 @@ describe('GameConfig', () => {
     expect(GameConfig.fps?.limit).toBe(60);
     expect(GameConfig.fps?.smoothStep).toBe(true);
   });
+
+  it('should run on Phaser 4.x runtime with TintModes', () => {
+    expect(Phaser.VERSION.startsWith('4.')).toBe(true);
+    expect((Phaser as any).TintModes).toBeDefined();
+    expect((Phaser as any).TintModes.FILL).toBe(1);
+  });
 });
 
 describe('index.html layout and container styling', () => {
