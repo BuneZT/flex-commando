@@ -7,7 +7,7 @@ This document provides context, architectural boundaries, and guidelines for AI 
 ## 1. Project Overview
 
 * **Title:** Flex Commando: Rogue Beef (`flex-commando`)
-* **Tech Stack:** TypeScript (strictly typed, `noEmit: true`), Vite, Phaser 3.80+ with Arcade Physics, Vitest (`happy-dom`).
+* **Tech Stack:** TypeScript (strictly typed, `noEmit: true`), Vite, Phaser 4.2+ with Arcade Physics, Vitest (`happy-dom`).
 * **View Resolution:** 512x288 pixels (16:9 ratio, pixelArt: true), 32x18 tiles per room at 16x16px tile size.
 * **Level Structure:** 4x4 matrix grid of rooms (128x72 total tiles per level, 2048x1152 px world space) with hybrid platforming via `RoomDecorator`.
 
@@ -67,7 +67,7 @@ flex-commando/
 
 2. **Phaser Import Rules**:
    - In configuration/type files (like `GameConfig.ts`), use `import type Phaser from 'phaser'` to prevent Node/Vitest from initializing Phaser's WebGL/canvas device features during imports.
-   - `vite.config.ts` includes `resolve: { alias: { phaser: 'phaser/dist/phaser.js' } }` and `test: { setupFiles: ['./vitest.setup.ts'] }` for headless Vitest compatibility.
+   - `vite.config.ts` includes `test: { environment: 'happy-dom', setupFiles: ['./vitest.setup.ts'] }` and relies on Phaser 4's native package `exports` map for headless Vitest compatibility.
 
 3. **Performance & Memory Management**:
    - Projectiles must use `ProjectilePool` recycling. Acquire with `pool.spawn()` (reuses `pool.find(p => !p.active)` before allocating); release with `projectile.deactivate()`. Never instantiate new sprites mid-firefight.

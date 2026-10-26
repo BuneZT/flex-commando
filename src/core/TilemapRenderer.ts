@@ -74,7 +74,7 @@ export class TilemapRenderer {
       tileset = map.addTilesetImage('tileset') || null;
     }
 
-    const groundLayer = map.createLayer(0, tileset || tilesetKey, 0, 0);
+    const groundLayer = map.createLayer(0, tileset || tilesetKey, 0, 0) as Phaser.Tilemaps.TilemapLayer | null;
     if (groundLayer && map && typeof map.setCollision === 'function') {
       map.setCollision([1, 3], true, true, groundLayer);
       map.setCollision(2, true, false, groundLayer);
