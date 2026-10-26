@@ -367,8 +367,19 @@ export function installPixelTextRenderer(phaserNamespace: any = (globalThis as a
         this.height = metrics.height;
         this.updateDisplayOrigin();
 
-        if (this.frame && typeof this.frame.setSize === 'function') {
-          this.frame.setSize(this.width, this.height);
+        if (this.frame) {
+          if (typeof this.frame.setSize === 'function') {
+            this.frame.setSize(this.width, this.height);
+          }
+          if (this.frame.source) {
+            if (typeof this.frame.source.updateSize === 'function') {
+              this.frame.source.updateSize(this.width, this.height);
+            }
+            this.frame.source.resolution = 1;
+          }
+          if (typeof this.frame.updateUVs === 'function') {
+            this.frame.updateUVs();
+          }
         }
 
         if (

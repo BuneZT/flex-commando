@@ -171,7 +171,11 @@ describe('TextStyle', () => {
       public originY = 0.5;
       public _displayOriginX = 0;
       public _displayOriginY = 0;
-      public frame = { setSize: vi.fn(), source: { glTexture: {} } };
+      public frame = {
+        setSize: vi.fn(),
+        updateUVs: vi.fn(),
+        source: { glTexture: {}, updateSize: vi.fn(), resolution: 1 },
+      };
       public renderer = { gl: {}, canvasToTexture: vi.fn().mockReturnValue({ id: 'gl_tex' }) };
 
       updateDisplayOrigin() {
@@ -202,6 +206,8 @@ describe('TextStyle', () => {
     expect(Number.isInteger(textInstance._displayOriginY)).toBe(true);
     expect(mockContext.drawImage).toHaveBeenCalled();
     expect(textInstance.frame.setSize).toHaveBeenCalledWith(textInstance.width, textInstance.height);
+    expect(textInstance.frame.source.updateSize).toHaveBeenCalledWith(textInstance.width, textInstance.height);
+    expect(textInstance.frame.updateUVs).toHaveBeenCalled();
     expect(textInstance.renderer.canvasToTexture).toHaveBeenCalled();
   });
 });
