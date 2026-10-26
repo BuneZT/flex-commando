@@ -11,18 +11,55 @@ export class CombatFX {
   ): void {
     if (!target) return;
 
-    if (typeof target.setTintFill === 'function') {
+    const fillMode = (Phaser as any).TintModes?.FILL ?? 1;
+    const multiplyMode = (Phaser as any).TintModes?.MULTIPLY ?? 0;
+
+    if (typeof target.setTintMode === 'function' && typeof target.setTint === 'function') {
+      target.setTint(0xffffff);
+      target.setTintMode(fillMode);
+    } else if (typeof target.setTintFill === 'function') {
       target.setTintFill(0xffffff);
     }
 
     const scene = target.scene;
     if (scene?.time && typeof scene.time.delayedCall === 'function') {
       scene.time.delayedCall(durationMs, () => {
-        if (target && target.active && typeof target.clearTint === 'function') {
-          target.clearTint();
+        if (target && target.active) {
+          if (typeof target.clearTint === 'function') {
+            target.clearTint();
+          }
+          if (typeof target.setTintMode === 'function') {
+            target.setTintMode(multiplyMode);
+          }
         }
       });
     }
+  }
+
+  /**
+   * Pre-allocates a Phaser 4 internal Glow filter on a sprite if WebGL filters are supported.
+   * Returns null in headless / mocked test environments with zero runtime throw risk.
+   */
+  public static attachGlowFilter(
+    target: Phaser.GameObjects.Sprite | any,
+    color: number = 0xffffff,
+    outerStrength: number = 2,
+    quality: number = 6,
+    distance: number = 4
+  ): any | null {
+    if (!target || typeof target.enableFilters !== 'function') {
+      return null;
+    }
+    try {
+      target.enableFilters();
+      const internal = target.filters?.internal;
+      if (internal && typeof internal.addGlow === 'function') {
+        return internal.addGlow(color, outerStrength, 0, 1, false, quality, distance);
+      }
+    } catch {
+      // Ignore in headless unit tests where Scene Camera / WebGL framebuffer is not initialized
+    }
+    return null;
   }
 
   /**

@@ -31,6 +31,64 @@ describe('CombatFX', () => {
     expect(spriteMock.clearTint).toHaveBeenCalled();
   });
 
+  it('uses Phaser 4 setTint + setTintMode(Phaser.TintModes.FILL) without calling deprecated setTintFill when setTintMode is present', () => {
+    let timerCallback: (() => void) | null = null;
+    const setTintFillSpy = vi.fn();
+    const spriteMock: any = {
+      active: true,
+      setTint: vi.fn().mockReturnThis(),
+      setTintMode: vi.fn().mockReturnThis(),
+      setTintFill: setTintFillSpy,
+      clearTint: vi.fn().mockReturnThis(),
+      scene: {
+        time: {
+          delayedCall: vi.fn((_ms: number, cb: () => void) => {
+            timerCallback = cb;
+          }),
+        },
+      },
+    };
+
+    CombatFX.applyHitFlash(spriteMock, 100);
+
+    expect(spriteMock.setTint).toHaveBeenCalledWith(0xffffff);
+    expect(spriteMock.setTintMode).toHaveBeenCalledWith(1);
+    expect(setTintFillSpy).not.toHaveBeenCalled();
+
+    if (timerCallback) {
+      (timerCallback as Function)();
+    }
+    expect(spriteMock.clearTint).toHaveBeenCalled();
+  });
+
+  it('attaches a Phaser 4 internal Glow filter safely via attachGlowFilter and returns null on headless mocks', () => {
+    const mockGlow = { color: 0x00ffff, outerStrength: 2, active: true };
+    const addGlowSpy = vi.fn().mockReturnValue(mockGlow);
+    const enableFiltersSpy = vi.fn();
+    const webglSprite: any = {
+      enableFilters: enableFiltersSpy,
+      filters: {
+        internal: {
+          addGlow: addGlowSpy,
+        },
+      },
+    };
+
+    const glow = (CombatFX as any).attachGlowFilter(webglSprite, 0x00ffff, 2, 6, 4);
+    expect(enableFiltersSpy).toHaveBeenCalled();
+    expect(addGlowSpy).toHaveBeenCalledWith(0x00ffff, 2, 0, 1, false, 6, 4);
+    expect(glow).toBe(mockGlow);
+
+    expect((CombatFX as any).attachGlowFilter({} as any, 0xff0000)).toBeNull();
+    expect(
+      (CombatFX as any).attachGlowFilter({
+        enableFilters: () => {
+          throw new Error('No WebGL context');
+        },
+      } as any)
+    ).toBeNull();
+  });
+
   it('safely handles sprites in headless/mocked environments without throwing', () => {
     expect(() => {
       CombatFX.applyHitFlash({} as any);
