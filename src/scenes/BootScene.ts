@@ -1,9 +1,14 @@
 import Phaser from 'phaser';
 import { AnimationFactory } from '../core/AnimationFactory';
+import { installTimeStepPatch } from '../core/TimeStepPatch';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
     super({ key: 'BootScene' });
+  }
+
+  init(): void {
+    installTimeStepPatch(this.game);
   }
 
   preload(): void {
